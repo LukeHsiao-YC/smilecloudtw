@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout>
+  <Navbar />
+  
+  <main class="min-h-screen bg-white pt-16 pb-24 relative overflow-hidden">
+    <div class="absolute inset-0 bg-sky-50/30"></div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      
+      <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-5xl font-black text-slate-800 mb-4">聯絡我們</h1>
+        <div class="w-24 h-2 bg-gradient-to-r from-sky-300 to-sky-500 mx-auto rounded-full"></div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-8 md:p-16 shadow-xl shadow-sky-100/50 border border-slate-100 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 to-amber-400 text-white mb-6 shadow-lg shadow-amber-200">
+          <i data-lucide="megaphone" class="w-10 h-10"></i>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-6">演講與合作邀約</h2>
+        <div class="text-slate-600 text-lg leading-relaxed space-y-6 max-w-2xl mx-auto mb-10">
+          <p>
+            過去除了在醫院診間傳遞健康體態的秘訣，我也在許多校園及社區分享，非常期待能有機會把健康知識帶給更多人。
+          </p>
+          <div class="bg-slate-50 py-4 px-6 rounded-2xl border border-slate-100 font-bold text-slate-700 flex flex-wrap justify-center gap-3">
+            <span>#健康體位管理</span>
+            <span>#兒童居家安全</span>
+            <span>#育兒指導</span>
+            <span>#兒童照護</span>
+          </div>
+          <p>演講邀約或合作計畫，都歡迎來信討論！</p>
+        </div>
+        <a href="mailto:u9602041@gmail.com" class="inline-flex items-center justify-center gap-3 bg-slate-800 hover:bg-sky-500 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+          <i data-lucide="mail" class="w-6 h-6"></i>
+          寄信給島主 (u9602041@gmail.com)
+        </a>
+      </div>
+      
+    </div>
+  </main>
+  
+  <Footer />
+</Layout>

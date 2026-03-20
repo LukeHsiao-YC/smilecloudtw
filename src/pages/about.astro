@@ -1,63 +1,139 @@
 ---
-import AboutHeroImage from '../assets/blog-placeholder-about.jpg';
-import Layout from '../layouts/BlogPost.astro';
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
 ---
 
-<Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
-	pubDate={new Date('August 08 2021')}
-	heroImage={AboutHeroImage}
->
-	<p>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo
-		viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam
-		adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus
-		et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus
-		vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque
-		sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet.
-	</p>
+<Layout>
+  <Navbar />
+  
+  <main class="min-h-screen bg-sky-50/50 pt-16 pb-24">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- 頁面標題 -->
+      <div class="text-center mb-16">
+        <h1 class="text-4xl md:text-5xl font-black text-slate-800 mb-4">認識島主</h1>
+        <div class="w-24 h-2 bg-gradient-to-r from-sky-300 to-sky-500 mx-auto rounded-full"></div>
+      </div>
 
-	<p>
-		Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non
-		tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non
-		blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna
-		porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis
-		massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc.
-		Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis
-		bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra
-		massa massa ultricies mi.
-	</p>
+      <div class="grid lg:grid-cols-12 gap-12 items-start text-left">
+        <div class="lg:col-span-5 space-y-8">
+          <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+            <div class="flex items-center gap-6 mb-6 text-left">
+              
+              <!-- 加上硬體加速與對比優化，幫助照片保持銳利 -->
+              <div class="w-32 h-32 md:w-36 md:h-36 shrink-0 rounded-full overflow-hidden shadow-lg border-2 border-white ring-2 ring-sky-100">
+                <img 
+                  src="/profile.jpg" 
+                  alt="蕭宇超醫師" 
+                  class="w-full h-full object-cover object-top"
+                  style="image-rendering: -webkit-optimize-contrast; transform: translateZ(0);"
+                  onerror="this.src='https://ui-avatars.com/api/?name=宇超&background=38bdf8&color=fff&size=200'"
+                />
+              </div>
 
-	<p>
-		Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl
-		suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet
-		nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae
-		turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem
-		dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat
-		semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus
-		vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum
-		facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam
-		vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla
-		urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim.
-	</p>
+              <div class="text-left">
+                <h3 class="text-2xl font-black text-slate-800">蕭宇超 醫師</h3>
+                <p class="text-sky-600 font-bold mt-1">小兒腸胃科 / 兒童體重管理</p>
+              </div>
+            </div>
+            <p class="text-slate-600 leading-relaxed mb-6 text-lg">
+              我是蕭宇超醫師，本身是一名小兒腸胃科醫師。除了照顧兒童常見疾病，我更希望透過專業的導引，陪著家長一起預防肥胖問題。
+            </p>
+          </div>
+          <div class="bg-slate-800 rounded-3xl p-8 text-white shadow-xl text-left">
+            <h3 class="text-xl font-bold mb-6 flex items-center gap-2 text-sky-300">
+              <i data-lucide="clock" class="w-6 h-6"></i>
+              門診時間
+            </h3>
+            <div class="space-y-4">
+              <div class="bg-white/10 rounded-2xl p-4 border border-white/5">
+                <div class="font-bold text-lg">阮綜合醫院</div>
+                <div class="text-slate-300">每周四 上午</div>
+              </div>
+              <div class="bg-white/10 rounded-2xl p-4 border border-white/5">
+                <div class="font-bold text-lg">玉里慈濟醫院</div>
+                <div class="text-slate-300">周三下午（每月兩次）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="lg:col-span-7 space-y-6 text-left">
+          
+          <!-- 現職與學歷卡片 -->
+          <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+            <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100">
+              <i data-lucide="award" class="w-6 h-6 text-sky-500"></i> 現職與學歷
+            </h3>
+            
+            <div class="space-y-8">
+              <div>
+                <div class="text-sm font-bold text-sky-500 mb-3 tracking-wider uppercase">Position</div>
+                <ul class="space-y-3 text-slate-600 text-lg">
+                  <li class="flex items-start gap-3">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-sky-400 shrink-0 mt-1"></i>
+                    阮綜合醫院 兒童腸胃科主治醫師
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-sky-400 shrink-0 mt-1"></i>
+                    玉里慈濟醫院 兒科兼任主治醫師
+                  </li>
+                </ul>
+              </div>
+              <div class="pt-6 border-t border-slate-50 text-left">
+                <div class="text-sm font-bold text-sky-500 mb-3 tracking-wider uppercase">Education</div>
+                <div class="text-slate-800 text-lg font-bold">中國醫藥大學 中醫系雙主修醫學系</div>
+              </div>
+            </div>
+          </div>
 
-	<p>
-		Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper
-		viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc
-		scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur
-		gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus
-		pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim
-		blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id
-		cursus metus aliquam eleifend mi.
-	</p>
+          <!-- 經歷與專長雙欄 -->
+          <div class="grid sm:grid-cols-2 gap-6">
+            
+            <!-- 經歷時間軸樣式 -->
+            <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+              <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100">
+                <i data-lucide="briefcase" class="w-6 h-6 text-sky-500"></i> 經歷
+              </h3>
+              <div class="space-y-4">
+                <div class="relative pl-4 border-l-2 border-slate-100 pb-2">
+                  <div class="absolute w-2.5 h-2.5 bg-sky-400 rounded-full -left-[5px] top-1.5 ring-4 ring-white"></div>
+                  <p class="font-bold text-slate-700">花蓮慈濟醫院小兒部</p>
+                  <p class="text-sm text-slate-500">住院醫師 / 兒童腸胃科研究醫師 / 主治醫師</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-slate-100 pb-2">
+                  <div class="absolute w-2.5 h-2.5 bg-slate-300 rounded-full -left-[5px] top-1.5 ring-4 ring-white"></div>
+                  <p class="font-bold text-slate-700">台北榮民總醫院兒童醫學部</p>
+                  <p class="text-sm text-slate-500">兒童胃腸科研究醫師</p>
+                </div>
+                <div class="relative pl-4 border-l-2 border-transparent">
+                  <div class="absolute w-2.5 h-2.5 bg-slate-300 rounded-full -left-[5px] top-1.5 ring-4 ring-white"></div>
+                  <p class="font-bold text-slate-700">玉里慈濟醫院小兒科</p>
+                  <p class="text-sm text-slate-500">兼任主治醫師</p>
+                </div>
+              </div>
+            </div>
 
-	<p>
-		Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta
-		nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam
-		tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci
-		ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar
-		proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
-	</p>
+            <!-- 專長標籤樣式 -->
+            <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
+              <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 pb-4 border-b border-slate-100">
+                <i data-lucide="star" class="w-6 h-6 text-amber-500"></i> 專長
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                <span class="bg-sky-50 text-sky-700 px-4 py-2 rounded-xl font-bold text-sm">一般兒科疾病</span>
+                <span class="bg-sky-50 text-sky-700 px-4 py-2 rounded-xl font-bold text-sm">兒童肝膽腸胃</span>
+                <span class="bg-amber-50 text-amber-700 px-4 py-2 rounded-xl font-bold text-sm border border-amber-100">肥胖控制</span>
+                <span class="bg-sky-50 text-sky-700 px-4 py-2 rounded-xl font-bold text-sm">腹部超音波</span>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+  
+  <Footer />
 </Layout>

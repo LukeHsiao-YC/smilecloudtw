@@ -1,0 +1,43 @@
+---
+---
+
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smilecloud 微笑雲朵 | 蕭宇超醫師</title>
+  
+  <!-- 載入 Tailwind 跟 Lucide 圖示 -->
+  <script is:inline src="https://cdn.tailwindcss.com"></script>
+  <script is:inline src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* 漂浮動畫統一放在骨架裡 */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+      100% { transform: translateY(0px); }
+    }
+    .animate-float {
+      animation: float 4s ease-in-out infinite;
+    }
+    .animate-float-delayed {
+      animation: float 5s ease-in-out infinite;
+      animation-delay: 2s;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 font-sans selection:bg-sky-200 text-slate-700">
+  
+  <!-- 這裡的 slot 就是未來其他頁面內容塞進來的地方 -->
+  <slot />
+
+  <script is:inline>
+    // 讓圖示在所有頁面都能正常顯示
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  </script>
+</body>
+</html>
