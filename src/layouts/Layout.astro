@@ -1,4 +1,12 @@
 ---
+import { ClientRouter } from 'astro:transitions';
+
+// 設定預設的網站資訊，如果其他文章或頁面沒有特別寫，就會用這組當作備案
+const {
+  title = "Smilecloud 微笑雲朵 | 蕭宇超醫師",
+  description = "我是健康冒險島的島主超人醫師蕭宇超，歡迎登島！在這裡我們不只談體重，更是打造讓孩子愛上運動與健康生活的世界。",
+  image = "/profile.jpg"
+} = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -6,13 +14,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smilecloud 微笑雲朵 | 蕭宇超醫師</title>
+  
+  <!-- 網站基礎資訊 -->
+  <title>{title}</title>
+  <meta name="description" content={description}>
+  
+  <!-- 社群分享設定 (給 LINE, FB 看的隱藏標籤) -->
+  <meta property="og:title" content={title}>
+  <meta property="og:description" content={description}>
+  <meta property="og:type" content="website">
+  <meta property="og:image" content={`https://smilecloud.tw${image}`}>
+  <meta property="og:url" content={`https://smilecloud.tw${Astro.url.pathname}`}>
+  
+  <!-- 開啟無縫換頁特效 (Astro 5.0 新寫法) -->
+  <ClientRouter />
+
+  <!-- 載入 Google 字體：思源黑體 Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
   
   <!-- 載入 Tailwind 跟 Lucide 圖示 -->
   <script is:inline src="https://cdn.tailwindcss.com"></script>
   <script is:inline src="https://unpkg.com/lucide@latest"></script>
   
-  <style>
+  <style is:global>
+    /* 套用新字體，帶有現代感的思源黑體，並強制覆蓋預設值 */
+    html, body {
+      font-family: 'Noto Sans TC', sans-serif !important;
+    }
+
     /* 漂浮動畫統一放在骨架裡 */
     @keyframes float {
       0% { transform: translateY(0px); }
@@ -26,18 +57,48 @@
       animation: float 5s ease-in-out infinite;
       animation-delay: 2s;
     }
+
+    /* 滑動淡入特效的準備動作 */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+    }
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
   </style>
 </head>
-<body class="bg-slate-50 font-sans selection:bg-sky-200 text-slate-700">
+<body class="bg-slate-50 selection:bg-sky-200 text-slate-700">
   
   <!-- 這裡的 slot 就是未來其他頁面內容塞進來的地方 -->
   <slot />
 
   <script is:inline>
-    // 讓圖示在所有頁面都能正常顯示
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
+    // 因為開啟了無縫換頁，我們要把執行的動作包起來，確保每次換頁都會重新啟動
+    document.addEventListener('astro:page-load', () => {
+      // 讓圖示在所有頁面都能正常顯示
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+
+      // 啟動滑動淡入偵測
+      const reveals = document.querySelectorAll('.reveal');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            // 顯示過就取消偵測，才不會上下滑動時重複閃爍
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.15 // 元素出現 15% 就觸發特效
+      });
+
+      reveals.forEach(reveal => observer.observe(reveal));
+    });
   </script>
 </body>
 </html>
