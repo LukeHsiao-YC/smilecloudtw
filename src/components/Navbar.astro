@@ -45,29 +45,32 @@
 </nav>
 
 <script is:inline>
-  const menuBtn = document.getElementById('mobile-menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const menuIcon = document.getElementById('menu-icon');
-  const mobileLinks = document.querySelectorAll('.mobile-link');
-  
-  let isMenuOpen = false;
+  // 把選單功能包裝起來，確保無縫換頁時也會重新啟動
+  document.addEventListener('astro:page-load', () => {
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuIcon = document.getElementById('menu-icon');
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+    
+    let isMenuOpen = false;
 
-  function toggleMenu() {
-    isMenuOpen = !isMenuOpen;
-    if (isMenuOpen && mobileMenu && menuIcon) {
-      mobileMenu.classList.remove('hidden');
-      menuIcon.setAttribute('data-lucide', 'x');
-    } else if (mobileMenu && menuIcon) {
-      mobileMenu.classList.add('hidden');
-      menuIcon.setAttribute('data-lucide', 'menu');
+    function toggleMenu() {
+      isMenuOpen = !isMenuOpen;
+      if (isMenuOpen && mobileMenu && menuIcon) {
+        mobileMenu.classList.remove('hidden');
+        menuIcon.setAttribute('data-lucide', 'x');
+      } else if (mobileMenu && menuIcon) {
+        mobileMenu.classList.add('hidden');
+        menuIcon.setAttribute('data-lucide', 'menu');
+      }
+      if (window.lucide) { window.lucide.createIcons(); }
     }
-    if (window.lucide) { window.lucide.createIcons(); }
-  }
 
-  if (menuBtn) { menuBtn.addEventListener('click', toggleMenu); }
-  if (mobileLinks.length > 0) {
-    mobileLinks.forEach(link => {
-      link.addEventListener('click', () => { if (isMenuOpen) toggleMenu(); });
-    });
-  }
+    if (menuBtn) { menuBtn.addEventListener('click', toggleMenu); }
+    if (mobileLinks.length > 0) {
+      mobileLinks.forEach(link => {
+        link.addEventListener('click', () => { if (isMenuOpen) toggleMenu(); });
+      });
+    }
+  });
 </script>
