@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>專屬運動處方互動指南</title>
+  
+  <!-- 載入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 設定模組引入路徑，確保 React 版本一致 -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.292.0?deps=react@18.2.0"
+      }
+    }
+  </script>
+  
+  <!-- 載入 Babel 即時編譯器 -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    import React, { useState, useEffect } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { 
+      Activity, HeartPulse, ArrowRight, ChevronRight, Info, 
+      Target, Flame, Play, Edit3, Award, Utensils, BookOpen, 
+      ArrowLeft, Ticket, LayoutGrid, CheckCircle2, RefreshCw, 
+      Facebook, Instagram, MessageCircle, ExternalLink, Youtube, 
+      ChevronDown, ChevronUp, MessageSquarePlus, Map, PlayCircle, Star, Baby, User, CalendarPlus, Copy
+    } from 'lucide-react';
+
+    // 集中管理靜態資料庫
+    const quickExercises = [
+      '原地甩手', '靠牆深蹲', '高抬腿原地走', '開合跳', '平板支撐',
+      '深蹲跳', '屈膝伏地挺身', '爬樓梯', '波比跳', '空中腳踏車'
+    ];
+
+    const bingoItems = [
+      '走樓梯代替電梯', '久坐站起來伸展', '看電視原地踏步', 
+      '提早一站下車走路', '自己動手做家事', '睡前深呼吸3次', 
+      '喝滿1500cc水', '做10個深蹲', '站著工作10分鐘'
+    ];
+
+    const contractActionOptions = [
+      "10下深蹲", "30秒棒式", "原地踏步兩分鐘", "伸展肩頸", "15下開合跳",
+      "靠牆深蹲30秒", "爬兩層樓梯", "10下扶牆伏地挺身", "原地甩手100下", "喝500cc溫水並拉筋"
+    ];
+
+    const exerciseDB = {
+      aerobic: [
+        { id: '', name: '不挑選', mins: 0, desc: '', howTo: '' },
+        { id: 'a1', name: '快走', mins: 15, desc: '15 分鐘', howTo: '維持微喘但還能說出完整句子的速度，雙手自然大幅擺動。' },
+        { id: 'a2', name: '平躺踩雙腳', mins: 10, desc: '10 分鐘', howTo: '躺在床上或瑜珈墊上，雙腳抬起像騎腳踏車一樣在空中畫圈。' },
+        { id: 'a3', name: '原地慢跑', mins: 20, desc: '20 分鐘', howTo: '在家看電視時原地小跑步，重點是腳步放輕，手肘彎曲前後擺動。' },
+        { id: 'a4', name: '原地甩手', mins: 15, desc: '15 分鐘', howTo: '雙腳與肩同寬，雙手平舉到胸前再往後甩，搭配膝蓋微彎，保持規律節奏。' }
+      ],
+      resistance: [
+        { id: '', name: '不挑選', mins: 0, desc: '', howTo: '' },
+        { id: 'r1', name: '徒手: 雙臂吊撐', mins: 10, desc: '3回合，每次5到15秒', howTo: '雙手前臂平放在地，雙腳往後踩直，身體從頭到腳像木板一樣平直，收緊核心。' },
+        { id: 'r2', name: '徒手: 伏地挺身', mins: 10, desc: '3回合，每次30到60秒', howTo: '雙手比肩膀微寬撐地，肚子收緊不塌腰，胸口靠近地面再推起(可選擇屈膝或不屈膝)。' },
+        { id: 'r3', name: '徒手: 雙臂後撐挺身', mins: 10, desc: '3回合，每次30到60秒', howTo: '背對穩固的椅子，雙手往後撐住邊緣。手肘彎曲讓身體下沉，再用力撐起。' },
+        { id: 'r4', name: '徒手: 引體向上', mins: 10, desc: '3回合，每次3到4下', howTo: '找穩固的單槓，雙手比肩寬握住，將身體往上拉直到下巴超過單槓。' },
+        { id: 'r5', name: '徒手: 肩膀伏地挺身', mins: 10, desc: '3回合，每次30到60秒', howTo: '呈倒V字型(下犬式)撐地，彎曲手肘讓頭部靠近地面，再用力推起。' },
+        { id: 'r6', name: '徒手: 雙臂側平舉前後轉', mins: 10, desc: '3回合，每次30到60秒', howTo: '雙手向兩側平舉，小幅度往前畫圈，再往後畫圈，感受肩膀發力。' },
+        { id: 'r7', name: '徒手: 深蹲', mins: 10, desc: '3回合，每次30到60秒', howTo: '雙腳與肩同寬，屁股往後坐，背部挺直，站起時大腿與臀部發力。' },
+        { id: 'r8', name: '啞鈴/彈力帶: 二頭肌彎舉', mins: 10, desc: '3回合，5到15RM', howTo: '手持啞鈴或踩穩彈力帶垂於兩側，手肘固定在腰際，向上彎舉靠近肩膀。' },
+        { id: 'r9', name: '啞鈴/彈力帶: 三頭肌伸展', mins: 10, desc: '3回合，5到15RM', howTo: '雙手握住一個啞鈴或拉緊彈力帶舉過頭頂，彎曲手肘下放到腦後，再用力伸直。' },
+        { id: 'r10', name: '啞鈴/彈力帶: 胸大肌推舉', mins: 10, desc: '3回合，5到15RM', howTo: '平躺，雙手持啞鈴(或將彈力帶繞過背部)在胸口兩側，垂直往上推舉直到手臂伸直。' },
+        { id: 'r11', name: '啞鈴/彈力帶: 後肩飛鳥', mins: 10, desc: '3回合，5到15RM', howTo: '身體微前傾，雙手拿啞鈴或踩著彈力帶兩端自然下垂，手肘微彎，往兩側上方提起至肩膀高度。' },
+        { id: 'r12', name: '啞鈴/彈力帶: 負重深蹲', mins: 10, desc: '3回合，5到15RM', howTo: '雙手拿著啞鈴或踩著彈力帶，保持背部挺直進行深蹲動作。' },
+        { id: 'r13', name: '機械: 前手臂彎舉', mins: 10, desc: '3回合，5到12次', howTo: '使用健身房二頭肌訓練機，調整好重量後進行彎舉。' },
+        { id: 'r14', name: '機械: 雙臂下拉', mins: 10, desc: '3回合，5到12次', howTo: '使用滑輪下拉機，挺胸收背，將握把往胸口方向拉下。' },
+        { id: 'r15', name: '機械: 雙臂內收', mins: 10, desc: '3回合，5到12次', howTo: '使用夾胸機(蝴蝶機)，感受胸肌出力將手把往中間夾緊。' },
+        { id: 'r16', name: '機械: 雙臂外展', mins: 10, desc: '3回合，5到12次', howTo: '使用反向蝴蝶機，感受後三角肌出力將手把往外打開。' },
+        { id: 'r17', name: '機械: 平推舉', mins: 10, desc: '3回合，5到12次', howTo: '使用胸推機，背部貼緊椅背，將握把往前推直再慢慢放回。' }
+      ],
+      hiit: [
+        { id: '', name: '不挑選', mins: 0, desc: '', howTo: '' },
+        { id: 'h1', name: '深蹲', mins: 3, desc: '做60秒，休2到3分', howTo: '用較快的節奏連續進行深蹲，把心跳率拉高到微喘的程度。' },
+        { id: 'h2', name: '開合跳', mins: 3, desc: '做60秒，休2到3分', howTo: '雙腳跳開時雙手在頭頂擊掌，跳回併攏時雙手拍大腿兩側。' },
+        { id: 'h3', name: '伏地挺身', mins: 3, desc: '做60秒，休2到3分', howTo: '連續動作，做不起來可以用膝蓋著地的方式撐完60秒。' },
+        { id: 'h4', name: '原地跑', mins: 3, desc: '做60秒，休2到3分', howTo: '像是在原地衝刺一樣，雙手跟雙腳快速擺動交替。' },
+        { id: 'h5', name: '側跳', mins: 3, desc: '做60秒，休2到3分', howTo: '雙腳併攏，想像地上有一條線，左右來回快速跳躍。' },
+        { id: 'h6', name: '平板', mins: 3, desc: '做60秒，休2到3分', howTo: '核心收緊，身體保持一直線撐住60秒。' },
+        { id: 'h7', name: '趴地爬山', mins: 3, desc: '做60秒，休2到3分', howTo: '雙手撐地的伏地挺身姿勢，膝蓋輪流往胸口快速收緊。' },
+        { id: 'h8', name: '波比跳', mins: 3, desc: '做60秒，休2到3分', howTo: '站立狀態蹲下，雙手撐地後雙腳往後跳，再跳回胸前，最後往上跳起。' },
+        { id: 'h9', name: '分腿跳', mins: 3, desc: '做60秒，休2到3分', howTo: '雙腳前後站立往下蹲(弓箭步)，用力跳起在空中換腳落地。' },
+        { id: 'h10', name: '高抬腿原地跑', mins: 3, desc: '做60秒，休2到3分', howTo: '原地快速跑步，膝蓋盡量往上抬高到腰部的位置。' }
+      ]
+    };
+
+    const coachVideoDB = [
+      { id: 'v_aero_1', title: '基礎踏步心肺有氧', desc: '低衝擊、無跳躍，是控制體重最安全的入門處方。', provider: '照護線上', target: 'adult', type: 'aerobic', url: 'https://www.youtube.com/watch?v=YO8XT3qqiBw' },
+      { id: 'v_aero_2', title: '18分鐘心肺有氧運動 (無跳躍)', desc: '在家動一動，無跳躍、無深蹲，不用擔心膝蓋痛不敢做。', provider: '照護線上', target: 'adult', type: 'aerobic', url: 'https://www.youtube.com/watch?v=2bbVbdxHhgg&list=PLiT_ZsaEqKklAqN-NozZ7zgQF6aU-IDQm' },
+      { id: 'v_aero_3', title: '徒手循環式全身訓練｜初階', desc: '初階的徒手循環式全身訓練，居家也能簡單練心肺。', provider: '高雄市運動發展局', target: 'adult', type: 'aerobic', url: 'https://www.youtube.com/watch?v=aBCl2kv8IXY' },
+      { id: 'v_str_1', title: '彈力帶運動教學', desc: '跟著做安全又有效，非常適合居家訓練。', provider: '中華民國糖尿病衛教學會', target: 'adult', type: 'strength', url: 'https://youtube.com/playlist?list=PLYOvnYelJ8SWTUIfdVZFQkGGrDHx6hJbQ&si=ff-erXQrB2x7trrr' },
+      { id: 'v_str_2', title: '全站姿腹部核心訓練', desc: '站著練腹部核心，可以同時改善支撐、平衡。', provider: '照護線上', target: 'adult', type: 'strength', url: 'https://www.youtube.com/watch?v=st6cWQ8ZnbE&list=PLiT_ZsaEqKklyb6jaW1p0vFHn8onNmr9O&index=2' },
+      { id: 'v_str_3', title: '10分鐘全身性肌力訓練', desc: '12個徒手動作全身練透透，在家也能增肌。', provider: '高雄市運動發展局', target: 'adult', type: 'strength', url: 'https://www.youtube.com/watch?v=u8dmY0K4rqo&t=93s' },
+      { id: 'v_str_4', title: '綜合性全身訓練', desc: '全身循環的綜合體適能訓練。', provider: '高雄市運動發展局', target: 'adult', type: 'strength', url: 'https://www.youtube.com/watch?v=DWZWwpzRb6c' },
+      { id: 'v_str_5', title: '坐著練上背與肩膀', desc: '坐著也能練系列，不用因為腳不舒服就終止運動喔！', provider: '照護線上', target: 'adult', type: 'strength', url: 'https://www.youtube.com/watch?v=cUDUxlsXyYQ&list=PLiT_ZsaEqKkkJXYdPF4gZLIJUZxiGmO84&index=3' },
+      { id: 'v_hiit_1', title: '居家體適能 (徒手爆汗全身訓練)', desc: '強度較高，適合大孩子與家長一起互相督促練習。', provider: '高雄市運動發展局', target: 'adult', type: 'hiit', url: 'https://www.youtube.com/watch?v=6KizlGHSqJY' },
+      { id: 'v_hiit_2', title: '四分鐘TABATA間歇訓練', desc: '入門級的TABATA練習，適合零碎時間動一動。', provider: '照護線上', target: 'adult', type: 'hiit', url: 'https://www.youtube.com/watch?v=NphFrQifJss&list=PLiT_ZsaEqKkm6zjG9Iiq2J__forp2iC6r&index=2' },
+      { id: 'c_aero_1', title: '親子音樂律動 (動物園主題)', desc: '結合故事與節奏，適合放學後輕鬆放電。', provider: '高雄市運動發展局', target: 'child', type: 'aerobic', energyLevel: 3, interactionLevel: 5, url: 'https://www.youtube.com/watch?v=VjvWffoGCc4' },
+      { id: 'c_str_1', title: '兒童體適能訓練 (大肌肉開發)', desc: '適合週末全家一起在家進行的大肌肉開發訓練。', provider: '高雄市運動發展局', target: 'child', type: 'strength', energyLevel: 5, interactionLevel: 4, url: 'https://www.youtube.com/watch?v=iZ1knnM7r4M' },
+      { id: 'c_str_2', title: '兒童體能訓練 EP2 (運動潛能激發)', desc: '著重在靈敏度與協調性，激發孩子天生的運動能力。', provider: '高雄市運動發展局', target: 'child', type: 'strength', energyLevel: 4, interactionLevel: 4, url: 'https://www.youtube.com/watch?v=kC_neHooV_c' },
+      { id: 'c_str_3', title: '兒童大肌肉訓練', desc: '訓練小朋友的大肌肉發展，家長也可以一起動起來！', provider: '高雄市運動發展局', target: 'child', type: 'strength', energyLevel: 4, interactionLevel: 4, url: 'https://www.youtube.com/watch?v=ACiTv3bfGbQ' }
+    ];
+
+    function App() {
+      const [step, setStep] = useState('intro');
+      
+      const [formData, setFormData] = useState({ height: '', weight: '', fitness: 'good' });
+      const [childFormData, setChildFormData] = useState({ goal: 'healthy', fitness: 'good' });
+      
+      const [result, setResult] = useState(null);
+      const [toast, setToast] = useState('');
+
+      const [userData, setUserData] = useState({
+        totalMinutes: 0,
+        streak: 0,
+        lastActiveDate: null,
+        contract: { trigger: '', action: '' },
+        bingoBoard: Array(9).fill(false)
+      });
+
+      const [dashboardView, setDashboardView] = useState('menu');
+      const [showResources, setShowResources] = useState(false);
+
+      const [videoAudience, setVideoAudience] = useState('all'); 
+      const [videoType, setVideoType] = useState('all'); 
+
+      const [bentoState, setBentoState] = useState({
+        aerobic: '', resistance1: '', resistance2: '', hiit1: '', hiit2: ''
+      });
+
+      const [showCheatSheet, setShowCheatSheet] = useState(false);
+      
+      const [contractForm, setContractForm] = useState({
+        trigger: '洗澡前', action: '10下深蹲', customTrigger: '', customAction: ''
+      });
+
+      const [currentQuick, setCurrentQuick] = useState('點擊下方按鈕抽籤');
+      const [isDrawing, setIsDrawing] = useState(false);
+      const [hasDrawn, setHasDrawn] = useState(false);
+
+      useEffect(() => {
+        const saved = localStorage.getItem('workout_tracker_data');
+        if (saved) {
+          setUserData(JSON.parse(saved));
+        }
+      }, []);
+
+      const saveUserData = (newData) => {
+        setUserData(newData);
+        localStorage.setItem('workout_tracker_data', JSON.stringify(newData));
+      };
+
+      const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(''), 3000);
+      };
+
+      const calculatePrescription = () => {
+        const h = parseFloat(formData.height) / 100;
+        const w = parseFloat(formData.weight);
+        if (!h || !w) return;
+
+        const bmi = w / (h * h);
+        let type = '';
+        let title = '';
+        let description = '';
+
+        if (bmi < 18.5) {
+          type = 'underweight';
+          title = '增肌養成處方';
+          description = '目前的重點是慢慢把肌肉量養起來，不要做太多會大量消耗熱量的運動，把營養留給肌肉生長就好。';
+        } else if (bmi >= 18.5 && bmi < 24) {
+          type = 'normal';
+          title = '體態維持處方';
+          description = '你的基礎非常好！現在只要維持心肺健康跟肌肉彈性，讓代謝功能保持在最佳狀態就可以了。';
+        } else {
+          type = 'overweight';
+          title = '減脂代謝處方';
+          description = '我們來幫身體創造一點熱量赤字，搭配多樣化的運動來燃燒脂肪，這對改善整體健康非常有幫助。';
+        }
+
+        setResult({ isChild: false, bmi: bmi.toFixed(1), type, title, description, fitness: formData.fitness });
+        setStep('result');
+        setDashboardView('menu');
+        setShowResources(false);
+      };
+
+      const calculateChildPrescription = () => {
+        let title = '';
+        let description = '';
+
+        if (childFormData.goal === 'healthy') {
+          title = '健康好體力處方';
+          description = '這個階段的重點在於培養運動習慣。多做能訓練大肌肉群跟協調性的動作，為未來的體能打下好基礎。';
+        } else if (childFormData.goal === 'weight') {
+          title = '體態管理處方';
+          description = '除了飲食控制，我們從低負擔的運動開始。減少坐著的時間，慢慢增加身體活動量，重點是不要讓關節承受太大壓力。';
+        } else if (childFormData.goal === 'tall') {
+          title = '衝刺身高處方';
+          description = '正值成長黃金期！在營養和睡眠充足的前提下，適度安排垂直跳躍與伸展運動，能有效刺激生長板。';
+        }
+
+        setResult({ 
+          isChild: true, 
+          type: childFormData.goal, 
+          fitness: childFormData.fitness, 
+          title, 
+          description 
+        });
+        setStep('result');
+        setDashboardView('menu');
+        setShowResources(false);
+      };
+
+      const addExerciseMinutes = (mins) => {
+        const today = new Date().toDateString();
+        let newData = { ...userData };
+        
+        if (newData.lastActiveDate !== today) {
+          newData.streak += 1;
+          newData.lastActiveDate = today;
+          newData.bingoBoard = Array(9).fill(false);
+        }
+        
+        newData.totalMinutes += mins;
+        saveUserData(newData);
+        showToast(`超棒的！成功累積 ${mins} 分鐘運動量`);
+      };
+
+      const toggleBingo = (index) => {
+        let newBoard = [...userData.bingoBoard];
+        newBoard[index] = !newBoard[index];
+        let newData = { ...userData, bingoBoard: newBoard };
+        saveUserData(newData);
+        if (newBoard[index]) {
+          showToast('解鎖一個日常運動零食！');
+        }
+      };
+
+      const handleContractSave = (e) => {
+        e.preventDefault();
+        const finalTrigger = contractForm.trigger === 'custom' ? contractForm.customTrigger : contractForm.trigger;
+        const finalAction = contractForm.action === 'custom' ? contractForm.customAction : contractForm.action;
+        
+        if (!finalTrigger || !finalAction) {
+          showToast('約定內容要填寫完整才能生效喔！');
+          return;
+        }
+        
+        saveUserData({ ...userData, contract: { trigger: finalTrigger, action: finalAction } });
+        showToast('契約簽署完成！');
+      };
+
+      // 行事曆與複製功能模組
+      const getCalendarData = () => {
+        const title = `運動處方小約定：${userData.contract.action}`;
+        const details = `每天 ${userData.contract.trigger}，別忘了你的運動小約定：${userData.contract.action}！\n\n(此提醒由專屬運動處方互動指南自動產生)`;
+        
+        const now = new Date();
+        let start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 0, 0);
+        let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 15, 0);
+        
+        const formatDate = (date) => {
+          return date.toISOString().replace(/-|:/g, '').split('.')[0] + 'Z';
+        };
+        
+        return { title, details, startStr: formatDate(start), endStr: formatDate(end) };
+      };
+
+      const handleGoogleCalendar = () => {
+        const { title, details, startStr, endStr } = getCalendarData();
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&details=${encodeURIComponent(details)}&dates=${startStr}/${endStr}&recur=RRULE:FREQ=DAILY`;
+        window.open(url, '_blank');
+      };
+
+      const handleAppleCalendar = () => {
+        const { title, details, startStr, endStr } = getCalendarData();
+        const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Workout Prescription//TW\nBEGIN:VEVENT\nSUMMARY:${title}\nDESCRIPTION:${details}\nDTSTART:${startStr}\nDTEND:${endStr}\nRRULE:FREQ=DAILY\nEND:VEVENT\nEND:VCALENDAR`;
+        
+        const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.setAttribute('download', 'workout_reminder.ics');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const handleCopyContract = () => {
+        const textToCopy = `運動處方小約定：每天 ${userData.contract.trigger}，我要做 ${userData.contract.action}！`;
+        
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast('已經複製到剪貼簿囉！');
+            }).catch(() => {
+                fallbackCopyTextToClipboard(textToCopy);
+            });
+        } else {
+            fallbackCopyTextToClipboard(textToCopy);
+        }
+      };
+
+      const fallbackCopyTextToClipboard = (text) => {
+          const textArea = document.createElement("textarea");
+          textArea.value = text;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          try {
+              document.execCommand('copy');
+              showToast('已經複製到剪貼簿囉！');
+          } catch (err) {
+              showToast('複製失敗，請嘗試手動反白複製。');
+          }
+          textArea.remove();
+      };
+
+      const startLuckyDraw = () => {
+        if (isDrawing) return;
+        setIsDrawing(true);
+        setHasDrawn(false);
+        let count = 0;
+        const interval = setInterval(() => {
+          const randomIndex = Math.floor(Math.random() * quickExercises.length);
+          setCurrentQuick(quickExercises[randomIndex]);
+          count++;
+          if (count > 15) {
+            clearInterval(interval);
+            setIsDrawing(false);
+            setHasDrawn(true);
+          }
+        }, 100);
+      };
+
+      const finishLuckyDraw = () => {
+        addExerciseMinutes(2);
+        setHasDrawn(false);
+        setCurrentQuick('點擊下方按鈕抽籤');
+        setDashboardView('menu');
+      };
+
+      const filteredVideos = coachVideoDB.filter(video => {
+        const matchAudience = videoAudience === 'all' || video.target === videoAudience;
+        const matchType = videoType === 'all' || video.type === videoType;
+        return matchAudience && matchType;
+      });
+
+      const renderStars = (level, label) => {
+        return (
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-xs text-gray-500 w-16">{label}</span>
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={`w-3.5 h-3.5 ${i < level ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} />
+              ))}
+            </div>
+          </div>
+        );
+      };
+
+      const getOptionData = (category, id) => {
+        if (!id) return null;
+        return exerciseDB[category].find(o => o.id === id);
+      };
+
+      const getSelectedExercises = () => {
+        const selected = [];
+        if (bentoState.aerobic) selected.push(getOptionData('aerobic', bentoState.aerobic));
+        if (bentoState.resistance1) selected.push(getOptionData('resistance', bentoState.resistance1));
+        if (bentoState.resistance2) selected.push(getOptionData('resistance', bentoState.resistance2));
+        if (bentoState.hiit1) selected.push(getOptionData('hiit', bentoState.hiit1));
+        if (bentoState.hiit2) selected.push(getOptionData('hiit', bentoState.hiit2));
+        return selected;
+      };
+
+      const getBentoTotalMins = () => {
+        let total = 0;
+        if (bentoState.aerobic) total += exerciseDB.aerobic.find(o => o.id === bentoState.aerobic)?.mins || 0;
+        if (bentoState.resistance1) total += exerciseDB.resistance.find(o => o.id === bentoState.resistance1)?.mins || 0;
+        if (bentoState.resistance2) total += exerciseDB.resistance.find(o => o.id === bentoState.resistance2)?.mins || 0;
+        if (bentoState.hiit1) total += exerciseDB.hiit.find(o => o.id === bentoState.hiit1)?.mins || 0;
+        if (bentoState.hiit2) total += exerciseDB.hiit.find(o => o.id === bentoState.hiit2)?.mins || 0;
+        return total;
+      };
+
+      const finishBento = () => {
+        const total = getBentoTotalMins();
+        if (total === 0) {
+          showToast('餐盤還是空的，先夾點菜吧！');
+          return;
+        }
+        addExerciseMinutes(total);
+        setBentoState({ aerobic: '', resistance1: '', resistance2: '', hiit1: '', hiit2: '' });
+        setShowCheatSheet(false);
+        setDashboardView('menu');
+        showToast(`餐盤完食！成功累積 ${total} 分鐘`);
+      };
+
+      const renderIntro = () => (
+        <div className="flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in duration-500 mt-6">
+          <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-2 animate-bounce shadow-sm border-4 border-white">
+            <Activity className="w-12 h-12 text-blue-500" />
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-emerald-500 tracking-widest italic uppercase">
+              GO!GO! EXERCISE
+            </h2>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
+              找到專屬運動處方
+            </h1>
+          </div>
+          <p className="text-gray-600 max-w-md leading-relaxed text-lg mt-4">
+            不需要給自己壓力，花個一分鐘回答現況，我們幫你準備了一套不會太累又有成就感的日常訓練計畫。
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mt-6">
+            <button 
+              onClick={() => setStep('assessment')}
+              className="flex-1 py-4 bg-gray-900 text-white rounded-2xl font-bold text-lg hover:bg-gray-800 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 shadow-sm"
+            >
+              <User className="w-5 h-5" /> 成人專屬評估
+            </button>
+            <button 
+              onClick={() => setStep('child_assessment')}
+              className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 shadow-sm"
+            >
+              <Baby className="w-5 h-5" /> 兒童與青少年
+            </button>
+          </div>
+        </div>
+      );
+
+      const renderAssessment = () => (
+        <div className="max-w-md mx-auto space-y-8 animate-in slide-in-from-right duration-500">
+          <div className="text-center mb-8">
+            <button onClick={() => setStep('intro')} className="mb-4 text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 mx-auto text-sm">
+              <ArrowLeft className="w-4 h-4" /> 回首頁
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800">了解你的身體現況</h2>
+            <p className="text-gray-500 mt-2">請放心，這些資料只會存在你的手機或電腦裡。</p>
+          </div>
+
+          <div className="space-y-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">身高 (公分)</label>
+              <input type="number" value={formData.height} onChange={(e) => setFormData({...formData, height: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="例如: 170" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">體重 (公斤)</label>
+              <input type="number" value={formData.weight} onChange={(e) => setFormData({...formData, weight: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="例如: 65" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">平時爬兩層樓梯會覺得很喘嗎？</label>
+              <div className="flex gap-4">
+                <button onClick={() => setFormData({...formData, fitness: 'poor'})} className={`flex-1 py-3 rounded-xl border transition-all ${formData.fitness === 'poor' ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>會滿喘的</button>
+                <button onClick={() => setFormData({...formData, fitness: 'good'})} className={`flex-1 py-3 rounded-xl border transition-all ${formData.fitness === 'good' ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>覺得滿輕鬆</button>
+              </div>
+            </div>
+          </div>
+          <button onClick={calculatePrescription} disabled={!formData.height || !formData.weight} className="w-full py-4 bg-gray-900 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-gray-800 transition-colors">
+            查看我的處方
+          </button>
+        </div>
+      );
+
+      const renderChildAssessment = () => (
+        <div className="max-w-md mx-auto space-y-8 animate-in slide-in-from-right duration-500">
+          <div className="text-center mb-6">
+            <button onClick={() => setStep('intro')} className="mb-4 text-gray-500 hover:text-gray-800 flex items-center justify-center gap-2 mx-auto text-sm">
+              <ArrowLeft className="w-4 h-4" /> 回首頁
+            </button>
+            <h2 className="text-2xl font-bold text-gray-800">專屬評估</h2>
+            <p className="text-gray-500 mt-2 text-sm leading-relaxed">成長階段的體態變化很快，不需要過度在意死板的數字。請選擇目前最符合的狀況：</p>
+          </div>
+
+          <div className="space-y-6 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-3">1. 目前最想達成的運動目標是？</label>
+              <div className="space-y-3">
+                <button onClick={() => setChildFormData({...childFormData, goal: 'healthy'})} className={`w-full text-left p-4 rounded-xl border transition-all ${childFormData.goal === 'healthy' ? 'bg-blue-50 border-blue-400' : 'border-gray-200 hover:border-blue-200'}`}>
+                  <h3 className={`font-bold ${childFormData.goal === 'healthy' ? 'text-blue-800' : 'text-gray-800'}`}>健康好體力</h3>
+                  <p className="text-sm text-gray-500 mt-1">想增加日常活動量，培養規律的運動習慣。</p>
+                </button>
+                <button onClick={() => setChildFormData({...childFormData, goal: 'weight'})} className={`w-full text-left p-4 rounded-xl border transition-all ${childFormData.goal === 'weight' ? 'bg-blue-50 border-blue-400' : 'border-gray-200 hover:border-blue-200'}`}>
+                  <h3 className={`font-bold ${childFormData.goal === 'weight' ? 'text-blue-800' : 'text-gray-800'}`}>體態管理</h3>
+                  <p className="text-sm text-gray-500 mt-1">稍微有點過重了，想找不會太負擔的減脂運動。</p>
+                </button>
+                <button onClick={() => setChildFormData({...childFormData, goal: 'tall'})} className={`w-full text-left p-4 rounded-xl border transition-all ${childFormData.goal === 'tall' ? 'bg-blue-50 border-blue-400' : 'border-gray-200 hover:border-blue-200'}`}>
+                  <h3 className={`font-bold ${childFormData.goal === 'tall' ? 'text-blue-800' : 'text-gray-800'}`}>衝刺身高</h3>
+                  <p className="text-sm text-gray-500 mt-1">正值發育期，想要透過運動刺激生長板發育。</p>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-3">2. 平時爬兩層樓梯會覺得很喘嗎？</label>
+              <div className="flex gap-4">
+                <button onClick={() => setChildFormData({...childFormData, fitness: 'poor'})} className={`flex-1 py-3 px-2 rounded-xl border transition-all text-sm ${childFormData.fitness === 'poor' ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                  會滿喘的
+                </button>
+                <button onClick={() => setChildFormData({...childFormData, fitness: 'good'})} className={`flex-1 py-3 px-2 rounded-xl border transition-all text-sm ${childFormData.fitness === 'good' ? 'bg-blue-50 border-blue-500 text-blue-700 font-medium' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+                  覺得滿輕鬆
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button onClick={calculateChildPrescription} className="w-full py-4 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition-colors">
+            查看專屬處方
+          </button>
+        </div>
+      );
+
+      const renderResult = () => {
+        const renderAdultAdvice = () => {
+          const isPoor = result.fitness === 'poor';
+          if (result.type === 'underweight') {
+            return (
+              <ul className="space-y-3 text-gray-600 mt-4 text-left mx-auto max-w-md">
+                {isPoor && <li className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-amber-800 text-sm mb-4">💡 <strong>心肺建構期：</strong>既然爬樓梯會覺得喘，代表我們需要先喚醒心肺引擎。所有運動請先從「中低強度」開始，感覺微喘能說話就好。</li>}
+                {!isPoor && <li className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-sm mb-4">💡 <strong>進階成長期：</strong>爬樓梯對你來說滿輕鬆的，基礎不錯！可以放心執行各種阻力訓練，幫助肌肉更有效率地生長。</li>}
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>阻力訓練最重要：</strong>每週安排 2 到 3 天幫助肌肉生長。{isPoor ? '先從無負重的徒手深蹲或推牆開始。' : '可以開始加入彈力帶或輕重量啞鈴。'}</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>適度有氧就好：</strong>每週大概 150 分鐘，維持基本心肺功能，不要做過度消耗熱量的長跑。</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>運動零食與 HIIT：</strong>{isPoor ? '目前只要多利用零碎時間伸展活動就好，暫時不要做會讓心跳飆高的 HIIT。' : '可以適度穿插初階的 HIIT 來刺激代謝。'}</div></li>
+              </ul>
+            );
+          } else if (result.type === 'normal') {
+            return (
+              <ul className="space-y-3 text-gray-600 mt-4 text-left mx-auto max-w-md">
+                {isPoor && <li className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-amber-800 text-sm mb-4">💡 <strong>心肺建構期：</strong>雖然體重標準，但爬樓梯會喘代表心肺耐力還有進步空間。請先著重在快走等平緩有氧，別急著做高強度訓練。</li>}
+                {!isPoor && <li className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-sm mb-4">💡 <strong>進階維持期：</strong>體態和體力都在很好的狀態！你可以大膽嘗試各種運動組合，特別是加入高強度間歇來挑戰自己。</li>}
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>有氧運動打底：</strong>每週累積 150 到 300 分鐘，快走或騎腳踏車都很棒。</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>阻力訓練維持：</strong>每週 2 到 3 天，鍛鍊主要肌群，不讓肌肉流失。</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>加入 HIIT 與零食：</strong>{isPoor ? '先用日常「運動零食」代替 HIIT，等體力變好再來挑戰高強度。' : '體力好時可以穿插 HIIT 挑戰自己，平時久坐記得配一點運動零食。'}</div></li>
+              </ul>
+            );
+          } else {
+            return (
+              <ul className="space-y-3 text-gray-600 mt-4 text-left mx-auto max-w-md">
+                {isPoor && <li className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-amber-800 text-sm mb-4">💡 <strong>心肺建構期：</strong>因為目前體能較容易喘，強烈建議初期避開會讓心跳劇烈起伏的波比跳或衝刺，先用「快走」把心肺基礎養起來最安全。</li>}
+                {!isPoor && <li className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-sm mb-4">💡 <strong>進階燃脂期：</strong>爬樓梯不喘代表你有足夠的體力去應付更高效率的燃脂運動。可以把 HIIT 加進你的常態菜單裡了！</li>}
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>有氧運動燃脂：</strong>每週累積 150 到 300 分鐘，這是消滅脂肪最安全的穩固基礎。</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>阻力訓練加持：</strong>每週 2 到 3 天，把肌肉養起來能幫你提高基礎代謝，自動消耗更多熱量。</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>HIIT 與零食特攻：</strong>{isPoor ? '初期多善用「運動零食」增加日常活動量就好。' : '每週 1 到 2 次的 HIIT 對改善代謝非常有效；加上日常的運動零食效果更好。'}</div></li>
+              </ul>
+            );
+          }
+        };
+
+        const renderChildAdvice = () => {
+          const isPoor = result.fitness === 'poor';
+          
+          if (result.type === 'healthy') {
+            return (
+              <ul className="space-y-3 text-gray-600 mt-4 text-left mx-auto max-w-md">
+                {isPoor ? (
+                  <li className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-amber-800 text-sm mb-4">
+                    💡 <strong>心肺建構期：</strong>爬樓梯容易喘代表體力還需要鍛鍊。一開始先不用勉強進行太劇烈的運動，從快走、輕鬆的單車等溫和有氧開始，慢慢把基礎體能養起來。
+                  </li>
+                ) : (
+                  <li className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-sm mb-4">
+                    💡 <strong>活力充沛期：</strong>體能基礎很棒！每天可以盡情安排 60 分鐘的中高強度活動，只要能讓心跳加快、有喘的感覺，對健康都非常有幫助。
+                  </li>
+                )}
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>不知道怎麼開始嗎？</strong>去「教練影音專區」挑喜歡的影片跟著做，或是自己動手組一個「211 運動餐盤」，全部做完會很有成就感喔！</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>日常生活變遊戲：</strong>多利用下方的「九宮格運動零食」，把多走樓梯、幫忙家事變成好玩的闖關。</div></li>
+              </ul>
+            );
+          } else if (result.type === 'weight') {
+            return (
+              <ul className="space-y-3 text-gray-600 mt-4 text-left mx-auto max-w-md">
+                {isPoor ? (
+                  <li className="bg-orange-50 p-3 rounded-lg border border-orange-100 text-orange-800 text-sm mb-4">
+                    💡 <strong>關節保護期：</strong>體重較重加上容易喘，初期千萬不要硬逼著去跑步或狂跳！我們先從「減少坐著的時間」開始，搭配無跳躍的溫和有氧，保護膝蓋最重要。
+                  </li>
+                ) : (
+                  <li className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-blue-800 text-sm mb-4">
+                    💡 <strong>穩定燃脂期：</strong>心肺狀態維持得不錯！可以多做稍微有點強度的有氧運動，搭配簡單的核心肌力訓練，幫助身體更有效率地消耗熱量。
+                  </li>
+                )}
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>選擇無跳躍影片：</strong>直接去「教練影音專區」找無跳躍或坐著練的影片，或是到「211 運動餐盤」多點一些健康蔬果(有氧)，好玩又沒壓力。</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>綁定生活習慣：</strong>設定「我和自己的小約定」，例如滑手機前先做 10 個靠牆深蹲。</div></li>
+              </ul>
+            );
+          } else {
+            return (
+              <ul className="space-y-3 text-gray-600 mt-4 text-left mx-auto max-w-md">
+                {isPoor ? (
+                  <li className="bg-amber-50 p-3 rounded-lg border border-amber-100 text-amber-800 text-sm mb-4">
+                    💡 <strong>基礎打底期：</strong>想長高需要跳躍刺激，但因為目前爬樓梯容易喘，建議先從少量的跳繩（例如 50 下）或是簡單的伸展開始，不要一次跳太多造成身體排斥。
+                  </li>
+                ) : (
+                  <li className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-purple-800 text-sm mb-4">
+                    💡 <strong>黃金衝刺期：</strong>體力允許的情況下，多安排垂直方向的負重與跳躍（像是開合跳、打籃球、摸高），是對骨骼發育最好的物理刺激！
+                  </li>
+                )}
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>長高菜單自己配：</strong>去「211 運動餐盤」挑選會用到腿部跟跳躍的動作，或是到「教練影音專區」找兒童大肌肉訓練影片跟著練。</div></li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5"/> <div><strong>把背挺直視覺抽高：</strong>去挑戰下方的「腹肌特訓小遊戲」，練好核心不駝背，視覺上馬上顯高。</div></li>
+              </ul>
+            );
+          }
+        };
+
+        return (
+          <div className="max-w-2xl mx-auto space-y-8 animate-in zoom-in-95 duration-500 text-center">
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
+              <div className={`absolute top-0 left-0 w-full h-2 ${result.isChild ? 'bg-orange-400' : 'bg-blue-500'}`}></div>
+              <HeartPulse className={`w-12 h-12 mx-auto mb-4 ${result.isChild ? 'text-orange-400' : 'text-blue-500'}`} />
+              <h2 className={`text-sm font-bold tracking-wider uppercase mb-2 ${result.isChild ? 'text-orange-500' : 'text-blue-600'}`}>
+                {result.isChild ? '專屬評估結果' : '成人專屬處方箋'}
+              </h2>
+              <h3 className="text-3xl font-bold text-gray-900 mb-4">{result.title}</h3>
+              <p className="text-lg text-gray-600 mb-6">{result.description}</p>
+              
+              {!result.isChild && (
+                <div className="inline-flex items-center gap-4 bg-gray-50 px-6 py-3 rounded-full mb-8">
+                  <span className="text-gray-500">你的 BMI 數值：</span>
+                  <span className="text-2xl font-bold text-gray-900">{result.bmi}</span>
+                </div>
+              )}
+
+              <div className={`border-t border-gray-100 pt-6 ${result.isChild ? 'mt-4' : ''}`}>
+                <h4 className="text-lg font-bold text-gray-800 mb-2">每週運動建議</h4>
+                {result.isChild ? renderChildAdvice() : renderAdultAdvice()}
+              </div>
+            </div>
+
+            <button onClick={() => setStep('dashboard')} className="w-full py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm">
+              進入每日運動儀表板 <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        );
+      };
+
+      const renderTopStats = () => (
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center shrink-0">
+              <Flame className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">運動連續天數</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{userData.streak} <span className="text-xs sm:text-sm text-gray-500 font-normal">天</span></p>
+            </div>
+          </div>
+          <div className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 text-blue-500 rounded-full flex items-center justify-center shrink-0">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-gray-500 font-medium">總累積訓練量</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{userData.totalMinutes} <span className="text-xs sm:text-sm text-gray-500 font-normal">分鐘</span></p>
+            </div>
+          </div>
+        </div>
+      );
+
+      const renderDashboard = () => {
+        if (dashboardView === 'menu') {
+          return (
+            <div className="max-w-4xl mx-auto animate-in fade-in duration-500 pb-12">
+              {renderTopStats()}
+              
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm mb-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Info className="w-6 h-6 text-blue-500" />
+                  使用秘笈：不知道從哪開始嗎？
+                </h3>
+                <p className="leading-relaxed text-gray-600 mb-6">
+                  運動最怕壓力大，建議你這樣搭配：先在下方設定好
+                  <button onClick={() => { const el = document.getElementById('contract-section'); if(el) el.scrollIntoView({behavior: 'smooth'}); }} className="text-blue-600 hover:text-blue-800 underline font-bold transition-colors mx-1">
+                    「我和自己的小約定」
+                  </button>
+                  。如果今天真的累到靈魂出竅，請點進
+                  <button onClick={() => setDashboardView('lucky')} className="text-blue-600 hover:text-blue-800 underline font-bold transition-colors mx-1">
+                    「幸運抽籤」
+                  </button>
+                  騙騙身體就好。平常有空閒的零碎時間，點一下
+                  <button onClick={() => setDashboardView('bingo')} className="text-blue-600 hover:text-blue-800 underline font-bold transition-colors mx-1">
+                    「九宮格」
+                  </button>
+                  當作闖關。等週末或心情好的時候，再來挑選
+                  <button onClick={() => setDashboardView('bento')} className="text-blue-600 hover:text-blue-800 underline font-bold transition-colors mx-1">
+                    「211 運動餐盤」
+                  </button>
+                  紮實流個汗。<br/><br/>
+                  💡 <strong>真的完全沒想法的話：</strong>強烈建議直接進入
+                  <button onClick={() => setDashboardView('videos')} className="text-red-500 hover:text-red-700 underline font-bold transition-colors mx-1">
+                    「教練影音專區」
+                  </button>
+                  ，找一部順眼的影片跟著做就對了！
+                </p>
+
+                <div id="contract-section" className="bg-yellow-50 p-6 rounded-2xl border border-yellow-100 scroll-mt-24">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Edit3 className="w-5 h-5 text-yellow-600" />
+                    <h4 className="font-bold text-gray-900">我和自己的小約定</h4>
+                  </div>
+                  {!userData.contract.trigger ? (
+                    <form onSubmit={handleContractSave} className="flex flex-col md:flex-row md:items-center gap-3">
+                      <div className="flex items-center gap-2 text-gray-800 text-sm">
+                        每天的
+                        <select value={contractForm.trigger} onChange={(e) => setContractForm({...contractForm, trigger: e.target.value})} className="px-2 py-1.5 rounded-lg border bg-white outline-none">
+                          <option value="洗澡前">洗澡前</option>
+                          <option value="吃午餐前">吃午餐前</option>
+                          <option value="關電腦下班時">關電腦下班時</option>
+                          <option value="看完一集劇">看完一集劇</option>
+                          <option value="custom">自行輸入...</option>
+                        </select>
+                        {contractForm.trigger === 'custom' && (
+                          <input type="text" placeholder="例如：等公車時" value={contractForm.customTrigger} onChange={(e) => setContractForm({...contractForm, customTrigger: e.target.value})} className="px-2 py-1.5 rounded-lg border w-24 outline-none" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-800 text-sm">
+                        順便做
+                        <select value={contractForm.action} onChange={(e) => setContractForm({...contractForm, action: e.target.value})} className="px-2 py-1.5 rounded-lg border bg-white outline-none">
+                          {contractActionOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                          <option value="custom">自行輸入...</option>
+                        </select>
+                        {contractForm.action === 'custom' && (
+                          <input type="text" placeholder="拉筋5分鐘" value={contractForm.customAction} onChange={(e) => setContractForm({...contractForm, customAction: e.target.value})} className="px-2 py-1.5 rounded-lg border w-24 outline-none" />
+                        )}
+                      </div>
+                      <button type="submit" className="md:ml-auto px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm font-medium hover:bg-yellow-600 transition-colors">
+                        蓋章立約
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-yellow-200 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <Award className="w-6 h-6 text-yellow-500" />
+                          <span className="text-gray-800 font-medium">每天 {userData.contract.trigger}，我要做 {userData.contract.action}</span>
+                        </div>
+                        <button onClick={() => saveUserData({ ...userData, contract: { trigger: '', action: '' } })} className="text-xs text-gray-400 hover:text-gray-600 underline shrink-0 pl-2">修改</button>
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-yellow-200/50 mt-1">
+                        <span className="text-xs font-bold text-yellow-700 flex items-center gap-1 w-full sm:w-auto mb-1 sm:mb-0">
+                          <CalendarPlus className="w-4 h-4" /> 怕忘記嗎？
+                        </span>
+                        <button onClick={handleGoogleCalendar} className="text-xs bg-white text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200 font-medium hover:bg-blue-50 transition-colors shadow-sm">
+                          Google 行事曆
+                        </button>
+                        <button onClick={handleAppleCalendar} className="text-xs bg-white text-gray-700 px-3 py-1.5 rounded-lg border border-gray-300 font-medium hover:bg-gray-50 transition-colors shadow-sm">
+                          Apple 行事曆
+                        </button>
+                        <button onClick={handleCopyContract} className="text-xs bg-white text-emerald-600 px-3 py-1.5 rounded-lg border border-emerald-200 font-medium hover:bg-emerald-50 transition-colors shadow-sm flex items-center gap-1">
+                          <Copy className="w-3.5 h-3.5" /> 複製約定
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <h3 className="text-xl font-bold text-gray-800 mb-4 px-2">今天想選哪個模式？</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onClick={() => setDashboardView('bento')} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 text-left flex flex-col h-full group">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Utensils className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">211 運動餐盤</h4>
+                  <p className="text-sm text-gray-500 flex-grow">依照健康餐盤比例，自由組合有氧、阻力與 HIIT，完整流個汗。</p>
+                  <div className="mt-4 text-emerald-600 text-sm font-medium flex items-center gap-1">進入餐盤 <ArrowRight className="w-4 h-4"/></div>
+                </button>
+
+                <button onClick={() => setDashboardView('bingo')} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 text-left flex flex-col h-full group">
+                  <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <LayoutGrid className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">九宮格運動零食</h4>
+                  <p className="text-sm text-gray-500 flex-grow">不用換衣服，把日常瑣碎的活動當作闖關，輕鬆無負擔。</p>
+                  <div className="mt-4 text-purple-600 text-sm font-medium flex items-center gap-1">開始闖關 <ArrowRight className="w-4 h-4"/></div>
+                </button>
+
+                <button onClick={() => setDashboardView('lucky')} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 text-left flex flex-col h-full group">
+                  <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Ticket className="w-6 h-6 text-rose-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">抽一個幸運動作</h4>
+                  <p className="text-sm text-gray-500 flex-grow">今天超懶得動？交給命運安排，抽一支籤只要做兩分鐘就好。</p>
+                  <div className="mt-4 text-rose-600 text-sm font-medium flex items-center gap-1">試試手氣 <ArrowRight className="w-4 h-4"/></div>
+                </button>
+              </div>
+
+              <h3 className="text-xl font-bold text-gray-800 mt-12 mb-4 px-2">專屬互動特訓</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <a href="https://lukehsiao-yc.github.io/for_healthy_children/" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 text-left flex flex-col h-full group cursor-pointer block">
+                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Map className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">健康冒險島</h4>
+                  <p className="text-sm text-gray-500 flex-grow">想更了解如何達到更健康的體態，歡迎登上宇超醫師建立的健康冒險島，一起打造超能身材!</p>
+                  <div className="mt-4 text-amber-600 text-sm font-medium flex items-center gap-1">開始冒險 <ExternalLink className="w-4 h-4"/></div>
+                </a>
+
+                <a href="https://lukehsiao-yc.github.io/forfatabd/" target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 text-left flex flex-col h-full group cursor-pointer block">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Activity className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">腹肌特訓小遊戲</h4>
+                  <p className="text-sm text-gray-500 flex-grow">想要特別強化核心？來挑戰這個專屬的腹部訓練小遊戲吧！</p>
+                  <div className="mt-4 text-blue-600 text-sm font-medium flex items-center gap-1">前往挑戰 <ExternalLink className="w-4 h-4"/></div>
+                </a>
+
+                <button onClick={() => setDashboardView('videos')} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 text-left flex flex-col h-full group cursor-pointer block">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <PlayCircle className="w-6 h-6 text-red-600" />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 mb-2">教練影音專區</h4>
+                  <p className="text-sm text-gray-500 flex-grow">跟著精選教學影片一起安全動起來。可依對象與類型自由篩選！</p>
+                  <div className="mt-4 text-red-600 text-sm font-medium flex items-center gap-1">進入專區 <ArrowRight className="w-4 h-4"/></div>
+                </button>
+              </div>
+              
+              <div className="mt-8 px-2">
+                <button onClick={() => setShowResources(!showResources)} className="w-full flex items-center justify-between p-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-2xl transition-colors font-bold">
+                  <span className="flex items-center gap-2"><BookOpen className="w-5 h-5" /> 實用運動指南與工具</span>
+                  {showResources ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                
+                {showResources && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 animate-in slide-in-from-top-2 duration-300">
+                    {[
+                      { title: '教育部 邁向健康體位 從健康生活型態做起', url: 'https://cpd.moe.gov.tw/articleInfo?id=36599' },
+                      { title: '國民健康署 全民身體活動指引', url: 'https://www.hpa.gov.tw/Pages/ashx/GetFile.ashx?lang=c&type=1&sid=ede2e5d9eb7841ffbab724ead43baead' },
+                      { title: '國民健康署 運動熱量計算機', url: 'https://km.hpa.gov.tw/obesity/TC/SportCalculate.aspx' },
+                      { title: '國民健康署 兒童與青少年運動建議', url: 'https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=571&pid=14174' },
+                      { title: '國民健康署 生活化運動建議', url: 'https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=571&pid=9773&sid=14182' },
+                      { title: '國民健康署 促進健康體能的方法', url: 'https://www.hpa.gov.tw/Pages/Detail.aspx?nodeid=571&pid=882&sid=14182' }
+                    ].map((link, index) => (
+                      <a key={index} href={link.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all group">
+                        <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-700 transition-colors pr-2">{link.title}</span>
+                        <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div className="text-center pt-12 pb-6">
+                <button onClick={() => {setStep('intro'); setDashboardView('menu');}} className="text-gray-400 hover:text-gray-600 transition-colors text-sm">
+                  回到首頁重新選擇測驗
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        if (dashboardView === 'videos') {
+          return (
+            <div className="max-w-4xl mx-auto animate-in slide-in-from-right duration-300 pb-12">
+              {renderTopStats()}
+              <button onClick={() => setDashboardView('menu')} className="mb-6 text-gray-500 hover:text-gray-800 flex items-center gap-2 text-sm">
+                <ArrowLeft className="w-4 h-4" /> 返回選單
+              </button>
+
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <PlayCircle className="w-7 h-7 text-red-500" />
+                  教練影音專區
+                </h3>
+                
+                <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100 mb-8">
+                  <div className="flex flex-col sm:flex-row gap-5">
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-gray-500 mb-2 block">適合對象</label>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setVideoAudience('all')} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${videoAudience === 'all' ? 'bg-red-500 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`}>全部</button>
+                        <button onClick={() => setVideoAudience('adult')} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${videoAudience === 'adult' ? 'bg-red-500 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`}>青少年/成年</button>
+                        <button onClick={() => setVideoAudience('child')} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${videoAudience === 'child' ? 'bg-red-500 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`}>幼兒/兒童</button>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-gray-500 mb-2 block">運動類型</label>
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => setVideoType('all')} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${videoType === 'all' ? 'bg-gray-800 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`}>全部</button>
+                        <button onClick={() => setVideoType('aerobic')} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${videoType === 'aerobic' ? 'bg-gray-800 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`}>有氧</button>
+                        <button onClick={() => setVideoType('strength')} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${videoType === 'strength' ? 'bg-gray-800 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`}>肌力</button>
+                        <button onClick={() => setVideoType('hiit')} className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${videoType === 'hiit' ? 'bg-gray-800 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-100'}`}>HIIT</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {filteredVideos.length > 0 ? (
+                    filteredVideos.map(video => (
+                      <div key={video.id} className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full group hover:shadow-md hover:border-red-200 transition-all">
+                        <div className="flex items-start justify-between mb-3">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-red-50 text-red-700 border border-red-100">
+                            <Youtube className="w-3.5 h-3.5" /> {video.provider}
+                          </span>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-lg font-medium">
+                            {video.type === 'aerobic' ? '有氧' : video.type === 'strength' ? '肌力' : 'HIIT'}
+                          </span>
+                        </div>
+                        
+                        <h4 className="text-lg font-bold text-gray-900 mb-2 leading-snug">{video.title}</h4>
+                        <p className="text-sm text-gray-600 mb-5 flex-grow leading-relaxed">{video.desc}</p>
+                        
+                        {video.target === 'child' && (
+                          <div className="mb-5 p-3.5 bg-amber-50/50 rounded-xl border border-amber-100/50">
+                            {renderStars(video.energyLevel, '放電等級')}
+                            {renderStars(video.interactionLevel, '親子互動')}
+                          </div>
+                        )}
+                        
+                        <a href={video.url} target="_blank" rel="noopener noreferrer" className="mt-auto w-full py-3 bg-gray-50 text-gray-700 hover:bg-red-500 hover:text-white border border-gray-200 hover:border-transparent rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-colors">
+                          前往觀看影片 <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="col-span-full py-16 text-center text-gray-500 bg-gray-50 rounded-2xl border-2 border-gray-200 border-dashed">
+                      <PlayCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                      目前這個分類還沒有影片喔，試著換個條件吧！
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        if (dashboardView === 'lucky') {
+          return (
+            <div className="max-w-2xl mx-auto animate-in slide-in-from-right duration-300 pb-12">
+              {renderTopStats()}
+              <button onClick={() => setDashboardView('menu')} className="mb-6 text-gray-500 hover:text-gray-800 flex items-center gap-2 text-sm">
+                <ArrowLeft className="w-4 h-4" /> 返回選單
+              </button>
+
+              <div className="bg-gradient-to-br from-rose-500 to-orange-500 p-8 rounded-3xl shadow-lg text-white text-center relative overflow-hidden">
+                <h3 className="text-2xl font-bold mb-2">抽一個幸運動作</h3>
+                <p className="text-rose-100 mb-8">只要動兩分鐘，就能騙大腦進入狀況！</p>
+                
+                <div className={`w-48 h-48 mx-auto bg-white/10 border-4 border-white/30 rounded-2xl flex items-center justify-center p-6 mb-8 ${isDrawing ? 'animate-bounce' : ''}`}>
+                  <span className={`text-2xl font-bold ${isDrawing ? 'blur-sm' : 'blur-none'} transition-all text-white drop-shadow-md`}>
+                    {currentQuick}
+                  </span>
+                </div>
+
+                {!hasDrawn ? (
+                  <button onClick={startLuckyDraw} disabled={isDrawing} className="bg-white text-rose-600 px-8 py-4 rounded-full font-bold hover:bg-rose-50 transition-all shadow-md text-lg disabled:opacity-50">
+                    {isDrawing ? '搖籤中...' : '搖一搖籤筒'}
+                  </button>
+                ) : (
+                  <div className="space-y-4 animate-in fade-in zoom-in">
+                    <button onClick={finishLuckyDraw} className="bg-green-500 text-white px-8 py-4 rounded-full font-bold hover:bg-green-600 transition-all shadow-md flex items-center justify-center gap-2 w-full">
+                      <CheckCircle2 className="w-6 h-6" /> 做完了，幫我紀錄 2 分鐘！
+                    </button>
+                    <button onClick={startLuckyDraw} className="text-white/80 hover:text-white underline text-sm">
+                      這個太難了，我想重抽一支
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (dashboardView === 'bingo') {
+          return (
+            <div className="max-w-2xl mx-auto animate-in slide-in-from-right duration-300 pb-12">
+              {renderTopStats()}
+              <button onClick={() => setDashboardView('menu')} className="mb-6 text-gray-500 hover:text-gray-800 flex items-center gap-2 text-sm">
+                <ArrowLeft className="w-4 h-4" /> 返回選單
+              </button>
+
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">九宮格運動零食</h3>
+                <p className="text-gray-500 text-sm mb-8 text-center">把生活碎片當作闖關遊戲，點擊完成任務！</p>
+                
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-sm mx-auto">
+                  {bingoItems.map((item, index) => (
+                    <button
+                      key={index}
+                      onClick={() => toggleBingo(index)}
+                      className={`aspect-square p-2 sm:p-4 rounded-2xl text-xs sm:text-sm font-medium transition-all flex items-center justify-center text-center leading-snug ${
+                        userData.bingoBoard[index]
+                          ? 'bg-purple-500 text-white scale-95 shadow-inner'
+                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-100'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+                
+                {userData.bingoBoard.filter(Boolean).length > 0 && (
+                  <p className="text-center mt-6 text-purple-600 font-medium animate-in fade-in">
+                    太棒了！今天已經收集了 {userData.bingoBoard.filter(Boolean).length} 個運動零食 🌟
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (dashboardView === 'bento') {
+          let bentoTip = "";
+          
+          if (result?.isChild) {
+             const isPoor = result.fitness === 'poor';
+             if (result.type === 'healthy') {
+               bentoTip = isPoor ? "建議先從溫和的健康蔬果(有氧)開始培養體力，再慢慢加入五穀雜糧(間歇)喔。" : "讓孩子自由挑選喜歡的動作！多選幾個有氧跟阻力，只要有流汗就及格囉。";
+             } else if (result.type === 'weight') {
+               bentoTip = isPoor ? "保護膝蓋最重要！先以無跳躍的健康蔬果(有氧)為主，五穀雜糧(間歇)先跳過。" : "可以多挑一點健康蔬果(有氧)幫助燃脂，搭配簡單的優質蛋白(阻力)增加代謝。";
+             } else {
+               bentoTip = isPoor ? "因為爬樓梯還會喘，我們先用簡單的優質蛋白(阻力)打底，不要急著做高強度跳躍。" : "為了刺激生長板，可以大膽搭配會用到腿部跳躍的五穀雜糧(間歇)動作！";
+             }
+          } else {
+            const isPoor = result.fitness === 'poor';
+            if (result?.type === 'underweight') {
+              bentoTip = "你現在最需要優質蛋白質！蛋白主菜(阻力)一定要點滿，健康蔬果(有氧)配一點點就好，五穀雜糧(HIIT)可以先跳過。";
+            } else if (result?.type === 'normal') {
+              bentoTip = isPoor ? "基礎不錯喔！建議先從健康蔬果(有氧)開始慢慢練心肺，配一點蛋白主菜(阻力)維持彈性。" : "基礎不錯喔！建議健康蔬果(有氧)、蛋白主菜(阻力)、五穀雜糧(HIIT)各挑一樣，維持代謝跟肌肉彈性。";
+            } else {
+              bentoTip = isPoor ? "因為目前心肺還在建構期，建議先多點一些健康蔬果(快走等溫和有氧)，暫時避開五穀雜糧(高強度間歇)。" : "為了強化燃脂，我們來個均衡大全餐！健康蔬果、雙份蛋白、雙份五穀雜糧全部點好點滿。";
+            }
+          }
+
+          return (
+            <div className="max-w-4xl mx-auto animate-in slide-in-from-right duration-300 pb-12">
+              {renderTopStats()}
+              <button onClick={() => setDashboardView('menu')} className="mb-6 text-gray-500 hover:text-gray-800 flex items-center gap-2 text-sm">
+                <ArrowLeft className="w-4 h-4" /> 返回選單
+              </button>
+
+              <div className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <Utensils className="w-6 h-6 text-emerald-600" />
+                  <h3 className="text-2xl font-bold text-gray-900">組裝 211 運動餐盤</h3>
+                </div>
+                
+                <div className="bg-emerald-50 p-4 rounded-2xl mb-8 border border-emerald-100 text-emerald-800 text-sm leading-relaxed">
+                  <strong>營養師的配餐建議：</strong><br/>{bentoTip}
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-medium text-gray-600">🥦 健康蔬果區 (有氧運動)</label>
+                      <select value={bentoState.aerobic} onChange={(e) => setBentoState({...bentoState, aerobic: e.target.value})} className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:ring-2 focus:ring-emerald-400">
+                        {exerciseDB.aerobic.map(opt => <option key={opt.id} value={opt.id}>{opt.name} {opt.desc ? `(${opt.desc})` : ''}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-600">🥩 優質蛋白 A (阻力)</label>
+                        <select value={bentoState.resistance1} onChange={(e) => setBentoState({...bentoState, resistance1: e.target.value})} className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:ring-2 focus:ring-emerald-400">
+                          {exerciseDB.resistance.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-600">🥩 優質蛋白 B (阻力)</label>
+                        <select value={bentoState.resistance2} onChange={(e) => setBentoState({...bentoState, resistance2: e.target.value})} className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:ring-2 focus:ring-emerald-400">
+                          {exerciseDB.resistance.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-600">🌾 五穀雜糧 A (HIIT間歇)</label>
+                        <select value={bentoState.hiit1} onChange={(e) => setBentoState({...bentoState, hiit1: e.target.value})} className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:ring-2 focus:ring-emerald-400">
+                          {exerciseDB.hiit.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-sm font-medium text-gray-600">🌾 五穀雜糧 B (HIIT間歇)</label>
+                        <select value={bentoState.hiit2} onChange={(e) => setBentoState({...bentoState, hiit2: e.target.value})} className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none focus:ring-2 focus:ring-emerald-400">
+                          {exerciseDB.hiit.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#4b5320] p-4 rounded-full shadow-inner relative w-full aspect-square max-w-[300px] mx-auto overflow-hidden border-8 border-gray-100 flex-shrink-0">
+                    <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-2 p-2">
+                      <div className="col-span-2 bg-[#f0fdf4] rounded-t-full p-2 flex flex-col items-center justify-center text-center border-4 border-[#dcfce7] relative">
+                        <span className="text-xs text-green-700 font-bold mb-1">健康蔬果區 (有氧)</span>
+                        {bentoState.aerobic ? (
+                          <div>
+                            <div className="font-bold text-gray-800 text-sm sm:text-base">{getOptionData('aerobic', bentoState.aerobic)?.name}</div>
+                            <div className="text-xs text-gray-500">{getOptionData('aerobic', bentoState.aerobic)?.desc}</div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm font-medium tracking-widest">尚未裝菜</span>
+                        )}
+                      </div>
+                      
+                      <div className="bg-[#fff7ed] rounded-bl-full p-2 flex flex-col items-center justify-center text-center border-4 border-[#ffedd5] relative">
+                        <span className="text-[10px] text-orange-700 font-bold mb-1">優質蛋白 (阻力)</span>
+                        {bentoState.resistance1 || bentoState.resistance2 ? (
+                          <div className="w-full flex flex-col gap-1 px-2">
+                            {bentoState.resistance1 && <div className="font-bold text-gray-800 text-[10px] sm:text-xs truncate">{getOptionData('resistance', bentoState.resistance1)?.name}</div>}
+                            {bentoState.resistance2 && <div className="font-bold text-gray-800 text-[10px] sm:text-xs truncate">{getOptionData('resistance', bentoState.resistance2)?.name}</div>}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-[10px] sm:text-xs font-medium">缺點蛋白質</span>
+                        )}
+                      </div>
+
+                      <div className="bg-[#fefce8] rounded-br-full p-2 flex flex-col items-center justify-center text-center border-4 border-[#fef9c3] relative">
+                        <span className="text-[10px] text-yellow-700 font-bold mb-1">五穀雜糧 (間歇)</span>
+                        {bentoState.hiit1 || bentoState.hiit2 ? (
+                           <div className="w-full flex flex-col gap-1 px-2">
+                           {bentoState.hiit1 && <div className="font-bold text-gray-800 text-[10px] sm:text-xs truncate">{getOptionData('hiit', bentoState.hiit1)?.name}</div>}
+                           {bentoState.hiit2 && <div className="font-bold text-gray-800 text-[10px] sm:text-xs truncate">{getOptionData('hiit', bentoState.hiit2)?.name}</div>}
+                         </div>
+                        ) : (
+                          <span className="text-gray-400 text-[10px] sm:text-xs font-medium">來點健康澱粉</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {getSelectedExercises().length > 0 && (
+                  <div className="mt-8 mb-6">
+                    <button onClick={() => setShowCheatSheet(!showCheatSheet)} className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium">
+                      <BookOpen className="w-5 h-5" /> 
+                      {showCheatSheet ? '收起動作小抄' : '不知道動作怎麼做嗎？看小抄'}
+                    </button>
+                    
+                    {showCheatSheet && (
+                      <div className="mt-3 p-5 bg-gray-50 border border-gray-200 rounded-xl space-y-4 animate-in slide-in-from-top-2 duration-300">
+                        {getSelectedExercises().map((ex, idx) => (
+                          <div key={idx} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                            <div className="font-bold text-gray-800 text-lg mb-1">{ex.name}</div>
+                            <div className="text-sm text-emerald-600 mb-2 font-medium bg-emerald-50 inline-block px-2 py-1 rounded">建議量: {ex.desc}</div>
+                            <div className="text-base text-gray-600 leading-relaxed">{ex.howTo}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button onClick={finishBento} disabled={getBentoTotalMins() === 0} className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg disabled:opacity-50 hover:bg-gray-800 transition-colors mt-4">
+                  吃完餐盤並紀錄 ({getBentoTotalMins()} 分鐘)
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        return null;
+      };
+
+      return (
+        <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-blue-200 relative flex flex-col">
+          {toast && (
+            <div className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg z-50 animate-in slide-in-from-top fade-in">
+              {toast}
+            </div>
+          )}
+          
+          <main className="container mx-auto px-4 py-8 md:py-12 flex-grow">
+            {step === 'intro' && renderIntro()}
+            {step === 'assessment' && renderAssessment()}
+            {step === 'child_assessment' && renderChildAssessment()}
+            {step === 'result' && renderResult()}
+            {step === 'dashboard' && renderDashboard()}
+          </main>
+
+          <footer className="text-center py-10 text-gray-500 text-sm mt-auto border-t border-gray-200 bg-white">
+            {/* 固定式意見回饋區塊 */}
+            <div className="max-w-md mx-auto bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-sm mb-10 text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquarePlus className="w-6 h-6 text-blue-500" />
+                <h4 className="font-bold text-gray-800 text-base">有什麼建議嗎？</h4>
+              </div>
+              <p className="text-sm text-gray-500 mb-5 leading-relaxed">發現錯誤、想許願新功能，或是單純想分享使用心得，都歡迎跟我說！</p>
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSfQCwqwNpqwfNVca6ToQMZzgSJ7Y98-RDHzsGDLmnvktV81Iw/viewform?usp=publish-editor" target="_blank" rel="noopener noreferrer" className="block w-full text-center py-3 bg-blue-100 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-200 transition-colors shadow-sm">
+                📝 填寫回饋表單
+              </a>
+            </div>
+
+            <p className="font-medium text-gray-600 mb-3 text-base">蕭宇超醫師製作 一起告別雲朵身材</p>
+            
+            <div className="flex items-center justify-center gap-6 mb-5">
+              <a href="https://www.facebook.com/share/1FoPpvVSZs/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors" title="Facebook 粉絲專頁">
+                <Facebook className="w-6 h-6" />
+              </a>
+              <a href="https://www.instagram.com/goodbyecloudkids_drhsiao?igsh=cWhkZXhwcjNoZnpm&utm_source=qr" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-600 transition-colors" title="Instagram">
+                <Instagram className="w-6 h-6" />
+              </a>
+              <a href="https://lin.ee/fAzcScx" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-500 transition-colors flex items-center gap-1.5" title="Line 官方帳號">
+                <MessageCircle className="w-6 h-6" />
+                <span className="font-medium text-base">LINE</span>
+              </a>
+            </div>
+
+            <p className="text-xs text-gray-400">
+              資料參考來源：
+              <a href="https://cpd.moe.gov.tw/articleInfo?id=36599" target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 underline transition-colors ml-1">
+                教育部 邁向健康體位 從健康生活型態做起
+              </a>
+            </p>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
+
+
