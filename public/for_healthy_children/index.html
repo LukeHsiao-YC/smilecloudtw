@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兒童健康體位大冒險 - 跟著超人醫師出發！</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            position: relative;
+            display: inline-block;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background-color: #3B82F6;
+            border-radius: 2px;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        /* 徽章彈出動畫 */
+        @keyframes popIn {
+            0% { transform: scale(0) rotate(-45deg); opacity: 0; }
+            100% { transform: scale(1) rotate(12deg); opacity: 1; }
+        }
+        .badge-show {
+            display: flex !important;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="gradient-bg text-gray-800">
+
+    <!-- Navbar -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm fixed w-full z-50 top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <i class="fa-solid fa-heart-pulse text-rose-500 text-2xl"></i>
+                    <span class="font-bold text-xl tracking-wide text-gray-800">健康冒險島</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#check" class="text-gray-600 hover:text-rose-500 transition px-3 py-2 rounded-md text-sm font-medium">身體密碼</a>
+                    <a href="#eat" class="text-gray-600 hover:text-green-500 transition px-3 py-2 rounded-md text-sm font-medium">魔法餐盤</a>
+                    <a href="#move" class="text-gray-600 hover:text-orange-500 transition px-3 py-2 rounded-md text-sm font-medium">體能特訓</a>
+                    <a href="#relax" class="text-gray-600 hover:text-blue-500 transition px-3 py-2 rounded-md text-sm font-medium">平靜休息站</a>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#check" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-rose-500 hover:bg-gray-50">身體密碼</a>
+                <a href="#eat" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-500 hover:bg-gray-50">魔法餐盤</a>
+                <a href="#move" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-orange-500 hover:bg-gray-50">體能特訓</a>
+                <a href="#relax" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-500 hover:bg-gray-50">平靜休息站</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative bg-white pt-24 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <span class="bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide mb-4 inline-block">Kids Health Journey</span>
+            
+            <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl mb-6">
+                跟著超人醫師 <br class="md:hidden"><span class="text-rose-500">告別雲朵身材</span>
+            </h1>
+            
+            <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-500 leading-relaxed">
+                歡迎登陸健康冒險島！親愛的雲朵小勇士，這裡有 12 個挑戰關卡。<br>
+                讓我們一起解開身體密碼、掌握魔法餐盤、擊退脂肪怪獸吧！
+            </p>
+
+            <!-- 進度條 UI (更新為 12 個徽章) -->
+            <div class="mt-10 max-w-md mx-auto bg-white p-5 rounded-2xl shadow-lg border border-gray-100 transform hover:scale-105 transition duration-300">
+                <div class="flex justify-between items-end mb-2">
+                    <span class="font-bold text-gray-700 text-lg"><i class="fa-solid fa-medal text-yellow-500 mr-2"></i>冒險進度</span>
+                    <span class="text-gray-500 font-bold"><span id="progress-text" class="text-3xl text-rose-500">0</span> / 12 徽章</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-4 mb-2 overflow-hidden shadow-inner">
+                    <div id="progress-bar" class="bg-gradient-to-r from-yellow-400 via-orange-400 to-rose-500 h-4 rounded-full transition-all duration-1000 ease-out relative" style="width: 0%">
+                        <!-- 進度條光澤特效 -->
+                        <div class="absolute top-0 left-0 right-0 bottom-0 bg-white opacity-20" style="background-image: linear-gradient(45deg,rgba(255,255,255,.15) 25%,transparent 25%,transparent 50%,rgba(255,255,255,.15) 50%,rgba(255,255,255,.15) 75%,transparent 75%,transparent); background-size: 1rem 1rem;"></div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-1">
+                    <button onclick="resetProgress()" class="text-xs text-gray-400 hover:text-rose-500 transition underline">重新開始挑戰</button>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-center gap-4">
+                <a href="#check" class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:-translate-y-1">
+                    開始收集徽章 <i class="fa-solid fa-arrow-down ml-2"></i>
+                </a>
+            </div>
+        </div>
+        <!-- Decorative Background Elements -->
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-30">
+            <div class="absolute top-10 left-10 w-24 h-24 bg-yellow-200 rounded-full blur-2xl"></div>
+            <div class="absolute bottom-10 right-10 w-32 h-32 bg-blue-200 rounded-full blur-2xl"></div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- Stage 1: Assessment -->
+        <section id="check" class="scroll-mt-24">
+            <div class="text-center mb-12">
+                <span class="text-rose-500 font-bold tracking-wider text-sm">STAGE 1</span><br>
+                <h2 class="text-3xl font-bold text-gray-900 section-title after:bg-rose-500 mt-2">解開雲朵人的身體密碼</h2>
+                <p class="mt-4 text-gray-500">知己知彼，百戰百勝！超人醫師需要先幫你做個小測驗。</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- App 1 -->
+                <a href="https://lukehsiao-yc.github.io/obesity-survey-app/" target="_blank" onclick="saveProgress('game-1')" id="card-game-1" class="relative block bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover group">
+                    <div id="badge-game-1" class="hidden absolute top-4 right-4 bg-yellow-400 text-white rounded-full w-12 h-12 items-center justify-center font-bold shadow-md border-4 border-white z-20 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div class="flex items-start justify-between">
+                        <div class="bg-rose-100 p-3 rounded-xl text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition">
+                            <i class="fa-solid fa-scale-balanced text-2xl"></i>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded">檢測站</span>
+                    </div>
+                    <h3 class="mt-4 text-xl font-bold text-gray-900 group-hover:text-rose-500 transition">體位肥胖檢測</h3>
+                    <p class="mt-2 text-gray-600">輸入身高體重，快速了解自己的 BMI 指數，看看目前是哪種雲朵體型。</p>
+                    <div class="mt-4 flex items-center text-rose-500 text-sm font-semibold">
+                        站上體重計 <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </a>
+
+                <!-- App 2 -->
+                <a href="https://lukehsiao-yc.github.io/Taiwanchildrendietsuggestion/" target="_blank" onclick="saveProgress('game-2')" id="card-game-2" class="relative block bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover group">
+                    <div id="badge-game-2" class="hidden absolute top-4 right-4 bg-yellow-400 text-white rounded-full w-12 h-12 items-center justify-center font-bold shadow-md border-4 border-white z-20 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div class="flex items-start justify-between">
+                        <div class="bg-rose-100 p-3 rounded-xl text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition">
+                            <i class="fa-solid fa-calculator text-2xl"></i>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded">情報站</span>
+                    </div>
+                    <h3 class="mt-4 text-xl font-bold text-gray-900 group-hover:text-rose-500 transition">專屬能量需求查詢</h3>
+                    <p class="mt-2 text-gray-600">根據年齡與活動量，由超級電腦算出你每天擊敗脂肪所需的精確食物份量。</p>
+                    <div class="mt-4 flex items-center text-rose-500 text-sm font-semibold">
+                        啟動計算 <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Stage 2: Diet Knowledge -->
+        <section id="eat" class="scroll-mt-24">
+            <div class="text-center mb-12">
+                <span class="text-green-500 font-bold tracking-wider text-sm">STAGE 2</span><br>
+                <h2 class="text-3xl font-bold text-gray-900 section-title after:bg-green-500 mt-2">魔法餐盤與食物紅綠燈</h2>
+                <p class="mt-4 text-gray-500">裝備升級！學會挑選對的能量來源，讓身體充滿活力。</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- App 3 (211 Plate) -->
+                <a href="https://lukehsiao-yc.github.io/211Plategame_total/" target="_blank" onclick="saveProgress('game-3')" id="card-game-3" class="relative block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover group h-full overflow-hidden">
+                    <div id="badge-game-3" class="hidden absolute top-3 right-3 bg-yellow-400 text-white rounded-full w-10 h-10 items-center justify-center font-bold shadow-md border-2 border-white z-20"><i class="fa-solid fa-star"></i></div>
+                    <div class="absolute top-0 left-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-10">NEW</div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-500 group-hover:text-white transition mt-2">
+                        <i class="fa-solid fa-chart-pie text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">打造我的 211 餐盤</h3>
+                    <p class="text-sm text-gray-600 mb-4">動手挑戰！將食物拖曳進盤子裡，練習「蔬菜、蛋白質、全穀雜糧」的黃金比例。</p>
+                    <div class="mt-auto text-green-600 text-sm font-semibold">挑戰拼圖 &rarr;</div>
+                </a>
+
+                <!-- App 4 -->
+                <a href="https://lukehsiao-yc.github.io/howmuchsugar/" target="_blank" onclick="saveProgress('game-4')" id="card-game-4" class="relative block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover group h-full">
+                    <div id="badge-game-4" class="hidden absolute top-3 right-3 bg-yellow-400 text-white rounded-full w-10 h-10 items-center justify-center font-bold shadow-md border-2 border-white z-20"><i class="fa-solid fa-star"></i></div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-500 group-hover:text-white transition">
+                        <i class="fa-solid fa-cubes text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">含糖飲料大揭密</h3>
+                    <p class="text-sm text-gray-600 mb-4">猜猜看飲料裡藏了幾顆方糖？視覺化感受糖分的震撼，學會聰明喝水！</p>
+                    <div class="mt-auto text-green-600 text-sm font-semibold">測試含糖量 &rarr;</div>
+                </a>
+
+                <!-- App 5 -->
+                <a href="https://lukehsiao-yc.github.io/calorie_density/" target="_blank" onclick="saveProgress('game-5')" id="card-game-5" class="relative block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover group h-full">
+                    <div id="badge-game-5" class="hidden absolute top-3 right-3 bg-yellow-400 text-white rounded-full w-10 h-10 items-center justify-center font-bold shadow-md border-2 border-white z-20"><i class="fa-solid fa-star"></i></div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-500 group-hover:text-white transition">
+                        <i class="fa-solid fa-bolt text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">認識熱量密度</h3>
+                    <p class="text-sm text-gray-600 mb-4">為什麼有些食物吃一點就胖？透過互動圖表，秒懂熱量密度的秘密。</p>
+                    <div class="mt-auto text-green-600 text-sm font-semibold">探索知識 &rarr;</div>
+                </a>
+
+                <!-- App 6 -->
+                <a href="https://tkrm7d.csb.app/" target="_blank" onclick="saveProgress('game-6')" id="card-game-6" class="relative block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover group h-full">
+                    <div id="badge-game-6" class="hidden absolute top-3 right-3 bg-yellow-400 text-white rounded-full w-10 h-10 items-center justify-center font-bold shadow-md border-2 border-white z-20"><i class="fa-solid fa-star"></i></div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-500 group-hover:text-white transition">
+                        <i class="fa-solid fa-burger text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">早餐外食怎麼選</h3>
+                    <p class="text-sm text-gray-600 mb-4">便利商店或早餐店該怎麼點餐？來看看哪些是優質早餐組合。</p>
+                    <div class="mt-auto text-green-600 text-sm font-semibold">挑選早餐 &rarr;</div>
+                </a>
+
+                 <!-- App 7 -->
+                 <a href="https://lukehsiao-yc.github.io/foodrunmobile/" target="_blank" onclick="saveProgress('game-7')" id="card-game-7" class="relative block bg-white rounded-2xl p-6 shadow-sm border border-gray-100 card-hover group h-full">
+                    <div id="badge-game-7" class="hidden absolute top-3 right-3 bg-yellow-400 text-white rounded-full w-10 h-10 items-center justify-center font-bold shadow-md border-2 border-white z-20"><i class="fa-solid fa-star"></i></div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 mb-4 group-hover:bg-green-500 group-hover:text-white transition">
+                        <i class="fa-solid fa-gamepad text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">紅綠燈跑酷特攻</h3>
+                    <p class="text-sm text-gray-600 mb-4">邊玩邊學！化身特攻隊員，在跑酷中閃避紅燈食物、收集綠燈食物。</p>
+                    <div class="mt-auto text-green-600 text-sm font-semibold">開始遊戲 &rarr;</div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Stage 3: Exercise Challenge -->
+        <section id="move" class="scroll-mt-24">
+            <div class="text-center mb-12">
+                <span class="text-orange-500 font-bold tracking-wider text-sm">STAGE 3</span><br>
+                <h2 class="text-3xl font-bold text-gray-900 section-title after:bg-orange-500 mt-2">擊退脂肪怪獸的體能特訓</h2>
+                <p class="mt-4 text-gray-500">裝備齊全後，該是起來活動筋骨、燃燒熱量的時候了！</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- App 8 -->
+                <a href="https://lukehsiao-yc.github.io/exercise-snack-game-adolescents/" target="_blank" onclick="saveProgress('game-8')" id="card-game-8" class="relative group overflow-hidden rounded-2xl shadow-md h-64 block">
+                    <div id="badge-game-8" class="hidden absolute top-4 right-4 bg-yellow-400 text-white rounded-full w-12 h-12 items-center justify-center font-bold shadow-md border-4 border-white z-20 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-orange-400 to-orange-600 transition-transform duration-300 group-hover:scale-105"></div>
+                    <div class="absolute inset-0 bg-black opacity-10 group-hover:opacity-0 transition"></div>
+                    <div class="relative p-8 h-full flex flex-col justify-between text-white">
+                        <div>
+                            <div class="bg-white/20 w-fit px-3 py-1 rounded-full text-xs font-bold mb-3 backdrop-blur-sm">敏捷訓練</div>
+                            <h3 class="text-2xl font-bold mb-2">運動點心任務</h3>
+                            <p class="text-orange-50 font-medium opacity-90">利用下課或看電視的零碎時間，完成短時間、高效率的趣味運動挑戰。</p>
+                        </div>
+                        <div class="flex items-center font-bold">
+                            接受挑戰 <i class="fa-solid fa-person-running ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- App 9 -->
+                <a href="https://lukehsiao-yc.github.io/fatfat/" target="_blank" onclick="saveProgress('game-9')" id="card-game-9" class="relative group overflow-hidden rounded-2xl shadow-md h-64 block">
+                    <div id="badge-game-9" class="hidden absolute top-4 right-4 bg-yellow-400 text-white rounded-full w-12 h-12 items-center justify-center font-bold shadow-md border-4 border-white z-20 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-yellow-400 to-yellow-600 transition-transform duration-300 group-hover:scale-105"></div>
+                    <div class="absolute inset-0 bg-black opacity-10 group-hover:opacity-0 transition"></div>
+                    <div class="relative p-8 h-full flex flex-col justify-between text-white">
+                        <div>
+                            <div class="bg-white/20 w-fit px-3 py-1 rounded-full text-xs font-bold mb-3 backdrop-blur-sm">核心魔法</div>
+                            <h3 class="text-2xl font-bold mb-2">挑戰瘦肚子特訓</h3>
+                            <p class="text-yellow-50 font-medium opacity-90">想徹底消滅肚子上的「雲朵」嗎？跟著超人醫師的指令一起燃燒核心吧！</p>
+                        </div>
+                        <div class="flex items-center font-bold">
+                            開始燃燒 <i class="fa-solid fa-fire ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- App 12 (專屬運動處方) -->
+                <a href="https://lukehsiao-yc.github.io/gogoexercise/" target="_blank" onclick="saveProgress('game-12')" id="card-game-12" class="relative group overflow-hidden rounded-2xl shadow-md h-64 block">
+                    <div id="badge-game-12" class="hidden absolute top-4 right-4 bg-yellow-400 text-white rounded-full w-12 h-12 items-center justify-center font-bold shadow-md border-4 border-white z-20 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-teal-400 to-teal-600 transition-transform duration-300 group-hover:scale-105"></div>
+                    <div class="absolute top-0 left-0 bg-teal-500 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-10">NEW</div>
+                    <div class="absolute inset-0 bg-black opacity-10 group-hover:opacity-0 transition"></div>
+                    <div class="relative p-8 h-full flex flex-col justify-between text-white">
+                        <div>
+                            <div class="bg-white/20 w-fit px-3 py-1 rounded-full text-xs font-bold mb-3 backdrop-blur-sm">量身打造</div>
+                            <h3 class="text-2xl font-bold mb-2">專屬運動處方</h3>
+                            <p class="text-teal-50 font-medium opacity-90">找不到適合的運動？讓超人醫師為你開立專屬的運動計畫，跟著做就對了！</p>
+                        </div>
+                        <div class="flex items-center font-bold">
+                            領取處方 <i class="fa-solid fa-prescription-bottle-medical ml-2"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Stage 4: Mindfulness & Routine (更新排版) -->
+        <section id="relax" class="scroll-mt-24 mb-24">
+            <div class="text-center mb-12">
+                <span class="text-blue-500 font-bold tracking-wider text-sm">STAGE 4</span><br>
+                <h2 class="text-3xl font-bold text-gray-900 section-title after:bg-blue-500 mt-2">勇士的平靜休息站</h2>
+                <p class="mt-4 text-gray-500">激烈的戰鬥後，讓大腦與心靈恢復平靜，才能在睡夢中變高變壯。</p>
+            </div>
+            <!-- ✅ 調整為 2 欄位網格，容納呼吸與睡眠遊戲 -->
+            <div class="grid md:grid-cols-2 gap-8">
+                 
+                 <!-- App 10 (Breathing) -->
+                 <a href="https://lukehsiao-yc.github.io/breathing/" target="_blank" onclick="saveProgress('game-10')" id="card-game-10" class="relative block bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover group">
+                    <div id="badge-game-10" class="hidden absolute top-4 right-4 bg-yellow-400 text-white rounded-full w-12 h-12 items-center justify-center font-bold shadow-md border-4 border-white z-20 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div class="flex items-start justify-between">
+                        <div class="bg-blue-100 p-3 rounded-xl text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition">
+                            <i class="fa-solid fa-lungs-virus text-2xl"></i>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded">情緒調節</span>
+                    </div>
+                    <h3 class="mt-4 text-xl font-bold text-gray-900 group-hover:text-blue-500 transition">魔法呼吸氣球</h3>
+                    <p class="mt-2 text-gray-600">肚子餓到生氣？還是壓力大想亂吃？跟著引導慢慢吹起魔法氣球，幫助你放鬆神經、趕走負面情緒。</p>
+                    <div class="mt-6 flex items-center text-blue-500 text-sm font-semibold">
+                        開始調息 <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </a>
+
+                <!-- ✅ App 11 (Sleep & Tall - 新增的遊戲) -->
+                <a href="https://lukehsiao-yc.github.io/i_want_tall/" target="_blank" onclick="saveProgress('game-11')" id="card-game-11" class="relative block bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover group overflow-hidden">
+                    <div id="badge-game-11" class="hidden absolute top-4 right-4 bg-yellow-400 text-white rounded-full w-12 h-12 items-center justify-center font-bold shadow-md border-4 border-white z-20 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div class="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10">NEW</div>
+                    <div class="flex items-start justify-between">
+                        <div class="bg-indigo-100 p-3 rounded-xl text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition">
+                            <i class="fa-solid fa-moon text-2xl"></i>
+                        </div>
+                        <span class="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-1 rounded">作息養成</span>
+                    </div>
+                    <h3 class="mt-4 text-xl font-bold text-gray-900 group-hover:text-indigo-500 transition">長高魔法鐘</h3>
+                    <p class="mt-2 text-gray-600">想長得像大樹一樣高嗎？計算你的專屬睡覺時間，學習放下手機，讓生長激素在夜晚為你施展魔法！</p>
+                    <div class="mt-6 flex items-center text-indigo-500 text-sm font-semibold">
+                        設定睡眠儀式 <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition"></i>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-14">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            
+            <!-- 品牌與作者資訊 -->
+            <div class="flex flex-col items-center justify-center mb-8">
+                <div class="flex items-center gap-2 text-rose-400 mb-2">
+                    <i class="fa-solid fa-heart"></i>
+                    <span class="font-bold text-xl tracking-wider">兒童健康體位計畫</span>
+                </div>
+                <p class="text-gray-300 font-medium text-lg mt-1">蕭宇超醫師製作 ✨ 一起告別雲朵身材</p>
+            </div>
+
+            <!-- 社群連結按鈕 -->
+            <div class="flex justify-center gap-8 mb-10">
+                <!-- Facebook -->
+                <a href="https://www.facebook.com/share/1FoPpvVSZs/?mibextid=wwXIfr" target="_blank" class="text-gray-400 hover:text-blue-500 transition-all duration-300 transform hover:scale-110 flex flex-col items-center gap-2">
+                    <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-50 transition-colors">
+                        <i class="fa-brands fa-facebook-f text-2xl"></i>
+                    </div>
+                    <span class="text-sm font-medium">FB 粉絲專頁</span>
+                </a>
+                
+                <!-- Instagram -->
+                <a href="https://www.instagram.com/goodbyecloudkids_drhsiao?igsh=cWhkZXhwcjNoZnpm&utm_source=qr" target="_blank" class="text-gray-400 hover:text-pink-500 transition-all duration-300 transform hover:scale-110 flex flex-col items-center gap-2">
+                    <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center hover:bg-pink-50 transition-colors">
+                        <i class="fa-brands fa-instagram text-2xl"></i>
+                    </div>
+                    <span class="text-sm font-medium">Instagram</span>
+                </a>
+                
+                <!-- LINE -->
+                <a href="https://lin.ee/fAzcScx" target="_blank" class="text-gray-400 hover:text-green-500 transition-all duration-300 transform hover:scale-110 flex flex-col items-center gap-2">
+                    <div class="w-14 h-14 bg-gray-700 rounded-full flex items-center justify-center hover:bg-green-50 transition-colors">
+                        <i class="fa-brands fa-line text-2xl"></i>
+                    </div>
+                    <span class="text-sm font-medium">LINE 官方帳號</span>
+                </a>
+            </div>
+
+            <div class="w-24 h-px bg-gray-700 mx-auto mb-8"></div>
+
+            <p class="text-gray-500 text-sm leading-relaxed">
+                這些互動遊戲皆為輔助教育工具，若有具體醫療需求，請諮詢專業醫師或營養師。<br>
+                Designed for Kids Health Education.
+            </p>
+        </div>
+    </footer>
+
+    <!-- 意見回饋浮動按鈕 -->
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfQCwqwNpqwfNVca6ToQMZzgSJ7Y98-RDHzsGDLmnvktV81Iw/viewform?usp=publish-editor" target="_blank" class="fixed bottom-6 right-6 z-50 bg-white/95 backdrop-blur-sm text-gray-700 hover:text-rose-500 font-bold py-3 px-5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(244,63,94,0.2)] flex items-center gap-2 group">
+        <i class="fa-solid fa-comment-dots text-xl text-rose-400 group-hover:scale-110 transition-transform"></i>
+        <span class="text-sm">意見回饋</span>
+    </a>
+
+    <!-- ✅ 進度追蹤系統腳本 -->
+    <script>
+        // ✅ 更新為 12 個遊戲
+        const totalGames = 12;
+
+        // 當點擊卡片時儲存進度
+        function saveProgress(gameId) {
+            let progress = JSON.parse(localStorage.getItem('cloudKidsProgress')) || {};
+            progress[gameId] = true;
+            localStorage.setItem('cloudKidsProgress', JSON.stringify(progress));
+            
+            // 延遲一點點時間更新 UI，讓使用者在新分頁開啟時，原本的網頁也會更新
+            setTimeout(updateProgressUI, 500);
+        }
+
+        // 重設進度 (供家長或測試使用)
+        function resetProgress() {
+            if(confirm("確定要重置所有的冒險進度嗎？")) {
+                localStorage.removeItem('cloudKidsProgress');
+                location.reload(); // 重新整理網頁
+            }
+        }
+
+        // 讀取進度並更新畫面
+        function updateProgressUI() {
+            let progress = JSON.parse(localStorage.getItem('cloudKidsProgress')) || {};
+            let count = 0;
+
+            for (let i = 1; i <= totalGames; i++) {
+                const gameId = 'game-' + i;
+                const badge = document.getElementById('badge-' + gameId);
+                const card = document.getElementById('card-' + gameId);
+
+                if (progress[gameId]) {
+                    count++;
+                    if (badge) {
+                        badge.classList.remove('hidden');
+                        badge.classList.add('badge-show');
+                    }
+                    if (card) {
+                        // 為完成的卡片加上明顯的金色邊框
+                        card.classList.remove('border-gray-100');
+                        card.classList.add('border-yellow-400', 'border-2');
+                    }
+                }
+            }
+
+            // 更新上方的進度條與文字
+            const progressText = document.getElementById('progress-text');
+            const progressBar = document.getElementById('progress-bar');
+            
+            if (progressText) {
+                if (count === totalGames) {
+                    progressText.innerHTML = `12 <span class="text-sm text-yellow-500 font-bold ml-1 tracking-widest"><i class="fa-solid fa-crown"></i> 恭喜完全破關！</span>`;
+                } else {
+                    progressText.innerText = count;
+                }
+            }
+            if (progressBar) {
+                progressBar.style.width = (count / totalGames * 100) + '%';
+            }
+        }
+
+        // 網頁載入時執行一次更新
+        window.onload = updateProgressUI;
+        
+        // 當使用者從其他分頁切換回來時，重新檢查進度
+        window.addEventListener('focus', updateProgressUI);
+    </script>
+
+</body>
+</html>
