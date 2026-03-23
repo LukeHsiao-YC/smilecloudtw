@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兒童及青少年飲食營養建議查詢系統</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            padding: 20px; 
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+        }
+        h1 { 
+            color: #2c3e50; 
+            text-align: center; 
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center; 
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 0.95em;
+        }
+        .form-group { 
+            margin-bottom: 18px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #34495e; 
+        }
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #dcdde1; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: #3498db; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        button:hover { 
+            background-color: #2980b9; 
+        }
+        .result-box { 
+            margin-top: 25px; 
+            padding: 20px; 
+            background-color: #e8f8f5; 
+            border-left: 5px solid #1abc9c; 
+            border-radius: 6px; 
+            display: none; 
+        }
+        .alert-box { 
+            background-color: #fdedec; 
+            border-left-color: #e74c3c; 
+        }
+        .warning-box { 
+            background-color: #fef9e7; 
+            border-left-color: #f1c40f; 
+        }
+        h3 { 
+            margin-top: 15px; 
+            color: #16a085; 
+            border-bottom: 2px solid rgba(22, 160, 133, 0.2);
+            padding-bottom: 8px;
+        }
+        ul { 
+            padding-left: 20px; 
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .exchange-section {
+            margin-top: 25px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .exchange-card {
+            background-color: #f8f9f9;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+        }
+        .exchange-card h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+        .exchange-card p {
+            margin: 0;
+            font-size: 0.95em;
+            color: #555;
+        }
+        .disclaimer {
+            margin-top: 30px;
+            font-size: 0.85em;
+            color: #95a5a6;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .footer-credit {
+            margin-top: 25px;
+            text-align: center;
+        }
+        .footer-credit p {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 12px;
+            font-size: 1.05em;
+        }
+        .return-link {
+            display: inline-block;
+            padding: 10px 24px;
+            background-color: #1abc9c;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 5px rgba(26, 188, 156, 0.2);
+        }
+        .return-link:hover {
+            background-color: #16a085;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>兒童及青少年飲食營養建議查詢系統</h1>
+    <p class="subtitle">涵蓋學齡前至青春期 (3至18歲) 的專屬飲食規劃</p>
+    
+    <div class="form-group">
+        <label for="gender">性別</label>
+        <select id="gender">
+            <option value="M">男 (Boy)</option>
+            <option value="F">女 (Girl)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="age">年齡 (3至18歲)</label>
+        <input type="number" id="age" min="3" max="18" value="8">
+    </div>
+    <div class="form-group">
+        <label for="height">身高 (公分)</label>
+        <input type="number" id="height" placeholder="例如: 130">
+    </div>
+    <div class="form-group">
+        <label for="weight">體重 (公斤)</label>
+        <input type="number" id="weight" placeholder="例如: 25">
+    </div>
+    <div class="form-group">
+        <label for="activity">日常活動量</label>
+        <select id="activity">
+            <option value="sedentary">低活動量 (幾乎都坐著、很少運動)</option>
+            <option value="lowActive" selected>中活動量 (日常活動、每週運動1到3次)</option>
+            <option value="active">高活動量 (活動量大、每週運動4到5次以上)</option>
+            <option value="veryActive">極高活動量 (校隊等級、每天高強度訓練)</option>
+        </select>
+    </div>
+    
+    <button onclick="calculateNutrition()">開始計算並產生建議</button>
+
+    <div id="result" class="result-box"></div>
+    
+    <div class="disclaimer">
+        提醒：本系統數值參考衛生福利部國民健康署與最新 DRIs 第八版公式。本建議僅供一般健康管理參考，不具醫療診斷效力，特殊健康狀況請諮詢臨床醫師。
+    </div>
+
+    <div class="footer-credit">
+        <p>蕭宇超醫師整理 一起邁向健康</p>
+        <a href="https://smilecloud.tw/" class="return-link">返回smilecloud健康島</a>
+    </div>
+</div>
+
+<script>
+    const bmiStandard = {
+        'M': {
+            3: { underweight: 13.7, overweight: 17.0, obese: 17.8 },
+            4: { underweight: 13.4, overweight: 16.7, obese: 17.6 },
+            5: { underweight: 13.3, overweight: 16.7, obese: 17.7 },
+            6: { underweight: 13.5, overweight: 16.9, obese: 18.5 },
+            7: { underweight: 13.8, overweight: 17.9, obese: 20.3 },
+            8: { underweight: 14.1, overweight: 19.0, obese: 21.6 },
+            9: { underweight: 14.3, overweight: 19.5, obese: 22.3 },
+            10: { underweight: 14.5, overweight: 20.0, obese: 22.7 },
+            11: { underweight: 14.8, overweight: 20.7, obese: 23.2 },
+            12: { underweight: 15.2, overweight: 21.3, obese: 23.9 },
+            13: { underweight: 15.7, overweight: 21.9, obese: 24.5 },
+            14: { underweight: 16.3, overweight: 22.5, obese: 25.0 },
+            15: { underweight: 16.9, overweight: 22.9, obese: 25.4 },
+            16: { underweight: 17.4, overweight: 23.3, obese: 25.6 },
+            17: { underweight: 17.8, overweight: 23.5, obese: 25.6 },
+            18: { underweight: 18.1, overweight: 23.6, obese: 25.8 }
+        },
+        'F': {
+            3: { underweight: 13.5, overweight: 16.9, obese: 17.8 },
+            4: { underweight: 13.2, overweight: 16.8, obese: 17.9 },
+            5: { underweight: 13.1, overweight: 17.0, obese: 18.1 },
+            6: { underweight: 13.1, overweight: 17.2, obese: 18.8 },
+            7: { underweight: 13.4, overweight: 17.7, obese: 19.6 },
+            8: { underweight: 13.8, overweight: 18.4, obese: 20.7 },
+            9: { underweight: 14.0, overweight: 19.1, obese: 21.3 },
+            10: { underweight: 14.3, overweight: 19.7, obese: 22.0 },
+            11: { underweight: 14.7, overweight: 20.5, obese: 22.7 },
+            12: { underweight: 15.2, overweight: 21.3, obese: 23.5 },
+            13: { underweight: 15.7, overweight: 21.9, obese: 24.3 },
+            14: { underweight: 16.3, overweight: 22.5, obese: 24.9 },
+            15: { underweight: 16.7, overweight: 22.7, obese: 25.2 },
+            16: { underweight: 17.1, overweight: 22.7, obese: 25.3 },
+            17: { underweight: 17.3, overweight: 22.7, obese: 25.3 },
+            18: { underweight: 17.3, overweight: 22.7, obese: 24.7 }
+        }
+    };
+
+    function calculateNutrition() {
+        const gender = document.getElementById('gender').value;
+        const age = parseInt(document.getElementById('age').value);
+        const heightCm = parseFloat(document.getElementById('height').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        const activityLevel = document.getElementById('activity').value;
+        
+        if (!heightCm || !weight || age < 3 || age > 18) {
+            alert("請輸入完整資料喔（年齡限 3 至 18 歲）。");
+            return;
+        }
+
+        const heightM = heightCm / 100;
+        const bmi = (weight / (heightM * heightM)).toFixed(1);
+        const standard = bmiStandard[gender][age];
+        
+        const medianBmi = (standard.underweight + standard.overweight) / 2;
+        const ibw = medianBmi * heightM * heightM;
+        
+        let status = "正常體位";
+        let statusClass = "result-box";
+        
+        if (bmi < standard.underweight) {
+            status = "體重過輕 (營養不良風險)";
+            statusClass += " warning-box";
+        } else if (bmi >= standard.obese) {
+            status = "肥胖";
+            statusClass += " alert-box";
+        } else if (bmi >= standard.overweight) {
+            status = "體重過重";
+            statusClass += " alert-box";
+        }
+
+        let pa = (gender === 'M') 
+            ? { 'sedentary': 1.0, 'lowActive': 1.13, 'active': 1.26, 'veryActive': 1.42 }[activityLevel]
+            : { 'sedentary': 1.0, 'lowActive': 1.16, 'active': 1.31, 'veryActive': 1.56 }[activityLevel];
+
+        const energyDeposition = age < 9 ? 20 : 25;
+
+        let eer = (gender === 'M') 
+            ? 88.5 - (61.9 * age) + pa * (26.7 * weight + 903 * heightM) + energyDeposition
+            : 135.3 - (30.8 * age) + pa * (10.0 * weight + 934 * heightM) + energyDeposition;
+        
+        let baseCalories = Math.round(eer);
+        let recommendedCalories = baseCalories;
+        let dietStrategy = "";
+        let isChild = age < 10;
+
+        if (status === "體重過重" || status === "肥胖") {
+            if (isChild) {
+                recommendedCalories = baseCalories;
+                dietStrategy = `
+                    <h3>🎯 飲食策略與熱量目標</h3>
+                    <p>孩子目前正處於神經與骨骼發育的黃金期。針對 10 歲以下的幼童，醫學上<strong>絕對不建議刻意節食或扣減熱量</strong>。</p>
+                    <ul>
+                        <li><strong>每日熱量：</strong>維持在正常需求的約 ${recommendedCalories} 大卡。</li>
+                        <li><strong>核心目標：</strong>我們的策略是「維持目前體重，讓身高自然追上」。請將家裡的含糖飲料、零食替換成鮮乳或原型食物，吃得飽也能瘦得健康。</li>
+                        <li><strong>營養佔比：</strong>碳水化合物佔 50% 到 55%，脂肪佔 25% 到 30%。</li>
+                    </ul>
+                `;
+            } else {
+                recommendedCalories = Math.max((gender === 'M' ? 1500 : 1200), Math.round(eer - 400));
+                dietStrategy = `
+                    <h3>🎯 飲食策略與熱量目標</h3>
+                    <p>我們為你規劃了溫和的熱量缺口，能在不影響發育的前提下降低體重。</p>
+                    <ul>
+                        <li><strong>每日熱量：</strong>建議控制在約 ${recommendedCalories} 大卡。</li>
+                        <li><strong>營養佔比：</strong>碳水化合物 50% 到 55%，脂肪佔 25% 到 30%。只要避開含糖飲料跟炸物，三餐其實可以吃得很飽。</li>
+                        <li><strong>如果還是餓：</strong>請優先補充 0.5 到 1 碗的「煮熟蔬菜」或生菜沙拉，用纖維把胃撐飽；若還是不滿足，再補充一顆水煮蛋，盡量避開餅乾或麵包喔！</li>
+                    </ul>
+                `;
+            }
+        } else if (status === "體重過輕 (營養不良風險)") {
+            if (isChild) {
+                recommendedCalories = Math.round(baseCalories + 300); 
+                dietStrategy = `
+                    <h3>🎯 飲食策略與熱量目標</h3>
+                    <p>小小孩的胃口通常很小，強迫吃大份量的食物只會讓他們更抗拒吃飯。我們幫你規劃了每天 ${recommendedCalories} 大卡的追趕目標。</p>
+                    <ul>
+                        <li><strong>核心策略：</strong>善用「食物強化（增加熱量密度）」。飯量維持正常，但可以在熱湯或青菜裡滴半匙優質植物油，或是把炒蛋加入起司片，讓每一口都吃進更多養分。</li>
+                        <li><strong>進食順序：</strong>這個階段的胃容量小，建議<strong>先吃「蛋白質（肉蛋）」和「白飯」</strong>。如果一開始就吃青菜把胃撐飽了，真正能幫忙長高長肉的營養反而吃不下喔！</li>
+                        <li><strong>餐次規矩：</strong>實行「餓的感覺是最好的調味料」。兩餐之間只給白開水，把牛奶移到餐後或睡前喝，確保正餐時胃是空的。</li>
+                    </ul>
+                `;
+            } else {
+                recommendedCalories = Math.round(baseCalories + 400);
+                dietStrategy = `
+                    <h3>🎯 飲食策略與熱量目標</h3>
+                    <p>現在正是身體需要大量能量來「長肉」的時候，我們為你準備了熱量盈餘的計畫。</p>
+                    <ul>
+                        <li><strong>每日熱量：</strong>目標設定在 ${recommendedCalories} 大卡。</li>
+                        <li><strong>進食順序：</strong>蔬菜的水分跟纖維容易讓人提早飽足。建議用餐時<strong>優先吃「肉類」和「飯麵」</strong>，把熱量密度最高的食物先吃下肚，最後有胃口再吃青菜。</li>
+                        <li><strong>營養佔比：</strong>碳水化合物佔 50% 到 60%，脂肪大約 30% 到 35%。可以適度增加健康的油脂（如堅果）來拉高熱量。</li>
+                        <li><strong>小秘訣：</strong>如果正餐吃不下太多，可以在兩餐之間增加小點心，例如一杯鮮乳配全麥麵包。</li>
+                    </ul>
+                `;
+            }
+        } else {
+            recommendedCalories = baseCalories;
+            dietStrategy = `
+                <h3>🎯 飲食策略與熱量目標</h3>
+                <p>目前發展狀況非常棒！請繼續維持好的飲食習慣。</p>
+                <ul>
+                    <li><strong>每日熱量：</strong>維持在約 ${recommendedCalories} 大卡即可。</li>
+                    <li><strong>營養佔比：</strong>碳水化合物 50% 到 65%，脂肪佔 20% 到 30%。</li>
+                    <li><strong>小秘訣：</strong>請持續維持規律運動與作息，這是保持好體態的最佳投資。</li>
+                </ul>
+            `;
+        }
+
+        // 餐盤視覺化策略修正
+        let plateStrategy = "";
+        if (status === "體重過重" || status === "肥胖") {
+            plateStrategy = `
+                <div class="exchange-card" style="background-color: #fcf3cf; border-left-color: #f1c40f;">
+                    <h4>🍽️ 餐盤實戰技巧：微調版 211 餐盤</h4>
+                    <p style="margin-bottom: 8px;">減重期可以借用 211 的擺盤視覺。但請留意，千萬不要用系統算出的「飯量」去等比例放大青菜，菜會多到吃不完！</p>
+                    <p style="background: #fff; padding: 10px; border-radius: 4px; font-size: 0.9em; border: 1px solid #fae5d3;">
+                        <strong>建議這樣擺盤最完美（青春期微調版）：</strong><br>
+                        1. <strong>🍚 碳水那一格：</strong>直接裝入系統算出的飯量。<br>
+                        2. <strong>🥩 蛋白質那一格：</strong>每餐大約 1 個手掌心大小的肉量，不要跟著飯量盲目放大體積。<br>
+                        3. <strong>🥬 蔬菜那一格：</strong>視覺上盡量填滿便當盒的一半（約 1 碗煮熟的菜），有達標就好！
+                    </p>
+                </div>
+            `;
+        } else {
+            plateStrategy = `
+                <div class="exchange-card" style="background-color: #e8daef; border-left-color: #9b59b6;">
+                    <h4>🍽️ 餐盤實戰技巧：建議採用「我的餐盤」</h4>
+                    <p style="margin-bottom: 8px;">針對正常發育或需要長肉的孩子，我們建議採用「我的餐盤」。適量的蔬菜搭配足夠的飯菜，最能幫助孩子好好長高長肉喔！</p>
+                    <p style="background: #fff; padding: 10px; border-radius: 4px; font-size: 0.9em; border: 1px solid #d7bde2;">
+                        <strong>建議這樣擺盤最適合成長：</strong><br>
+                        1. <strong>🍚 飯菜等量：</strong>每一餐的飯量跟蔬菜量在視覺上大約是 1 比 1（各佔餐盤的三分之一）。<br>
+                        2. <strong>🥩 掌心肉：</strong>蛋白質大約是一個手掌心的大小與厚度。<br>
+                        3. <strong>🍼 餐間補給：</strong>如果是容易吃不下的孩子，水果跟鮮奶請移到餐後或點心時間吃，確保正餐有胃容量把飯跟肉吃完。
+                    </p>
+                </div>
+            `;
+        }
+
+        function getGrainBowlsNum(calories) {
+            if (calories <= 1100) return 1;
+            if (calories <= 1300) return 1.5;
+            if (calories <= 1600) return 2.5;
+            if (calories <= 1900) return 3;
+            if (calories <= 2200) return 3.5;
+            if (calories <= 2600) return 4;
+            if (calories <= 3000) return 4.5;
+            return 5;
+        }
+
+        function getVegFruit(calories) {
+            if (calories <= 1200) return { veg: 2, fruit: 2 };
+            if (calories <= 1500) return { veg: 3, fruit: 2 };
+            if (calories <= 1800) return { veg: 3, fruit: 2 };
+            if (calories <= 2200) return { veg: 4, fruit: 3 };
+            return { veg: 5, fruit: 4 };
+        }
+
+        const driCoef = getProteinCoefficient(age, gender);
+        const driMinAbs = getMinAbsoluteProtein(age, gender);
+        let minProtein = 0;
+        let maxProtein = 0;
+
+        let minProteinPercentage = 0.14;
+        let maxProteinPercentage = 0.16;
+
+        if (status === "體重過重" || status === "肥胖") {
+            minProteinPercentage = 0.16;
+            maxProteinPercentage = 0.20;
+        } else if (status === "體重過輕 (營養不良風險)") {
+            minProteinPercentage = 0.14;
+            maxProteinPercentage = 0.16; 
+        }
+
+        let calorieBasedMinProtein = Math.round((recommendedCalories * minProteinPercentage) / 4);
+        let calorieBasedMaxProtein = Math.round((recommendedCalories * maxProteinPercentage) / 4);
+
+        if (status === "體重過重" || status === "肥胖") {
+            if(isChild) {
+                minProtein = Math.round(Math.max(driMinAbs, weight * driCoef, calorieBasedMinProtein));
+                maxProtein = Math.round(Math.max(driMinAbs, weight * driCoef * 1.2, calorieBasedMaxProtein));
+            } else {
+                minProtein = Math.round(Math.max(driMinAbs, (ibw * driCoef) * 1.2, calorieBasedMinProtein));
+                maxProtein = Math.round(Math.max(driMinAbs, (ibw * driCoef) * 1.5, calorieBasedMaxProtein));
+            }
+        } else if (status === "體重過輕 (營養不良風險)") {
+            minProtein = Math.round(Math.max(driMinAbs, ibw * driCoef, calorieBasedMinProtein));
+            maxProtein = Math.round(Math.max(driMinAbs, ibw * driCoef * 1.2, calorieBasedMaxProtein));
+        } else {
+            minProtein = Math.round(Math.max(driMinAbs, weight * driCoef, calorieBasedMinProtein));
+            maxProtein = Math.round(Math.max(driMinAbs, weight * driCoef * 1.2, calorieBasedMaxProtein));
+        }
+
+        const bowlsNum = getGrainBowlsNum(recommendedCalories);
+        const grainProtein = bowlsNum * 4 * 2; 
+        const vegFruit = getVegFruit(recommendedCalories);
+        const vegProtein = vegFruit.veg * 1;   
+        const dairyProtein = 1.5 * 8;          
+        const baseProteinSum = grainProtein + vegProtein + dairyProtein;
+
+        let minMeatPortion = Math.round((minProtein - baseProteinSum) / 7);
+        let maxMeatPortion = Math.round((maxProtein - baseProteinSum) / 7);
+        
+        if(minMeatPortion < 1) minMeatPortion = 1;
+        if(maxMeatPortion < 2) maxMeatPortion = 2;
+
+        const bowlDisplay = (bowlsNum === 1.5) ? "1.5 到 2" : bowlsNum;
+
+        let exchangeSection = `
+            <div class="exchange-section">
+                <h3>🍽️ 專屬食物份量代換指南</h3>
+                <p style="color: #7f8c8d; font-size: 0.95em; margin-top: -5px;">幫你把生硬的克數，翻譯成餐桌上直覺的份量，跟著吃就對了！</p>
+                
+                <div class="exchange-card">
+                    <h4>🥚 豆魚蛋肉類（蛋白質）：每天 ${minMeatPortion} 到 ${maxMeatPortion} 份</h4>
+                    <p style="margin-bottom: 8px;">總需求量約 ${minProtein}~${maxProtein} 克。系統已扣除飯菜中的微量蛋白，為你精算出實際要吃的主菜量。<br>
+                    <strong>基礎份量：1份 = 1顆雞蛋 = 半盒嫩豆腐 = 1杯無糖豆漿(190ml)</strong>。</p>
+                    <p style="background: #eaf2f8; padding: 10px; border-radius: 4px; font-size: 0.9em;">
+                        <strong>🥩 肉類與海鮮（1份大約是 3 指幅寬、35g），挑選指南：</strong><br>
+                        ✅ <strong>低脂推薦：</strong>去皮雞胸肉、豬里肌肉、蝦仁、蛤蜊、一般魚肉。<br>
+                        ✅ <strong>中脂適量：</strong>雞腿肉、豬後腿肉、火鍋牛肉片、傳統豆腐。<br>
+                        ⚠️ <strong>高脂少吃：</strong>牛腩、牛五花、豬五花、秋刀魚。
+                    </p>
+                </div>
+
+                <div class="exchange-card">
+                    <h4>🍚 全穀雜糧類（主食）：每天約 ${bowlDisplay} 碗</h4>
+                    <p>提供日常活動最需要的能量。<br>
+                    <strong>份量對照：1 碗白飯 = 2 碗稠稀飯 = 2 碗熟麵條 = 2 片吐司 = 2 個小地瓜 = 2 個中型馬鈴薯 = 12 湯匙麥片 = 將近 3 根玉米</strong>。</p>
+                </div>
+
+                <div class="exchange-card">
+                    <h4>🥬 蔬菜與水果：每天 ${vegFruit.veg} 份菜 + ${vegFruit.fruit} 份水果</h4>
+                    <p>攝取豐富的維生素與膳食纖維。<br>
+                    <strong>份量對照：1份蔬菜 = 生重 100 克（超商生菜沙拉約 1 到 1.5 份）= 煮熟後大約半個飯碗（半個拳頭大）= 生菜沙拉約 1 個大拳頭</strong>。<br>
+                    <strong>份量對照：1份水果 = 1個拳頭大</strong>（如1顆小蘋果或1個柳丁）。</p>
+                </div>
+
+                <div class="exchange-card">
+                    <h4>🥛 乳品與堅果：天天必備</h4>
+                    <p>長高不可或缺的營養。每天建議喝 <strong>1.5 到 2 杯鮮乳</strong>（1杯約240ml），炒菜用油已算在熱量內，但建議每天可額外吃 <strong>1湯匙無調味堅果</strong>（約5粒腰果或10粒花生）。</p>
+                </div>
+
+                ${plateStrategy}
+            </div>
+        `;
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.className = statusClass;
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <h2 style="text-align:center; margin-bottom:15px;">計算結果：${status}</h2>
+            <p><strong>目前的 BMI：</strong> ${bmi}</p>
+            <p style="font-size:0.9em; color:#666;">（標準參考：過輕 < ${standard.underweight} | 過重 >= ${standard.overweight} | 肥胖 >= ${standard.obese}）</p>
+            <hr style="border:0; border-top:1px solid #ccc; margin:15px 0;">
+            ${dietStrategy}
+            ${exchangeSection}
+        `;
+    }
+
+    function getProteinCoefficient(age, gender) {
+        if (age >= 3 && age <= 9) return 1.2;
+        if (age >= 10 && age <= 12) return gender === 'M' ? 1.4 : 1.3;
+        if (age >= 13 && age <= 15) return gender === 'M' ? 1.3 : 1.2;
+        if (age >= 16 && age <= 18) return gender === 'M' ? 1.2 : 1.1;
+        return 1.2; 
+    }
+
+    function getMinAbsoluteProtein(age, gender) {
+        if (age === 3) return 20;
+        if (age >= 4 && age <= 6) return 30;
+        if (age >= 7 && age <= 9) return 40;
+        if (age >= 10 && age <= 12) return gender === 'M' ? 55 : 50;
+        if (age >= 13 && age <= 15) return gender === 'M' ? 70 : 60;
+        if (age >= 16 && age <= 18) return gender === 'M' ? 75 : 55;
+        return 60;
+    }
+</script>
+
+</body>
+</html>
