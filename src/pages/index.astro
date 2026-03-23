@@ -1,96 +1,356 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Navbar from '../components/Navbar.astro';
-import Footer from '../components/Footer.astro';
+// 保持乾淨的設定區塊
 ---
 
-<Layout>
-  <Navbar />
-
-  <main>
-    <!-- 主視覺區 -->
-    <section class="relative pt-24 pb-32 overflow-hidden">
-      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-100 via-white to-slate-50 z-0"></div>
-      
-      <div class="absolute top-20 left-10 md:left-20 text-sky-200/60 animate-float"><i data-lucide="cloud" class="w-32 h-32 md:w-48 md:h-48"></i></div>
-      <div class="absolute top-40 right-10 md:right-32 text-sky-200/60 animate-float-delayed"><i data-lucide="cloud" class="w-20 h-20 md:w-32 md:h-32"></i></div>
-      
-      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-        <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white border border-sky-100 shadow-sm text-sky-600 font-bold mb-8 text-sm md:text-base">
-          <i data-lucide="heart-pulse" class="w-5 h-5 text-rose-400"></i>
-          <span>蕭宇超醫師的健康冒險島</span>
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smilecloud 微笑雲朵 | 蕭宇超醫師</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 font-sans selection:bg-sky-200">
+  
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-sky-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-20">
+        <div class="flex items-center cursor-pointer" onclick="window.scrollTo(0, 0)">
+          <div class="bg-sky-400 p-2 rounded-2xl mr-3">
+            <i data-lucide="cloud" class="text-white h-6 w-6" stroke-width="2.5"></i>
+          </div>
+          <span class="text-2xl font-bold text-sky-600 tracking-wider">Smilecloud</span>
         </div>
         
-        <h1 class="text-5xl md:text-7xl font-black text-slate-800 mb-8 leading-tight tracking-tight">
-          告別雲朵身材<br/>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">一起健康生活</span>
-        </h1>
-        
-        <p class="text-lg md:text-xl text-slate-600 mb-12 max-w-2xl mx-auto leading-relaxed">
-          我是健康冒險島的島主超人醫師蕭宇超，歡迎登島！在這裡我們不只談體重，更是打造讓孩子愛上運動與健康生活的世界。
-        </p>
+        <div class="hidden md:flex items-center space-x-8">
+          <button onclick="window.scrollTo(0, 0)" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">首頁</button>
+          <a href="#features" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">互動區</a>
+          <a href="#about" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">認識島主</a>
+          <a href="#contact" class="bg-sky-400 hover:bg-sky-500 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+            聯絡我們
+          </a>
+        </div>
 
-        <div class="mt-12">
-          <a href="#features" class="inline-flex items-center justify-center gap-3 bg-amber-400 hover:bg-amber-500 text-slate-900 px-10 py-4 rounded-full font-black text-xl transition-all shadow-lg shadow-amber-200 hover:shadow-xl transform hover:-translate-y-1">
+        <div class="md:hidden flex items-center">
+          <button id="mobile-menu-btn" class="text-slate-600">
+            <i id="menu-icon" data-lucide="menu" class="h-6 w-6"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-sky-50 px-4 pt-2 pb-4 space-y-2 shadow-lg">
+      <button onclick="window.scrollTo(0, 0)" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">首頁</button>
+      <a href="#features" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">互動區</a>
+      <a href="#about" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">認識島主</a>
+      <a href="#contact" class="mobile-link block w-full text-center mt-4 bg-sky-400 text-white px-3 py-3 rounded-xl font-bold">聯絡我們</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="relative pt-20 pb-32 overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-b from-sky-50 to-slate-50 z-0"></div>
+      <div class="absolute top-20 left-10 text-sky-100 opacity-50"><i data-lucide="cloud" class="w-32 h-32"></i></div>
+      <div class="absolute top-40 right-20 text-sky-100 opacity-60"><i data-lucide="cloud" class="w-20 h-20"></i></div>
+      
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-100 text-sky-700 font-semibold mb-8 text-sm">
+          <i data-lucide="heart" class="text-sky-500 w-4 h-4"></i>
+          <span>蕭宇超醫師的健康冒險島</span>
+        </div>
+        <h1 class="text-5xl md:text-6xl font-extrabold text-slate-800 mb-8 leading-tight">
+          告別雲朵身材<br/>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-sky-600">一起健康生活</span>
+        </h1>
+        <div class="text-lg md:text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed text-left md:text-center">
+          <p class="mb-8">
+            我是健康冒險島的島主超人醫師蕭宇超，歡迎登島！在這裡我們不只是在談體重，更是在打造一個讓孩子愛上運動與健康生活的世界。透過趣味互動與專業指引，讓健康習慣自然養成。
+          </p>
+          
+          <div class="bg-white/60 backdrop-blur-md rounded-3xl p-6 md:p-8 text-left border border-sky-100 shadow-sm max-w-2xl mx-auto">
+            <p class="font-bold text-sky-700 mb-5 flex items-center gap-2 text-xl">
+              <i data-lucide="map-pin" class="text-sky-500 w-6 h-6"></i>
+              給第一次登島夥伴的探險建議：
+            </p>
+            <ul class="space-y-4">
+              <li class="flex items-start gap-4">
+                <div class="bg-sky-100 p-2 rounded-xl mt-1 shrink-0"><i data-lucide="cloud" class="text-sky-500 w-5 h-5"></i></div>
+                <div class="pt-1">
+                  <strong class="text-slate-800">想玩闖關遊戲？</strong> 
+                  <span class="text-slate-600"> 可以選擇「健康冒險島」馬上開始挑戰！</span>
+                </div>
+              </li>
+              <li class="flex items-start gap-4">
+                <div class="bg-indigo-100 p-2 rounded-xl mt-1 shrink-0"><i data-lucide="clipboard-check" class="text-indigo-500 w-5 h-5"></i></div>
+                <div class="pt-1">
+                  <strong class="text-slate-800">有雲朵身材嗎？</strong> 
+                  <span class="text-slate-600"> 請進入「身材檢測站」花一分鐘簡單評估。</span>
+                </div>
+              </li>
+              <li class="flex items-start gap-4">
+                <div class="bg-amber-100 p-2 rounded-xl mt-1 shrink-0"><i data-lucide="activity" class="text-amber-500 w-5 h-5"></i></div>
+                <div class="pt-1">
+                  <strong class="text-slate-800">不知道怎麼動？</strong> 
+                  <span class="text-slate-600"> 前往「專屬運動處方」，量身打造你的運動計畫。</span>
+                </div>
+              </li>
+            </ul>
+            <div class="mt-6 pt-5 border-t border-sky-100/50 text-center text-slate-500 font-medium">
+              探索互動區還有很多有趣的地方，歡迎常常來玩喔！
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-center mt-8">
+          <a href="#features" class="bg-amber-400 hover:bg-amber-500 text-slate-900 px-10 py-4 rounded-full font-bold text-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2">
             開始探索互動區
-            <i data-lucide="arrow-down-circle" class="w-6 h-6"></i>
           </a>
         </div>
       </div>
     </section>
 
-    <!-- 互動區 (已經加上 reveal 特效) -->
-    <section id="features" class="py-24 bg-white reveal">
+    <section id="features" class="py-20 bg-slate-50">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
-          <h2 class="text-3xl md:text-5xl font-black text-slate-800 mb-4">探索互動區</h2>
-          <div class="w-24 h-2 bg-gradient-to-r from-sky-300 to-sky-500 mx-auto rounded-full"></div>
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">探索互動區</h2>
+          <div class="w-20 h-1.5 bg-sky-400 mx-auto rounded-full"></div>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 hover:bg-white hover:shadow-2xl hover:shadow-sky-100 hover:-translate-y-2 transition-all duration-300 group flex flex-col h-full">
-            <div class="bg-sky-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-sky-500 transition-all duration-300 text-sky-500 group-hover:text-white">
-              <i data-lucide="map" class="w-8 h-8"></i>
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
+            <div class="bg-sky-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <i data-lucide="cloud" class="text-sky-500 w-8 h-8"></i>
             </div>
-            <h3 class="text-2xl font-black text-slate-800 mb-4">健康冒險島</h3>
+            <h3 class="text-2xl font-bold text-slate-800 mb-4">健康冒險島</h3>
             <p class="text-slate-600 mb-8 flex-grow leading-relaxed">
-              透過 12 個闖關小遊戲，認識自己的身體，學習健康的飲食技巧、建立運動習慣與放鬆睡眠的秘訣。
+              透過 12 個闖關小遊戲，一起認識自己的身體，學習健康的飲食技巧、運動習慣的建立，以及放鬆睡眠的技巧。
             </p>
-            <a href="https://smilecloud.tw/for_healthy_children/" target="_blank" rel="noreferrer" class="inline-flex items-center justify-center w-full bg-sky-100 text-sky-700 font-bold py-3 rounded-xl group-hover:bg-sky-50 transition-colors mt-auto">
+            <a href="https://smilecloud.tw/for_healthy_children/" target="_blank" rel="noreferrer" class="inline-flex items-center text-sky-600 font-bold hover:text-sky-700 mt-auto">
               立即登島挑戰 <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
             </a>
           </div>
 
-          <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 hover:bg-white hover:shadow-2xl hover:shadow-indigo-100 hover:-translate-y-2 transition-all duration-300 group flex flex-col h-full">
-            <div class="bg-indigo-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-500 transition-all duration-300 text-indigo-500 group-hover:text-white">
-              <i data-lucide="clipboard-check" class="w-8 h-8"></i>
+          <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
+            <div class="bg-indigo-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <i data-lucide="clipboard-check" class="text-indigo-500 w-8 h-8"></i>
             </div>
-            <h3 class="text-2xl font-black text-slate-800 mb-4">身材檢測站</h3>
+            <h3 class="text-2xl font-bold text-slate-800 mb-4">身材檢測站</h3>
             <p class="text-slate-600 mb-8 flex-grow leading-relaxed">
-              想知道目前的身體是不是雲朵身材嗎？透過簡單的評估，快速了解目前的體位健康狀況。
+              想認識目前的身體是不是雲朵身材嗎？透過簡單的評估，了解目前的體位狀況。
             </p>
-            <a href="https://smilecloud.tw/obesity-survey-app/" target="_blank" rel="noreferrer" class="inline-flex items-center justify-center w-full bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl group-hover:bg-indigo-100 transition-colors mt-auto">
+            <a href="https://smilecloud.tw/obesity-survey-app/" target="_blank" rel="noreferrer" class="inline-flex items-center text-sky-600 font-bold hover:text-sky-700 mt-auto">
               開始評估檢測 <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
             </a>
           </div>
 
-          <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 hover:bg-white hover:shadow-2xl hover:shadow-amber-100 hover:-translate-y-2 transition-all duration-300 group flex flex-col h-full">
-            <div class="bg-amber-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-amber-500 transition-all duration-300 text-amber-500 group-hover:text-white">
-              <i data-lucide="activity" class="w-8 h-8"></i>
+          <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
+            <div class="bg-amber-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <i data-lucide="activity" class="text-amber-500 w-8 h-8"></i>
             </div>
-            <h3 class="text-2xl font-black text-slate-800 mb-4">專屬運動處方</h3>
+            <h3 class="text-2xl font-bold text-slate-800 mb-4">專屬運動處方</h3>
             <p class="text-slate-600 mb-8 flex-grow leading-relaxed">
-              不知道怎麼開始運動？輸入基本資料，立刻為你量身打造專屬的階段性運動計畫。
+              不知道怎麼開始運動？輸入基本資料，立刻為你打造專屬的階段性運動計畫。
             </p>
-            <a href="https://smilecloud.tw/gogoexercise/" target="_blank" rel="noreferrer" class="inline-flex items-center justify-center w-full bg-amber-50 text-amber-700 font-bold py-3 rounded-xl group-hover:bg-amber-100 transition-colors mt-auto">
+            <a href="https://smilecloud.tw/gogoexercise/" target="_blank" rel="noreferrer" class="inline-flex items-center text-sky-600 font-bold hover:text-sky-700 mt-auto">
               領取專屬處方 <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
             </a>
+          </div>
+
+          <div class="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
+            <div class="bg-rose-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <i data-lucide="utensils" class="text-rose-500 w-8 h-8"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-4">我吃多少才夠呢？</h3>
+            <p class="text-slate-600 mb-8 flex-grow leading-relaxed">
+              想知道一天需要吃多少食物才夠嗎？透過簡單的計算，了解專屬的飲食份量，讓營養攝取剛剛好！
+            </p>
+            <a href="https://lukehsiao-yc.github.io/diet/" target="_blank" rel="noreferrer" class="inline-flex items-center text-sky-600 font-bold hover:text-sky-700 mt-auto">
+              開始計算份量 <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="py-20 bg-white">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-sky-50 rounded-3xl p-8 md:p-12 border border-sky-100 shadow-sm">
+          <div class="flex flex-col lg:flex-row gap-12">
+            
+            <div class="lg:w-5/12">
+               <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                 <span class="bg-sky-400 p-2.5 rounded-2xl text-white"><i data-lucide="user" class="w-6 h-6"></i></span>
+                 關於島主
+               </h2>
+               <p class="text-slate-600 text-lg leading-relaxed mb-6">
+                 我是蕭宇超醫師，大家的健康超級夥伴。本身是一名小兒腸胃科醫師，除了照顧兒童常見疾病、腸胃健康，也致力於兒童肥胖的照顧。
+               </p>
+               <p class="text-slate-600 text-lg leading-relaxed mb-8">
+                 除了在醫院內的醫療處置，我也走進校園進行一對一的傳遞健康體位知識，並長期在校園、親子館、政府機關進行相關的衛教演講。同時也努力開發跟推廣各種有趣的線上互動遊戲，讓更多人可以朝健康的生活邁進！
+               </p>
+               
+               <div class="bg-white p-6 rounded-2xl shadow-sm border border-sky-100">
+                 <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
+                   <i data-lucide="clock" class="w-5 h-5"></i> 門診時間
+                 </h3>
+                 <ul class="space-y-4 text-slate-600">
+                   <li class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                     <span class="font-bold text-slate-800 min-w-[100px]">阮綜合醫院</span>
+                     <span>每周四上午</span>
+                   </li>
+                   <li class="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3">
+                     <span class="font-bold text-slate-800 min-w-[100px]">玉里慈濟醫院</span>
+                     <span>周三下午，每個月兩次<br/><span class="text-sm text-slate-400">(以門診表時間為主)</span></span>
+                   </li>
+                 </ul>
+               </div>
+            </div>
+
+            <div class="lg:w-7/12 space-y-6">
+               <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100">
+                 <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
+                   <i data-lucide="award" class="w-5 h-5"></i> 現職與學歷
+                 </h3>
+                 <div class="space-y-4 text-slate-600">
+                   <div>
+                     <div class="font-bold text-slate-800 mb-1">現職</div>
+                     <ul class="list-disc list-inside space-y-1 ml-1">
+                       <li>阮綜合醫院 兒童急診科、兒童腸胃科主治醫師</li>
+                       <li>玉里慈濟醫院 兒科兼任主治醫師</li>
+                     </ul>
+                   </div>
+                   <div class="pt-2 border-t border-slate-50">
+                     <div class="font-bold text-slate-800 mb-1">學歷</div>
+                     <div class="ml-1">中國醫藥大學 中醫系雙主修醫學系</div>
+                   </div>
+                 </div>
+               </div>
+
+               <div class="flex flex-col md:flex-row gap-6">
+                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 flex-1">
+                   <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
+                     <i data-lucide="briefcase" class="w-5 h-5"></i> 經歷
+                   </h3>
+                   <ol class="list-decimal list-inside space-y-2 text-slate-600 ml-1">
+                     <li>花蓮慈濟醫院小兒部住院醫師</li>
+                     <li>花蓮慈濟醫院小兒部兒童腸胃科研究醫師</li>
+                     <li>台北榮民總醫院兒童醫學部兒童胃腸科研究醫師</li>
+                     <li>花蓮慈濟醫院小兒部兒童腸胃科主治醫師</li>
+                     <li>玉里慈濟醫院小兒科兼任主治醫師</li>
+                   </ol>
+                 </div>
+                 
+                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 md:w-1/3">
+                   <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
+                     <i data-lucide="star" class="w-5 h-5"></i> 專長
+                   </h3>
+                   <ul class="list-disc list-inside space-y-2 text-slate-600 ml-1">
+                     <li>一般兒科疾病</li>
+                     <li>兒童肝膽腸胃疾病</li>
+                     <li>肥胖控制</li>
+                     <li>腹部超音波</li>
+                   </ul>
+                 </div>
+               </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
+    <section id="contact" class="py-20 bg-slate-50">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-sm text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-amber-500 mb-6">
+            <i data-lucide="mail" class="w-8 h-8"></i>
+          </div>
+          <h2 class="text-3xl font-bold text-slate-800 mb-6">演講與合作邀約</h2>
+          <div class="text-slate-600 text-lg leading-relaxed space-y-4 max-w-2xl mx-auto mb-8">
+            <p>
+              過去除了在醫院診間傳遞健康體態的秘訣，我也在許多校園以及社區分享，也期待能有機會能把健康知識分享給更多人。
+            </p>
+            <p class="bg-slate-50 py-3 px-6 rounded-xl inline-block text-slate-700 font-medium">
+              演講主題：健康體位管理、兒童居家安全、育兒指導、兒童照護
+            </p>
+            <p>
+              演講邀約或合作計畫歡迎來信討論：
+            </p>
+          </div>
+          <a href="mailto:u9602041@gmail.com" class="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1">
+            <i data-lucide="mail" class="w-5 h-5"></i>
+            u9602041@gmail.com
+          </a>
+        </div>
+      </div>
+    </section>
   </main>
   
-  <Footer />
-</Layout>
+  <footer class="bg-slate-900 text-slate-400 py-16 text-center">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center justify-center gap-2 mb-6 text-white text-xl font-bold">
+        <i data-lucide="cloud" class="text-sky-400 w-6 h-6"></i> Smilecloud
+      </div>
+      <p class="mb-10 text-slate-300">讓專業知識走進家庭，陪伴孩子健康成長。</p>
+      
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+        <a href="https://www.facebook.com/share/1FoPpvVSZs/?mibextid=wwXIfr" target="_blank" rel="noreferrer" class="flex items-center gap-2 bg-slate-800 hover:bg-blue-600 text-white px-8 py-3.5 rounded-full font-medium transition-all w-full sm:w-auto justify-center shadow-md">
+          <i data-lucide="facebook" class="w-5 h-5"></i>
+          <span>告別雲朵人</span>
+        </a>
+        <a href="https://lin.ee/fAzcScx" target="_blank" rel="noreferrer" class="flex items-center gap-2 bg-slate-800 hover:bg-[#06C755] text-white px-8 py-3.5 rounded-full font-medium transition-all w-full sm:w-auto justify-center shadow-md">
+          <i data-lucide="message-circle" class="w-5 h-5"></i>
+          <span>宇超醫師｜你的超級夥伴</span>
+        </a>
+      </div>
+
+      <div class="text-sm border-t border-slate-800 pt-8">
+        © 2026 蕭宇超醫師. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <script is:inline>
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const menuIcon = document.getElementById('menu-icon');
+    const mobileLinks = document.querySelectorAll('.mobile-link');
+    
+    let isMenuOpen = false;
+
+    function toggleMenu() {
+      isMenuOpen = !isMenuOpen;
+      
+      if (isMenuOpen && mobileMenu && menuIcon) {
+        mobileMenu.classList.remove('hidden');
+        menuIcon.setAttribute('data-lucide', 'x');
+      } else if (mobileMenu && menuIcon) {
+        mobileMenu.classList.add('hidden');
+        menuIcon.setAttribute('data-lucide', 'menu');
+      }
+      
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+    }
+
+    if (menuBtn) {
+      menuBtn.addEventListener('click', toggleMenu);
+    }
+
+    if (mobileLinks.length > 0) {
+      mobileLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          if (isMenuOpen) toggleMenu();
+        });
+      });
+    }
+  </script>
+</body>
+</html>
