@@ -9,9 +9,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smilecloud 微笑雲朵 | 蕭宇超醫師</title>
   
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- 加上 is:inline 護身符，讓 Astro 系統絕對不要干擾排版魔法 -->
+  <script is:inline src="https://cdn.tailwindcss.com"></script>
+  <script is:inline src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="bg-slate-50 font-sans selection:bg-sky-200">
   
@@ -42,6 +42,7 @@
       </div>
     </div>
 
+    <!-- 手機版下拉選單 -->
     <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-sky-50 px-4 pt-2 pb-4 space-y-2 shadow-lg">
       <button onclick="window.scrollTo(0, 0)" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">首頁</button>
       <a href="#features" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">互動區</a>
