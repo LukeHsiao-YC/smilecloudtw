@@ -1,35 +1,66 @@
 ---
+// 這裡接收來自 .md 檔案設定區 (frontmatter) 的資料
+const { title, date, category, tags, description } = Astro.props.frontmatter || Astro.props;
+
 import Layout from './Layout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-
-// 接收 Markdown 最上方傳過來的設定資料
-const { frontmatter } = Astro.props;
 ---
 
 <Layout>
   <Navbar />
-  
-  <main class="pt-24 pb-32 bg-white min-h-screen">
-    <article class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="mb-12 text-center border-b border-slate-100 pb-12">
-        <div class="inline-flex items-center gap-2 text-sm text-sky-600 font-bold bg-sky-50 px-4 py-1.5 rounded-full mb-6">
-          {frontmatter.category || '衛教專欄'}
-        </div>
-        <h1 class="text-4xl md:text-5xl font-black text-slate-800 mb-6 leading-tight">
-          {frontmatter.title}
-        </h1>
-        <div class="text-slate-500 font-medium">
-          發布日期：{frontmatter.date}
-        </div>
-      </div>
 
-      <!-- 這裡負責把 Markdown 轉成網頁格式顯示出來 -->
-      <div class="markdown-content">
+  <main class="pt-24 pb-32 bg-white min-h-screen">
+    <article class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <header class="text-center mb-16">
+        {/* 分類泡泡 */}
+        <div class="inline-block bg-sky-50 text-sky-600 px-4 py-1.5 rounded-full font-bold text-sm mb-6">
+          {category || '衛教資訊'}
+        </div>
+
+        {/* 支援換行的標題 */}
+        <h1 
+          class="text-4xl md:text-5xl font-black text-slate-800 mb-8 leading-tight tracking-tight"
+          set:html={title}
+        />
+
+        <div class="flex flex-col items-center gap-4">
+          <div class="text-slate-400 font-medium">發布日期：{date}</div>
+          
+          {/* 自動顯示標籤區塊 - 已修正 TypeScript 類型錯誤 */}
+          {tags && (
+            <div class="flex flex-wrap justify-center gap-2 mt-2">
+              {tags.map((tag: string) => (
+                <span class="text-xs font-bold text-sky-400 bg-sky-50/50 px-3 py-1 rounded-lg">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        <div class="w-16 h-1 bg-sky-100 mx-auto mt-12 rounded-full"></div>
+      </header>
+
+      {/* 文章正文內容 */}
+      <div class="prose prose-lg prose-slate max-w-none 
+        prose-headings:font-black prose-headings:text-slate-800
+        prose-p:text-slate-600 prose-p:leading-relaxed
+        prose-strong:text-sky-600 prose-strong:font-bold
+        prose-img:rounded-3xl prose-img:shadow-lg
+        prose-blockquote:border-sky-200 prose-blockquote:bg-sky-50/50 prose-blockquote:py-2 prose-blockquote:rounded-r-2xl
+        selection:bg-sky-100 article-content">
         <slot />
       </div>
-      
+
+      <footer class="mt-20 pt-10 border-t border-slate-100">
+        <a href="/blog" class="inline-flex items-center gap-2 text-sky-600 font-bold hover:gap-3 transition-all">
+          <i data-lucide="arrow-left" class="w-5 h-5"></i> 
+          回到衛教專欄
+        </a>
+      </footer>
+
     </article>
   </main>
 
@@ -37,9 +68,40 @@ const { frontmatter } = Astro.props;
 </Layout>
 
 <style is:global>
-  /* 簡單幫 Markdown 的內容加上基本排版，讓文字好讀一點 */
-  .markdown-content h2 { font-size: 1.875rem; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; color: #1e293b; }
-  .markdown-content p { margin-bottom: 1.5rem; line-height: 1.8; color: #475569; font-size: 1.125rem; }
-  .markdown-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1.5rem; color: #475569; font-size: 1.125rem; }
-  .markdown-content li { margin-bottom: 0.5rem; }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  
+  /* 強制每段開頭空兩格 */
+  .article-content p {
+    text-indent: 2em;
+    margin-bottom: 1.5rem;
+  }
+
+  /* 解決標題大小與樣式問題 */
+  .prose h1 { 
+    font-size: 2.5rem !important; 
+    margin-top: 2.5rem !important;
+    margin-bottom: 1.5rem !important;
+    color: #1e293b !important;
+  }
+  .prose h2 { 
+    font-size: 2rem !important; 
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 0.5rem;
+    color: #1e293b !important;
+  }
+  .prose h3 { 
+    font-size: 1.5rem !important; 
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
+    color: #0369a1 !important;
+  }
+
+  /* 列表不需要空兩格 */
+  .article-content li {
+    text-indent: 0;
+  }
 </style>

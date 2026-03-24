@@ -1,20 +1,19 @@
 ---
 import Layout from '../layouts/Layout.astro';
+// 注意：請確認你的專案中 Navbar 和 Footer 的實際路徑是否正確
+// 如果之前是放在 src/components 下，請維持原樣
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 
-// 這裡的路徑 ./posts/*.md 代表「找我旁邊那個叫 posts 資料夾裡的 md 檔」
+// 抓取 posts 資料夾裡的 md 檔
 const posts = Object.values(import.meta.glob('./posts/*.md', { eager: true }));
 
-// 按照日期排序（新的在上面）
+// 按照日期排序
 const sortedPosts = posts.sort((a: any, b: any) => {
   const dateA = a.frontmatter?.date ? new Date(a.frontmatter.date).getTime() : 0;
   const dateB = b.frontmatter?.date ? new Date(b.frontmatter.date).getTime() : 0;
   return dateB - dateA;
 });
-
-// 如果你想確認有沒有抓到，可以在瀏覽器按 F12 看 Console
-console.log("文章清單：", sortedPosts);
 ---
 
 <Layout>
@@ -32,7 +31,7 @@ console.log("文章清單：", sortedPosts);
         {sortedPosts.length === 0 ? (
           <div class="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
             <p class="text-xl font-bold">目前還沒有文章喔</p>
-            <p class="mt-2 text-sm">快去 src/pages/posts/ 資料夾新增第一篇 .md 檔案吧！</p>
+            <p class="mt-2 text-sm">快去 src/pages/blog/posts/ 資料夾新增第一篇 .md 檔案吧！</p>
           </div>
         ) : (
           sortedPosts.map((post: any) => (
@@ -44,9 +43,13 @@ console.log("文章清單：", sortedPosts);
                   </span>
                   <span class="font-medium">{post.frontmatter.date}</span>
                 </div>
-                <h2 class="text-2xl md:text-3xl font-black text-slate-800 mb-4 group-hover:text-sky-600 transition-colors">
-                  {post.frontmatter.title}
-                </h2>
+                
+                {/* 關鍵修改點：使用 set:html 讓標題支援 <br> 換行 */}
+                <h2 
+                  class="text-2xl md:text-3xl font-black text-slate-800 mb-4 group-hover:text-sky-600 transition-colors leading-tight"
+                  set:html={post.frontmatter.title}
+                />
+
                 <p class="text-slate-500 leading-relaxed mb-6 line-clamp-2">
                   {post.frontmatter.description}
                 </p>
