@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/BlogPost.astro
-title: "兒童減重該怎麼吃？211餐盤適合嗎？<"
+title: "兒童減重該怎麼吃？211餐盤適合嗎？"
 date: 2026-03-24
 category: 兒童肥胖
 author: "蕭宇超醫師"
