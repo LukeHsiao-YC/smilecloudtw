@@ -1,5 +1,11 @@
 ---
-// 保持乾淨的設定區塊
+import { getCollection } from 'astro:content';
+import '../styles/global.css';
+
+// 讓系統自動抓取 blog 資料夾裡的文章，並依照日期從新到舊排序，取前 3 篇顯示在首頁
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+).slice(0, 3);
 ---
 
 <!DOCTYPE html>
@@ -9,7 +15,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smilecloud 微笑雲朵 | 蕭宇超醫師</title>
   
-  <!-- 加上 is:inline 護身符，讓 Astro 系統絕對不要干擾排版魔法 -->
   <script is:inline src="https://cdn.tailwindcss.com"></script>
   <script is:inline src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -28,6 +33,7 @@
         <div class="hidden md:flex items-center space-x-8">
           <button onclick="window.scrollTo(0, 0)" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">首頁</button>
           <a href="#features" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">互動區</a>
+          <a href="/blog" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">知識加油站</a>
           <a href="#about" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">認識島主</a>
           <a href="#contact" class="bg-sky-400 hover:bg-sky-500 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
             聯絡我們
@@ -42,10 +48,10 @@
       </div>
     </div>
 
-    <!-- 手機版下拉選單 -->
     <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-sky-50 px-4 pt-2 pb-4 space-y-2 shadow-lg">
       <button onclick="window.scrollTo(0, 0)" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">首頁</button>
       <a href="#features" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">互動區</a>
+      <a href="/blog" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">知識加油站</a>
       <a href="#about" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">認識島主</a>
       <a href="#contact" class="mobile-link block w-full text-center mt-4 bg-sky-400 text-white px-3 py-3 rounded-xl font-bold">聯絡我們</a>
     </div>
@@ -167,7 +173,6 @@
             <p class="text-slate-600 mb-8 flex-grow leading-relaxed">
               想知道一天需要吃多少食物才夠嗎？透過簡單的計算，了解專屬的飲食份量，讓營養攝取剛剛好！
             </p>
-            <!-- 連結改成直接連到自己家裡的 public/diet 資料夾 -->
             <a href="/diet/" target="_blank" rel="noreferrer" class="inline-flex items-center text-sky-600 font-bold hover:text-sky-700 mt-auto">
               開始計算份量 <i data-lucide="arrow-right" class="ml-2 w-5 h-5"></i>
             </a>
@@ -177,9 +182,48 @@
       </div>
     </section>
 
-    <section id="about" class="py-20 bg-white">
+    <section id="blog" class="py-20 bg-white">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-sky-50 rounded-3xl p-8 md:p-12 border border-sky-100 shadow-sm">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">知識加油站</h2>
+          <div class="w-20 h-1.5 bg-sky-400 mx-auto rounded-full"></div>
+          <p class="mt-4 text-lg text-slate-600">寫給家長的實戰指南，輕鬆看懂兒童營養與成長密碼。</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+          {
+            posts.map((post) => (
+              <a href={`/blog/${post.slug}/`} class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
+                <div class="text-sky-500 text-sm font-bold mb-3 flex items-center gap-2">
+                  <i data-lucide="calendar" class="w-4 h-4"></i>
+                  {post.data.pubDate.toLocaleDateString('zh-TW')}
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-sky-600 transition-colors line-clamp-2">
+                  {post.data.title}
+                </h3>
+                <p class="text-slate-600 mb-6 flex-grow line-clamp-3 leading-relaxed">
+                  {post.data.description}
+                </p>
+                <div class="inline-flex items-center text-sky-600 font-bold mt-auto">
+                  閱讀全文 <i data-lucide="arrow-right" class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+              </a>
+            ))
+          }
+        </div>
+
+        <div class="flex justify-center">
+          <a href="/blog" class="inline-flex items-center justify-center gap-2 bg-white hover:bg-sky-50 text-sky-600 border-2 border-sky-100 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm hover:shadow-md">
+            <i data-lucide="book-open" class="w-5 h-5"></i>
+            查看所有文章
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="py-20 bg-slate-50">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-3xl p-8 md:p-12 border border-sky-100 shadow-sm">
           <div class="flex flex-col lg:flex-row gap-12">
             
             <div class="lg:w-5/12">
@@ -194,7 +238,7 @@
                  除了在醫院內的醫療處置，我也走進校園進行一對一的傳遞健康體位知識，並長期在校園、親子館、政府機關進行相關的衛教演講。同時也努力開發跟推廣各種有趣的線上互動遊戲，讓更多人可以朝健康的生活邁進！
                </p>
                
-               <div class="bg-white p-6 rounded-2xl shadow-sm border border-sky-100">
+               <div class="bg-slate-50 p-6 rounded-2xl shadow-sm border border-sky-100">
                  <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
                    <i data-lucide="clock" class="w-5 h-5"></i> 門診時間
                  </h3>
@@ -212,7 +256,7 @@
             </div>
 
             <div class="lg:w-7/12 space-y-6">
-               <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100">
+               <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100">
                  <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
                    <i data-lucide="award" class="w-5 h-5"></i> 現職與學歷
                  </h3>
@@ -224,7 +268,7 @@
                        <li>玉里慈濟醫院 兒科兼任主治醫師</li>
                      </ul>
                    </div>
-                   <div class="pt-2 border-t border-slate-50">
+                   <div class="pt-2 border-t border-slate-100">
                      <div class="font-bold text-slate-800 mb-1">學歷</div>
                      <div class="ml-1">中國醫藥大學 中醫系雙主修醫學系</div>
                    </div>
@@ -232,7 +276,7 @@
                </div>
 
                <div class="flex flex-col md:flex-row gap-6">
-                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 flex-1">
+                 <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 flex-1">
                    <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
                      <i data-lucide="briefcase" class="w-5 h-5"></i> 經歷
                    </h3>
@@ -245,7 +289,7 @@
                    </ol>
                  </div>
                  
-                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 md:w-1/3">
+                 <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 md:w-1/3">
                    <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
                      <i data-lucide="star" class="w-5 h-5"></i> 專長
                    </h3>
@@ -263,9 +307,9 @@
       </div>
     </section>
 
-    <section id="contact" class="py-20 bg-slate-50">
+    <section id="contact" class="py-20 bg-white">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-sm text-center">
+        <div class="bg-slate-50 rounded-3xl p-8 md:p-12 border border-slate-100 shadow-sm text-center">
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-amber-500 mb-6">
             <i data-lucide="mail" class="w-8 h-8"></i>
           </div>
@@ -274,7 +318,7 @@
             <p>
               過去除了在醫院診間傳遞健康體態的秘訣，我也在許多校園以及社區分享，也期待能有機會能把健康知識分享給更多人。
             </p>
-            <p class="bg-slate-50 py-3 px-6 rounded-xl inline-block text-slate-700 font-medium">
+            <p class="bg-white border border-slate-200 py-3 px-6 rounded-xl inline-block text-slate-700 font-medium">
               演講主題：健康體位管理、兒童居家安全、育兒指導、兒童照護
             </p>
             <p>
