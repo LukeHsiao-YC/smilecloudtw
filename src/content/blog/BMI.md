@@ -36,5 +36,5 @@ tags: ["BMI", "體位評估", "雲朵人"]
 ![BMI計算](/image/BMI2.jpg)
 兒童的BMI會依據不同的年紀跟性別而有差異，有兩個方式可以查詢:<br><br>
 1.使用[**台灣國健署的兒童BMI網路計算機**](https://www.hpa.gov.tw/Obesity/ChildBMI.aspx)<br>
-2.幫大家設計了一個[**身材評估站**](https://www.hpa.gov.tw/Obesity/ChildBMI.aspx)<br>
+2.幫大家設計了一個[**身材評估站**](https://smilecloud.tw/obesity-survey-app/)<br>
 大家可以點進去評估一下喔!
