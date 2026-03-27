@@ -209,7 +209,7 @@ const posts = allPosts.sort((a, b) => {
           {
             posts && posts.length > 0 ? (
               posts.map((post) => (
-                <a href={`/blog/${post.id || post.slug}/`} class="bg-slate-50 p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
+                <a href={`/blog/${post.id || post.id}/`} class="bg-slate-50 p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
                   <div class="text-sky-500 text-sm font-bold mb-3 flex items-center gap-2">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                     {new Date((post.data as any).date || (post.data as any).pubDate || new Date()).toLocaleDateString('zh-TW')}

@@ -5,27 +5,27 @@ import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 
 // 1. 抓取所有文章
-// 注意：這裡會去 src/content/blog 抓資料
 const posts = await getCollection('blog');
 
 // 2. 按照日期排序
-// 這裡用了彈性寫法，同時支援 date 或 pubDate 欄位
+// 加入防呆機制：如果 pubDate 是空的，就當作 0 (代表時間最早)，這樣 TypeScript 就不會報錯了
 const sortedPosts = posts.sort((a, b) => {
-  const dateA = new Date((a.data as any).date || (a.data as any).pubDate || 0).getTime();
-  const dateB = new Date((b.data as any).date || (b.data as any).pubDate || 0).getTime();
+  const dateA = a.data.pubDate ? new Date(a.data.pubDate).getTime() : 0;
+  const dateB = b.data.pubDate ? new Date(b.data.pubDate).getTime() : 0;
   return dateB - dateA;
 });
 
-// 3. 自動找出所有的專題系列 (排除重複且不為空的)
+// 3. 自動找出所有的專題系列
+// 因為你的 schema 還沒定義 series，我們用 (data as any) 繞過檢查
 const allSeries = [...new Set(posts.map(p => (p.data as any).series).filter(Boolean))];
 
-// 針對每個系列計算文章數與取得預覽
+// 針對每個系列計算文章數，並保留該系列的所有文章以便展開
 const seriesData = allSeries.map(seriesName => {
   const postsInSeries = posts.filter(p => (p.data as any).series === seriesName);
   return {
     name: seriesName,
     count: postsInSeries.length,
-    latestPosts: postsInSeries.slice(0, 2)
+    allPosts: postsInSeries
   };
 });
 ---
@@ -61,18 +61,40 @@ const seriesData = allSeries.map(seriesName => {
                     目前收錄 {item.count} 篇文章
                   </div>
                   
-                  <div class="space-y-3 mb-8">
-                    {item.latestPosts.map(p => (
-                      <div class="text-sm text-slate-500 flex items-start gap-2">
-                        <span class="text-sky-300 font-bold mt-0.5">·</span>
+                  <div class="space-y-3 mb-6">
+                    {/* 永遠顯示的前兩篇文章 */}
+                    {item.allPosts.slice(0, 2).map(p => (
+                      <a href={`/blog/${p.id}/`} class="text-sm text-slate-500 flex items-start gap-2 hover:text-sky-600 transition-colors group/link">
+                        <span class="text-sky-300 font-bold mt-0.5 group-hover/link:text-sky-500 transition-colors">·</span>
                         <span class="line-clamp-1 italic">{p.data.title}</span>
-                      </div>
+                      </a>
                     ))}
+
+                    {/* 超過兩篇才顯示展開按鈕與隱藏文章 */}
+                    {item.count > 2 && (
+                      <details class="group/details cursor-pointer pt-1">
+                        <summary class="text-sky-500 text-sm font-bold flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity focus:outline-none list-none [&::-webkit-details-marker]:hidden">
+                          <span class="group-open/details:hidden">展開其餘 {item.count - 2} 篇文章</span>
+                          <span class="hidden group-open/details:inline">收合文章</span>
+                          <i data-lucide="chevron-down" class="w-4 h-4 group-open/details:rotate-180 transition-transform duration-300"></i>
+                        </summary>
+                        <div class="space-y-3 pt-4 pb-2">
+                          {item.allPosts.slice(2).map(p => (
+                            <a href={`/blog/${p.id}/`} class="text-sm text-slate-500 flex items-start gap-2 hover:text-sky-600 transition-colors group/link">
+                              <span class="text-sky-300 font-bold mt-0.5 group-hover/link:text-sky-500 transition-colors">·</span>
+                              <span class="line-clamp-1 italic">{p.data.title}</span>
+                            </a>
+                          ))}
+                        </div>
+                      </details>
+                    )}
                   </div>
                   
-                  <div class="text-sky-500 text-sm font-bold flex items-center gap-1 opacity-60">
-                    點擊下方文章開始閱讀 <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                  </div>
+                  {item.count <= 2 && (
+                    <div class="text-sky-500 text-sm font-bold flex items-center gap-1 opacity-60">
+                      點擊上方文章開始閱讀
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -80,7 +102,6 @@ const seriesData = allSeries.map(seriesName => {
         </div>
       )}
 
-      {/* 全部文章列表區 */}
       <h2 class="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
         <i data-lucide="list" class="w-5 h-5 text-sky-500"></i>
         最新發布內容
@@ -97,7 +118,6 @@ const seriesData = allSeries.map(seriesName => {
             <a href={`/blog/${post.id}/`} class="block group">
               <article class="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-100 group-hover:shadow-xl group-hover:shadow-sky-100 group-hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
                 
-                {/* 專題標記 */}
                 {(post.data as any).series && (
                   <div class="absolute top-0 right-0 bg-sky-100 text-sky-600 px-6 py-2 rounded-bl-3xl text-xs font-black tracking-wider">
                     {(post.data as any).series} 系列
@@ -109,7 +129,8 @@ const seriesData = allSeries.map(seriesName => {
                     {(post.data as any).category || '衛教資訊'}
                   </span>
                   <span class="font-medium italic tracking-tighter">
-                    {new Date((post.data as any).date || (post.data as any).pubDate).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                    {/* 這裡也加上防呆，如果沒日期就不顯示 */}
+                    {post.data.pubDate ? new Date(post.data.pubDate).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '未定日期'}
                   </span>
                 </div>
                 
@@ -119,7 +140,7 @@ const seriesData = allSeries.map(seriesName => {
                 />
 
                 <p class="text-slate-500 leading-relaxed mb-8 line-clamp-2">
-                  {(post.data as any).description}
+                  {post.data.description}
                 </p>
                 
                 <div class="text-sky-600 font-bold flex items-center gap-2 group-hover:gap-4 transition-all">
@@ -137,7 +158,6 @@ const seriesData = allSeries.map(seriesName => {
 </Layout>
 
 <style is:global>
-  /* 載入思源黑體 (Noto Sans TC) 並套用到 blog 頁面 */
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
   
   body {
