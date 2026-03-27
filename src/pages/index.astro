@@ -1,13 +1,16 @@
 ---
 import { getCollection } from 'astro:content';
 
-// 讓系統自動抓取 blog 資料夾裡的文章，並加上防呆日期處理，避免 valueOf 報錯
 const allPosts = await getCollection('blog');
-const posts = allPosts.sort((a, b) => {
-  const dateA = new Date((a.data as any).date || (a.data as any).pubDate || 0).getTime();
-  const dateB = new Date((b.data as any).date || (b.data as any).pubDate || 0).getTime();
-  return dateB - dateA;
-}).slice(0, 3);
+
+// 自動找出所有的專題系列 (排除重複且不為空的)
+const allSeries = [...new Set(allPosts.map(p => (p.data as any).series).filter(Boolean))];
+
+// 針對每個系列計算文章數，這次把限制數量的 .slice(0, 3) 拿掉，讓全部系列都能顯示
+const seriesData = allSeries.map(seriesName => {
+  const count = allPosts.filter(p => (p.data as any).series === seriesName).length;
+  return { name: seriesName, count };
+});
 ---
 
 <!DOCTYPE html>
@@ -46,10 +49,6 @@ const posts = allPosts.sort((a, b) => {
           <button onclick="window.scrollTo(0, 0)" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">首頁</button>
           <a href="#features" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">互動區</a>
           <a href="/blog" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">知識加油站</a>
-          <a href="#about" class="text-slate-600 hover:text-sky-500 font-medium transition-colors">認識島主</a>
-          <a href="#contact" class="bg-sky-400 hover:bg-sky-500 text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-            聯絡我們
-          </a>
         </div>
 
         <div class="md:hidden flex items-center">
@@ -65,8 +64,6 @@ const posts = allPosts.sort((a, b) => {
       <button onclick="window.scrollTo(0, 0)" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">首頁</button>
       <a href="#features" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">互動區</a>
       <a href="/blog" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">知識加油站</a>
-      <a href="#about" class="mobile-link block w-full text-left px-3 py-2 text-slate-600 font-medium">認識島主</a>
-      <a href="#contact" class="mobile-link block w-full text-center mt-4 bg-sky-400 text-white px-3 py-3 rounded-xl font-bold">聯絡我們</a>
     </div>
   </nav>
 
@@ -196,172 +193,46 @@ const posts = allPosts.sort((a, b) => {
       </div>
     </section>
 
-    <!-- 知識加油站預覽區塊 -->
+    <!-- 知識加油站預覽區塊 (改為顯示所有系列) -->
     <section id="blog" class="py-20 bg-white">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
           <h2 class="text-3xl md:text-4xl font-bold text-slate-800 mb-4">知識加油站</h2>
           <div class="w-20 h-1.5 bg-sky-400 mx-auto rounded-full"></div>
-          <p class="mt-4 text-lg text-slate-600">寫給家長的實戰指南，輕鬆看懂兒童營養與成長密碼。</p>
+          <p class="mt-4 text-lg text-slate-600">精選衛教專題，輕鬆看懂兒童營養與成長密碼。</p>
         </div>
 
         <div class="grid md:grid-cols-3 gap-8 mb-12">
-          {
-            posts && posts.length > 0 ? (
-              posts.map((post) => (
-                <a href={`/blog/${post.id || post.id}/`} class="bg-slate-50 p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col h-full">
-                  <div class="text-sky-500 text-sm font-bold mb-3 flex items-center gap-2">
-                    <i data-lucide="calendar" class="w-4 h-4"></i>
-                    {new Date((post.data as any).date || (post.data as any).pubDate || new Date()).toLocaleDateString('zh-TW')}
-                  </div>
-                  <h3 class="text-xl font-bold text-slate-800 mb-3 group-hover:text-sky-600 transition-colors line-clamp-2" set:html={post.data.title}>
-                  </h3>
-                  <p class="text-slate-600 mb-6 flex-grow line-clamp-3 leading-relaxed">
-                    {post.data.description}
-                  </p>
-                  <div class="inline-flex items-center text-sky-600 font-bold mt-auto">
-                    閱讀全文 <i data-lucide="arrow-right" class="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
-                  </div>
-                </a>
-              ))
-            ) : (
-              <div class="col-span-3 text-center py-10 text-slate-500">
-                目前還沒有文章喔，敬請期待島主的新分享！
-              </div>
-            )
-          }
+          {seriesData.length > 0 ? (
+            seriesData.map((item) => (
+              <a href="/blog" class="bg-slate-50 p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-sky-200 transition-all group flex flex-col items-center text-center h-full">
+                <div class="bg-sky-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <i data-lucide="layers" class="text-sky-500 w-8 h-8"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-3 group-hover:text-sky-600 transition-colors">
+                  #{item.name}
+                </h3>
+                <p class="text-slate-500 font-medium mt-auto">
+                  共收錄 {item.count} 篇文章
+                </p>
+              </a>
+            ))
+          ) : (
+            <div class="col-span-3 text-center py-10 text-slate-500">
+              目前還沒有專題喔，敬請期待島主的新分享！
+            </div>
+          )}
         </div>
 
         <div class="flex justify-center">
           <a href="/blog" class="inline-flex items-center justify-center gap-2 bg-white hover:bg-sky-50 text-sky-600 border-2 border-sky-100 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-sm hover:shadow-md">
             <i data-lucide="book-open" class="w-5 h-5"></i>
-            查看所有文章
+            前往衛教專欄
           </a>
         </div>
       </div>
     </section>
 
-    <!-- 關於島主區塊 -->
-    <section id="about" class="py-20 bg-slate-50 relative z-10 border-t border-slate-100">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-white rounded-3xl p-8 md:p-12 border border-sky-100 shadow-sm">
-          <div class="flex flex-col lg:flex-row gap-12">
-            
-            <div class="lg:w-5/12">
-               <div class="mb-8 rounded-full overflow-hidden shadow-sm border-4 border-white aspect-square bg-sky-100 relative max-w-[260px] mx-auto lg:mx-0">
-                 <img src="/your-photo.jpg" alt="蕭宇超醫師" class="w-full h-full object-cover object-top relative z-10" onerror="this.style.opacity='0'" />
-                 <div class="absolute inset-0 flex flex-col items-center justify-center text-sky-400/50 z-0 bg-sky-50">
-                   <i data-lucide="image" class="w-12 h-12 mb-2"></i>
-                   <span class="text-sm font-bold">請將 src 替換為照片路徑</span>
-                 </div>
-               </div>
-
-               <h2 class="text-3xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-                 <span class="bg-sky-400 p-2.5 rounded-2xl text-white"><i data-lucide="user" class="w-6 h-6"></i></span>
-                 關於島主
-               </h2>
-               <p class="text-slate-600 text-lg leading-relaxed mb-6">
-                 我是蕭宇超醫師，大家的健康超級夥伴。本身是一名小兒腸胃科醫師，除了照顧兒童常見疾病、腸胃健康，也致力於兒童肥胖的照顧。
-               </p>
-               <p class="text-slate-600 text-lg leading-relaxed mb-8">
-                 除了在醫院內的醫療處置，我也走進校園進行一對一的傳遞健康體位知識，並長期在校園、親子館、政府機關進行相關的衛教演講。同時也努力開發跟推廣各種有趣的線上互動遊戲，讓更多人可以朝健康的生活邁進！
-               </p>
-               
-               <div class="bg-slate-50 p-6 rounded-2xl shadow-sm border border-sky-100">
-                 <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
-                   <i data-lucide="clock" class="w-5 h-5"></i> 門診時間
-                 </h3>
-                 <ul class="space-y-4 text-slate-600">
-                   <li class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                     <span class="font-bold text-slate-800 min-w-[100px]">阮綜合醫院</span>
-                     <span>每周四上午</span>
-                   </li>
-                   <li class="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3">
-                     <span class="font-bold text-slate-800 min-w-[100px]">玉里慈濟醫院</span>
-                     <span>周三下午，每個月兩次<br/><span class="text-sm text-slate-400">(以門診表時間為主)</span></span>
-                   </li>
-                 </ul>
-               </div>
-            </div>
-
-            <div class="lg:w-7/12 space-y-6">
-               <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100">
-                 <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
-                   <i data-lucide="award" class="w-5 h-5"></i> 現職與學歷
-                 </h3>
-                 <div class="space-y-4 text-slate-600">
-                   <div>
-                     <div class="font-bold text-slate-800 mb-1">現職</div>
-                     <ul class="list-disc list-inside space-y-1 ml-1">
-                       <li>阮綜合醫院 兒童急診科、兒童腸胃科主治醫師</li>
-                       <li>玉里慈濟醫院 兒科兼任主治醫師</li>
-                     </ul>
-                   </div>
-                   <div class="pt-2 border-t border-slate-100">
-                     <div class="font-bold text-slate-800 mb-1">學歷</div>
-                     <div class="ml-1">中國醫藥大學 中醫系雙主修醫學系</div>
-                   </div>
-                 </div>
-               </div>
-
-               <div class="flex flex-col md:flex-row gap-6">
-                 <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 flex-1">
-                   <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
-                     <i data-lucide="briefcase" class="w-5 h-5"></i> 經歷
-                   </h3>
-                   <ol class="list-decimal list-inside space-y-2 text-slate-600 ml-1">
-                     <li>花蓮慈濟醫院小兒部住院醫師</li>
-                     <li>花蓮慈濟醫院小兒部兒童腸胃科研究醫師</li>
-                     <li>台北榮民總醫院兒童醫學部兒童胃腸科研究醫師</li>
-                     <li>花蓮慈濟醫院小兒部兒童腸胃科主治醫師</li>
-                     <li>玉里慈濟醫院小兒科兼任主治醫師</li>
-                   </ol>
-                 </div>
-                 
-                 <div class="bg-slate-50 p-6 md:p-8 rounded-2xl shadow-sm border border-sky-100 md:w-1/3">
-                   <h3 class="text-lg font-bold text-sky-700 mb-4 flex items-center gap-2">
-                     <i data-lucide="star" class="w-5 h-5"></i> 專長
-                   </h3>
-                   <ul class="list-disc list-inside space-y-2 text-slate-600 ml-1">
-                     <li>一般兒科疾病</li>
-                     <li>兒童肝膽腸胃疾病</li>
-                     <li>肥胖控制</li>
-                     <li>腹部超音波</li>
-                   </ul>
-                 </div>
-               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 聯絡我們區塊 -->
-    <section id="contact" class="py-20 bg-white relative z-10">
-      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="bg-slate-50 rounded-3xl p-8 md:p-12 border border-slate-100 shadow-sm text-center">
-          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-amber-500 mb-6">
-            <i data-lucide="mail" class="w-8 h-8"></i>
-          </div>
-          <h2 class="text-3xl font-bold text-slate-800 mb-6">演講與合作邀約</h2>
-          <div class="text-slate-600 text-lg leading-relaxed space-y-4 max-w-2xl mx-auto mb-8">
-            <p>
-              過去除了在醫院診間傳遞健康體態的秘訣，我也在許多校園以及社區分享，也期待能有機會能把健康知識分享給更多人。
-            </p>
-            <p class="bg-white border border-slate-200 py-3 px-6 rounded-xl inline-block text-slate-700 font-medium">
-              演講主題：健康體位管理、兒童居家安全、育兒指導、兒童照護
-            </p>
-            <p>
-              演講邀約或合作計畫歡迎來信討論：
-            </p>
-          </div>
-          <a href="mailto:u9602041@gmail.com" class="inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1">
-            <i data-lucide="mail" class="w-5 h-5"></i>
-            u9602041@gmail.com
-          </a>
-        </div>
-      </div>
-    </section>
   </main>
   
   <footer class="bg-slate-900 text-slate-400 py-16 text-center mt-auto">
