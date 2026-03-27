@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貓咪跳繩大戰爭</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; }
+        body {
+            font-family: '微軟正黑體', sans-serif;
+            margin: 0; padding: 0; height: 100vh;
+            background: #87CEEB;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* 頂部狀態列 */
+        .header {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .stats { font-size: 16px; font-weight: bold; color: #ffd700; display: flex; flex-direction: column; align-items: center; }
+        .stats span { font-size: 24px; }
+        
+        .timer-container {
+            flex-grow: 1;
+            margin: 0 20px;
+            text-align: center;
+        }
+        #phase-text { font-size: 20px; font-weight: bold; margin-bottom: 5px; color: #fff; text-shadow: 2px 2px 0 #333; }
+        .progress-bar {
+            width: 100%; height: 20px;
+            background: #555; border-radius: 10px; overflow: hidden;
+            border: 2px solid #fff;
+        }
+        #time-bar {
+            width: 100%; height: 100%;
+            background: #2ed573; transition: width 0.5s linear, background 0.5s;
+        }
+
+        /* 遊戲戰場 */
+        #battlefield {
+            flex-grow: 1;
+            position: relative;
+            background-color: #87CEEB;
+            background-image: linear-gradient(to bottom, transparent 70%, #8B4513 70%);
+            border-bottom: 20px solid #2ed573;
+            overflow: hidden;
+            transition: background-color 2s ease;
+        }
+
+        .scenery {
+            position: absolute;
+            bottom: 30%;
+            width: 200%;
+            height: 100px;
+            background-image: repeating-linear-gradient(90deg, transparent 0, transparent 100px, rgba(255,255,255,0.2) 100px, rgba(255,255,255,0.2) 120px);
+            transition: transform 0.2s ease-out;
+            z-index: 1;
+        }
+
+        #scout-cat {
+            position: absolute;
+            bottom: 30%;
+            left: 20%;
+            font-size: 60px;
+            z-index: 10;
+            transition: bottom 0.1s ease-out;
+            display: none;
+            transform: scaleX(-1); /* 讓領跑貓也朝向右邊 */
+        }
+
+        .bg-prop {
+            position: absolute;
+            z-index: 2;
+            transition: transform 0.2s ease-out;
+            pointer-events: none;
+        }
+
+        .unit {
+            position: absolute;
+            bottom: 30%;
+            font-size: 45px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: left 0.1s linear;
+            z-index: 5;
+        }
+        .hp-bar-bg { width: 40px; height: 6px; background: red; margin-bottom: 5px; border-radius: 3px; }
+        .hp-bar { height: 100%; background: #2ed573; border-radius: 3px; width: 100%; transition: width 0.2s; }
+        
+        .damage-text {
+            position: absolute; color: red; font-weight: bold; font-size: 24px;
+            text-shadow: 1px 1px 0 #fff;
+            animation: floatUp 0.5s ease-out forwards; pointer-events: none; z-index: 30;
+        }
+        .bonus-text {
+            position: absolute; color: #ffd700; font-weight: bold; font-size: 30px;
+            text-shadow: 2px 2px 0 #333; left: 50%; transform: translateX(-50%); bottom: 50%;
+            animation: popUp 1.5s ease-out forwards; pointer-events: none; z-index: 40;
+            white-space: nowrap;
+        }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-40px) scale(1.5); opacity: 0; } }
+        @keyframes popUp { 0% { transform: translate(-50%, 0) scale(0.5); opacity: 0; } 20% { transform: translate(-50%, -50px) scale(1.2); opacity: 1; } 80% { transform: translate(-50%, -50px) scale(1); opacity: 1; } 100% { transform: translate(-50%, -80px) scale(1); opacity: 0; } }
+
+        /* 商店 */
+        .shop {
+            background: #222; padding: 15px 5px;
+            display: flex; justify-content: center; gap: 8px;
+            z-index: 20; position: relative; flex-wrap: wrap;
+        }
+        #shop-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 25; display: flex;
+            justify-content: center; align-items: center;
+            color: white; font-size: 20px; font-weight: bold; letter-spacing: 2px;
+            pointer-events: none; 
+        }
+        
+        .cat-card {
+            background: #fff; border-radius: 10px; padding: 8px;
+            text-align: center; width: 95px; border: 4px solid #ccc;
+            opacity: 0.5; transition: 0.3s; position: relative;
+        }
+        .cat-card.charged { opacity: 1; border-color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.5); }
+        .charged-tag {
+            position: absolute; top: -10px; right: -5px; background: #ff4757; color: white;
+            font-size: 10px; padding: 2px 4px; border-radius: 10px; font-weight: bold;
+            display: none; animation: pulse 1s infinite;
+        }
+        .cat-card.charged .charged-tag { display: block; }
+        .cat-card.affordable { opacity: 1; border-color: #2ed573; cursor: pointer; }
+        .cat-card.active { transform: scale(0.9); background: #f0f0f0; }
+        .cat-card.locked { filter: grayscale(100%); opacity: 0.3; }
+        
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .cat-card .icon { font-size: 30px; }
+        .cat-card .price { color: #ff4757; font-weight: bold; font-size: 13px; margin: 4px 0; }
+        .cat-card .hint { background: #555; color: white; border-radius: 5px; font-size: 10px; padding: 2px; margin-top: 4px; }
+        .cat-card .level-tag { color: #3742fa; font-size: 12px; font-weight: bold; }
+        
+        .locked-text {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(0,0,0,0.8); color: white; font-size: 12px; border-radius: 6px;
+            font-weight: bold; text-align: center; line-height: 1.2;
+        }
+
+        /* 彈出視窗 */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; text-align: center;
+        }
+        .overlay h1 { font-size: 36px; margin: 10px 0; color: #333; }
+        .overlay p { font-size: 18px; color: #555; max-width: 600px; line-height: 1.5; }
+        
+        .btn-group { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center;}
+        button {
+            background: #ff4757; color: white; border: none; padding: 12px 24px;
+            font-size: 18px; font-weight: bold; border-radius: 30px; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        button:hover { background: #ff6b81; transform: translateY(-2px); }
+        button:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-secondary { background: #3742fa; }
+        .btn-success { background: #2ed573; }
+        .btn-gold { background: #ffa502; color: #fff; text-shadow: 1px 1px 0 #cc8400; }
+
+        #sys-msg {
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: #ffd700; padding: 10px 30px;
+            border-radius: 20px; font-size: 20px; font-weight: bold; z-index: 50;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        
+        #phase-transition {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); color: #fff; z-index: 60;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; 
+        }
+        #phase-transition h2 { font-size: 60px; margin: 0; text-shadow: 4px 4px 0 #ff4757; }
+        #phase-transition p { font-size: 24px; color: #ffd700; margin-top: 10px; }
+
+        .streak-badge {
+            background: #ffd700; color: #333; padding: 5px 15px; border-radius: 20px;
+            font-weight: bold; font-size: 16px; margin-bottom: 15px; border: 2px solid #cc8400;
+        }
+
+        #mode-selection { margin-bottom: 20px; }
+        .mode-desc { font-size: 14px; color: #666; margin-top: 5px; }
+
+        #pace-indicator {
+            position: absolute; top: 90px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 8px 20px;
+            border-radius: 20px; font-weight: bold; font-size: 18px; z-index: 25;
+            display: none; border: 2px solid #fff;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 準備畫面與模式選擇 -->
+    <div id="setup-screen" class="overlay">
+        <button id="cheat-day-btn" style="position: absolute; top: 20px; left: 20px; font-size: 14px; padding: 10px; background: #555; box-shadow: none;">⏳ 模擬換日(測試用)</button>
+        <h1>貓咪跳繩大戰爭</h1>
+        <div class="streak-badge" id="streak-display">連續跳繩：1 天 (貓咪 Lv.1)</div>
+        <p>請選擇你今天的挑戰模式：<br><span style="color:#ff4757; font-weight:bold; font-size: 16px;">(單局 3 分鐘無壓力，慢慢累積！每日目標 5 局)</span></p>
+        
+        <div id="mode-selection" class="btn-group">
+            <div>
+                <button id="mode-rope-btn" class="btn-gold">有繩挑戰</button>
+                <div class="mode-desc">金幣獲得兩倍！<br>(需要 2 支 Joy-Con)</div>
+            </div>
+            <div>
+                <button id="mode-norope-btn" class="btn-secondary">無繩休閒</button>
+                <div class="mode-desc">輕鬆賺金幣<br>(只需要 1 支 Joy-Con)</div>
+            </div>
+        </div>
+
+        <div id="connect-section" style="display: none; flex-direction: column; align-items: center;">
+            <p id="connection-status" style="color: #ff4757; font-weight: bold; font-size: 20px;">請連線 Joy-Con</p>
+            <div class="btn-group">
+                <button id="connect-btn">連線 Joy-Con</button>
+                <button id="kb-start-btn" class="btn-secondary">用鍵盤直接開始 (測試用)</button>
+                <button id="start-btn" class="btn-success" style="display:none;">開始第 1 局</button>
+            </div>
+            
+            <!-- 節拍器開關 -->
+            <button id="metronome-toggle-btn" style="background: #34495e; color: white; padding: 10px 20px; font-size: 16px; margin-top: 15px; box-shadow: none;">🎵 輔助節拍器：關閉</button>
+            
+            <button id="back-mode-btn" style="background: transparent; color: #888; box-shadow: none; font-size: 14px; margin-top: 10px;">重新選擇模式</button>
+        </div>
+    </div>
+
+    <!-- 局數過關畫面 -->
+    <div id="result-screen" class="overlay" style="display: none;">
+        <h1 id="result-title">第 1 局 防守成功！</h1>
+        <p id="growth-feedback" style="color: #2ed573; font-weight: bold; font-size: 22px; margin: 15px 0;"></p>
+        <p style="font-size: 20px;">
+            本局跳躍：<span id="result-jumps" style="color:#ff4757; font-weight:bold;">0</span> 下<br>
+            目前金幣：<span id="result-coins" style="color:#ffd700; font-weight:bold;">0</span> 🪙
+        </p>
+        <p style="color: #ff4757; font-weight: bold; font-size: 16px;">(下一局怪獸將會變強，但跳躍賺取的金幣也會增加！)</p>
+        
+        <div class="btn-group">
+            <button id="next-round-btn" class="btn-success">進入下一局</button>
+            <button id="end-training-btn" class="btn-secondary">結束今日訓練</button>
+        </div>
+    </div>
+
+    <!-- 每日總結算畫面 -->
+    <div id="daily-summary-screen" class="overlay" style="display: none;">
+        <h1 style="color: #ff4757; font-size: 48px;">哇！你今天太棒了！</h1>
+        <p style="font-size: 24px; color: #333; font-weight: bold;">
+            你的心肺和肌肉都變得更強壯了喔！
+        </p>
+        <div style="background: #f1f2f6; padding: 20px; border-radius: 15px; border: 3px solid #dfe4ea; margin: 20px 0; width: 80%; max-width: 400px;">
+            <p style="font-size: 20px; margin: 10px 0;">🏃 總共完成：<span id="summary-rounds" style="color:#3742fa; font-weight:bold;">0</span> 局</p>
+            <p style="font-size: 20px; margin: 10px 0;">⚡ 總跳躍數：<span id="summary-jumps" style="color:#ff4757; font-weight:bold;">0</span> 下</p>
+        </div>
+        
+        <div class="streak-badge" id="summary-streak" style="font-size: 20px; padding: 10px 20px;">目前連續跳繩：1 天</div>
+        <p id="next-reward-preview" style="color: #cc8400; font-weight: bold; font-size: 18px; margin-top: 0;"></p>
+
+        <button id="final-close-btn" class="btn-success" style="margin-top: 30px;">明天繼續挑戰！</button>
+    </div>
+
+    <!-- 頂部資訊 -->
+    <div class="header">
+        <div class="stats">局數<br><span id="round-display" style="color:#fff;">1</span></div>
+        <div class="stats">次數<br><span id="jump-display">0</span></div>
+        <div class="stats">金幣<br><span id="coin-display">0</span></div>
+        
+        <div class="timer-container">
+            <div id="phase-text">🏃‍♂️ 衝刺備戰中 3:00</div>
+            <div class="progress-bar"><div id="time-bar"></div></div>
+        </div>
+        
+        <div class="stats">擊殺<br><span id="kill-display">0</span></div>
+    </div>
+
+    <div id="pace-indicator">配速測量中...</div>
+
+    <!-- 戰場與特效 -->
+    <div id="battlefield">
+        <div class="scenery" id="scenery"></div>
+        <div id="scout-cat">🐈</div>
+    </div>
+    
+    <div id="sys-msg">系統提示</div>
+    <div id="phase-transition">
+        <h2 id="transition-title">怪物來襲！</h2>
+        <p id="transition-subtitle">準備迎擊！</p>
+    </div>
+
+    <!-- 商店 -->
+    <div class="shop" id="shop">
+        <div id="shop-overlay">跳躍收集中...</div>
+        
+        <div class="cat-card" id="card-1">
+            <div class="charged-tag">Ready</div>
+            <div class="icon">🐈</div><div>基礎貓</div>
+            <div class="level-tag cat-lv-display">Lv.1</div>
+            <div class="price">10 🪙</div>
+            <div class="hint" id="stats-1" style="background: #3742fa;">血50 攻15</div>
+            <div class="hint">鍵 A / 右</div>
+        </div>
+        <div class="cat-card" id="card-2">
+            <div class="charged-tag">Ready</div>
+            <div class="icon">🛡️</div><div>坦克貓</div>
+            <div class="level-tag cat-lv-display">Lv.1</div>
+            <div class="price">30 🪙</div>
+            <div class="hint" id="stats-2" style="background: #3742fa;">血250 攻5</div>
+            <div class="hint">鍵 B / 下</div>
+        </div>
+        <div class="cat-card" id="card-3">
+            <div class="charged-tag">Ready</div>
+            <div class="icon">😼</div><div>忍者貓</div>
+            <div class="level-tag cat-lv-display">Lv.1</div>
+            <div class="price">50 🪙</div>
+            <div class="hint" id="stats-3" style="background: #3742fa;">血40 攻40</div>
+            <div class="hint">鍵 X / 上</div>
+        </div>
+        <div class="cat-card locked" id="card-4">
+            <div class="charged-tag">Ready</div>
+            <div class="icon">✨</div><div>魔法貓</div>
+            <div class="level-tag cat-lv-display">Lv.1</div>
+            <div class="price">150 🪙</div>
+            <div class="hint" id="stats-4" style="background: #3742fa;">血100 攻100</div>
+            <div class="hint">鍵 Y / 左</div>
+            <div class="locked-text" id="lock-text-4">生涯 500下<br>解鎖</div>
+        </div>
+        <div class="cat-card locked" id="card-5">
+            <div class="charged-tag">Ready</div>
+            <div class="icon">🤖</div><div>機器貓</div>
+            <div class="level-tag cat-lv-display">Lv.1</div>
+            <div class="price">300 🪙</div>
+            <div class="hint" id="stats-5" style="background: #3742fa;">血600 攻200</div>
+            <div class="hint">扳機 L/R</div>
+            <div class="locked-text" id="lock-text-5">撐到第 3 局<br>解鎖</div>
+        </div>
+    </div>
+
+    <script>
+        // --- 連續天數與存檔邏輯 ---
+        let todayDate = new Date().toLocaleDateString();
+        let savedDate = localStorage.getItem('lastPlayDate');
+        let consecutiveDays = parseInt(localStorage.getItem('consecutiveDays') || '1');
+        let lifetimeJumps = parseInt(localStorage.getItem('lifetimeJumps') || '0');
+        
+        if (savedDate) {
+            let lastDateObj = new Date(savedDate);
+            let todayObj = new Date(todayDate);
+            let diffTime = Math.abs(todayObj - lastDateObj);
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays > 1) {
+                consecutiveDays = 1; 
+                localStorage.setItem('consecutiveDays', consecutiveDays);
+            }
+        }
+
+        let catLevel = 1;
+        if (consecutiveDays >= 7) catLevel = 3;
+        else if (consecutiveDays >= 3) catLevel = 2;
+
+        document.getElementById('streak-display').innerText = `連續跳繩：${consecutiveDays} 天 (貓咪 Lv.${catLevel})`;
+        let lvTags = document.querySelectorAll('.cat-lv-display');
+        lvTags.forEach(tag => tag.innerText = `Lv.${catLevel}`);
+
+        // --- 遊戲變數 ---
+        let playMode = 'NOROPE';
+        let coinMultiplier = 1;
+        let requiredJoycons = 1;
+        let connectedDevicesCount = 0;
+
+        let currentRound = 1;
+        let todayCompletedRounds = 0;
+        let todayTotalJumps = 0;
+        
+        let jumpTimestamps = []; 
+
+        const CAT_TYPES = {
+            1: { id: 1, icon: '🐈', price: 10, hp: 50, atk: 15, speed: 2, range: 40, cooldown: 50, reqJumps: 0, reqRound: 1 },
+            2: { id: 2, icon: '🛡️', price: 30, hp: 250, atk: 5, speed: 1, range: 40, cooldown: 80, reqJumps: 0, reqRound: 1 },
+            3: { id: 3, icon: '😼', price: 50, hp: 40, atk: 40, speed: 4, range: 50, cooldown: 40, reqJumps: 0, reqRound: 1 },
+            4: { id: 4, icon: '✨', price: 150, hp: 100, atk: 100, speed: 2, range: 150, cooldown: 90, reqJumps: 500, reqRound: 1 },
+            5: { id: 5, icon: '🤖', price: 300, hp: 600, atk: 200, speed: 1.5, range: 60, cooldown: 120, reqJumps: 0, reqRound: 3 }
+        };
+
+        const MONSTER_TYPES = [
+            { icon: '👾', baseHp: 80, atk: 10, speed: 1.5, range: 40, cooldown: 60 },
+            { icon: '🦇', baseHp: 40, atk: 15, speed: 3.5, range: 40, cooldown: 40 },
+            { icon: '👹', baseHp: 300, atk: 30, speed: 1, range: 50, cooldown: 90 }
+        ];
+
+        function updateCatCardStats() {
+            let upgradeMult = 1 + (catLevel - 1) * 0.5;
+            for (let i = 1; i <= 5; i++) {
+                let cat = CAT_TYPES[i];
+                let currentHp = Math.floor(cat.hp * upgradeMult);
+                let currentAtk = Math.floor(cat.atk * upgradeMult);
+                let statsEl = document.getElementById('stats-' + i);
+                if (statsEl) {
+                    statsEl.innerText = `血${currentHp} 攻${currentAtk}`;
+                }
+            }
+        }
+        updateCatCardStats(); 
+
+        let currentPhase = 'NONE';
+        let coins = 0;
+        let kills = 0;
+        let roundJumps = 0;
+        let units = []; 
+        let isPlaying = false;
+        let gameLoopId;
+        
+        let audioCtx;
+        let metronomeInterval;
+        let isMetronomeOn = false;
+        const TARGET_BPM = 70; 
+        
+        const JUMP_TIME = 180; 
+        const BATTLE_TIME = 60; 
+        let timeRemaining = JUMP_TIME;
+        let timerInterval;
+        let sceneryPos = 0;
+
+        const battlefield = document.getElementById('battlefield');
+        const scoutCat = document.getElementById('scout-cat');
+        const scenery = document.getElementById('scenery');
+        const shopOverlay = document.getElementById('shop-overlay');
+        const cards = { 
+            1: document.getElementById('card-1'), 2: document.getElementById('card-2'), 
+            3: document.getElementById('card-3'), 4: document.getElementById('card-4'),
+            5: document.getElementById('card-5')
+        };
+
+        // --- 模式選擇 UI ---
+        document.getElementById('mode-rope-btn').addEventListener('click', () => {
+            playMode = 'ROPE';
+            coinMultiplier = 2;
+            requiredJoycons = 2;
+            showConnectSection("有繩模式：金幣雙倍！請連線第一支手把 (綁腳上)");
+        });
+
+        document.getElementById('mode-norope-btn').addEventListener('click', () => {
+            playMode = 'NOROPE';
+            coinMultiplier = 1;
+            requiredJoycons = 1;
+            showConnectSection("無繩休閒：請連線 1 支手把 (拿手上)");
+        });
+
+        document.getElementById('back-mode-btn').addEventListener('click', () => {
+            document.getElementById('mode-selection').style.display = 'flex';
+            document.getElementById('connect-section').style.display = 'none';
+        });
+
+        function showConnectSection(text) {
+            document.getElementById('mode-selection').style.display = 'none';
+            document.getElementById('connect-section').style.display = 'flex';
+            document.getElementById('connection-status').innerText = text;
+            updateStartButtonStatus();
+        }
+
+        document.getElementById('metronome-toggle-btn').addEventListener('click', (e) => {
+            isMetronomeOn = !isMetronomeOn;
+            if (isMetronomeOn) {
+                e.target.innerText = '🎵 輔助節拍器：開啟 (70 BPM)';
+                e.target.style.background = '#2ed573';
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } else {
+                e.target.innerText = '🎵 輔助節拍器：關閉';
+                e.target.style.background = '#34495e';
+            }
+        });
+
+        function updateStartButtonStatus() {
+            if (connectedDevicesCount >= requiredJoycons) {
+                document.getElementById('start-btn').style.display = 'inline-block';
+                document.getElementById('connect-btn').style.display = 'none';
+                document.getElementById('connection-status').innerText = "太棒了！手把準備就緒，隨時可以開始。";
+                document.getElementById('connection-status').style.color = '#2ed573';
+            } else {
+                document.getElementById('start-btn').style.display = 'none';
+                document.getElementById('connect-btn').style.display = 'inline-block';
+            }
+        }
+
+        function checkUnlocks() {
+            if (lifetimeJumps >= CAT_TYPES[4].reqJumps) {
+                cards[4].classList.remove('locked');
+                document.getElementById('lock-text-4').style.display = 'none';
+            } else {
+                cards[4].classList.add('locked');
+                document.getElementById('lock-text-4').style.display = 'flex';
+                document.getElementById('lock-text-4').innerHTML = `生涯 500下<br>解鎖 (目前${lifetimeJumps})`;
+            }
+            
+            if (currentRound >= CAT_TYPES[5].reqRound) {
+                cards[5].classList.remove('locked');
+                document.getElementById('lock-text-5').style.display = 'none';
+            } else {
+                cards[5].classList.add('locked');
+                document.getElementById('lock-text-5').style.display = 'flex';
+            }
+        }
+
+        function updateShopUI() {
+            for (let i = 1; i <= 5; i++) {
+                if (lifetimeJumps < CAT_TYPES[i].reqJumps || currentRound < CAT_TYPES[i].reqRound) continue;
+                
+                const card = cards[i];
+                if (currentPhase === 'JUMP') {
+                    card.classList.remove('affordable');
+                    if (coins >= CAT_TYPES[i].price) card.classList.add('charged');
+                    else card.classList.remove('charged');
+                } else if (currentPhase === 'BATTLE') {
+                    card.classList.remove('charged');
+                    if (coins >= CAT_TYPES[i].price) card.classList.add('affordable');
+                    else card.classList.remove('affordable');
+                }
+            }
+        }
+
+        function addCoins(amount) {
+            coins += amount;
+            document.getElementById('coin-display').innerText = coins;
+            updateShopUI();
+        }
+
+        function playBeatSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            
+            osc.start(audioCtx.currentTime);
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function startJumpPhase() {
+            currentPhase = 'JUMP';
+            timeRemaining = JUMP_TIME;
+            roundJumps = 0;
+            jumpTimestamps = [];
+            document.getElementById('jump-display').innerText = 0;
+            
+            document.getElementById('phase-text').innerText = `🏃‍♂️ 第 ${currentRound} 局 備戰中`;
+            document.getElementById('time-bar').style.background = '#2ed573';
+            battlefield.style.backgroundColor = '#87CEEB'; 
+            shopOverlay.style.display = 'flex'; 
+            scoutCat.style.display = 'block';   
+            document.getElementById('pace-indicator').style.display = 'block';
+            
+            checkUnlocks();
+            updateShopUI();
+            
+            units.forEach(u => u.el.remove());
+            units = [];
+            
+            document.querySelectorAll('.bg-prop').forEach(el => el.remove());
+
+            if (isMetronomeOn) {
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                const beatDelay = 60000 / TARGET_BPM;
+                metronomeInterval = setInterval(playBeatSound, beatDelay);
+            }
+        }
+
+        function startBattlePhase() {
+            currentPhase = 'BATTLE';
+            timeRemaining = BATTLE_TIME;
+            
+            if (metronomeInterval) clearInterval(metronomeInterval);
+            
+            const transitionEl = document.getElementById('phase-transition');
+            document.getElementById('transition-title').innerText = `第 ${currentRound} 波怪物來襲！`;
+            document.getElementById('transition-subtitle').innerText = "血量變厚了，準備迎擊！";
+            transitionEl.style.opacity = 1;
+            setTimeout(() => transitionEl.style.opacity = 0, 2000);
+
+            document.getElementById('phase-text').innerText = '⚔️ 怪物來襲！';
+            document.getElementById('time-bar').style.background = '#ff4757';
+            shopOverlay.style.display = 'none'; 
+            scoutCat.style.display = 'none';    
+            document.getElementById('pace-indicator').style.display = 'none';
+            updateShopUI();
+            
+            document.querySelectorAll('.bg-prop').forEach(el => el.remove());
+        }
+
+        class Unit {
+            constructor(isCat, typeData) {
+                this.isCat = isCat;
+                this.icon = typeData.icon;
+                
+                let upgradeMult = 1 + (catLevel - 1) * 0.5; 
+                this.maxHp = Math.floor(typeData.hp * (isCat ? upgradeMult : 1));
+                this.hp = this.maxHp;
+                this.atk = Math.floor(typeData.atk * (isCat ? upgradeMult : 1));
+                
+                this.speed = typeData.speed;
+                this.range = typeData.range;
+                this.cooldownMax = typeData.cooldown;
+                this.cooldown = 0;
+                this.x = isCat ? 0 : window.innerWidth + 50; 
+                this.id = Math.random().toString(36).substr(2, 9);
+                this.el = this.createDOM();
+                battlefield.appendChild(this.el);
+            }
+
+            createDOM() {
+                const el = document.createElement('div');
+                el.className = `unit ${this.isCat ? 'cat' : 'monster'}`;
+                // 加入 emoji-icon 獨立翻轉，避免連帶翻轉血條
+                el.innerHTML = `
+                    <div class="hp-bar-bg"><div class="hp-bar" id="hp-${this.id}"></div></div>
+                    <div class="emoji-icon" style="transform: scaleX(${this.isCat ? -1 : 1}); display: inline-block; transition: transform 0.1s;">${this.icon}</div>
+                `;
+                el.style.left = this.x + 'px';
+                return el;
+            }
+
+            takeDamage(amount) {
+                this.hp -= amount;
+                const hpBar = document.getElementById(`hp-${this.id}`);
+                if(hpBar) hpBar.style.width = Math.max(0, (this.hp / this.maxHp) * 100) + '%';
+                
+                const dmgEl = document.createElement('div');
+                dmgEl.className = 'damage-text';
+                dmgEl.innerText = `-${amount}`;
+                dmgEl.style.left = (this.x + 20) + 'px';
+                dmgEl.style.bottom = '40%';
+                battlefield.appendChild(dmgEl);
+                setTimeout(() => dmgEl.remove(), 500);
+
+                if (this.hp <= 0) {
+                    this.el.remove();
+                    if (!this.isCat) {
+                        let reward = this.maxHp > 300 ? 15 : 5; 
+                        addCoins(reward);
+                        kills++;
+                        document.getElementById('kill-display').innerText = kills;
+                    }
+                }
+            }
+
+            update(enemies) {
+                if (this.hp <= 0) return;
+                let nearestEnemy = null;
+                let minDistance = Infinity;
+
+                for (let enemy of enemies) {
+                    if (enemy.hp <= 0) continue;
+                    let dist = this.isCat ? (enemy.x - this.x) : (this.x - enemy.x);
+                    if (dist > 0 && dist < minDistance) {
+                        minDistance = dist;
+                        nearestEnemy = enemy;
+                    }
+                }
+
+                if (nearestEnemy && minDistance <= this.range) {
+                    if (this.cooldown <= 0) {
+                        nearestEnemy.takeDamage(this.atk);
+                        this.cooldown = this.cooldownMax;
+                        
+                        const iconEl = this.el.querySelector('.emoji-icon');
+                        if (iconEl) {
+                            // 貓咪面朝右，攻擊時稍微往前傾(逆時針為負角度)
+                            iconEl.style.transform = `scaleX(${this.isCat ? -1 : 1}) rotate(${this.isCat ? -15 : 15}deg)`;
+                            setTimeout(() => {
+                                if (iconEl) iconEl.style.transform = `scaleX(${this.isCat ? -1 : 1}) rotate(0deg)`;
+                            }, 100);
+                        }
+                    }
+                } else {
+                    this.x += this.isCat ? this.speed : -this.speed;
+                    this.el.style.left = this.x + 'px';
+                }
+                if (this.cooldown > 0) this.cooldown--;
+            }
+        }
+
+        function spawnMonster() {
+            let roll = Math.random() * 100;
+            let mTypeIndex = 0;
+            
+            let batWeight = timeRemaining < 40 ? 40 : 10;
+            let bossWeight = timeRemaining < 20 ? 30 : 0;
+
+            if (roll < bossWeight) mTypeIndex = 2;
+            else if (roll < batWeight + bossWeight) mTypeIndex = 1;
+            
+            const baseType = MONSTER_TYPES[mTypeIndex];
+            
+            let hpMultiplier = 1 + ((currentRound - 1) * 0.5);
+            let finalHp = Math.floor(baseType.baseHp * hpMultiplier);
+
+            units.push(new Unit(false, { 
+                icon: baseType.icon, hp: finalHp, atk: baseType.atk, 
+                speed: baseType.speed, range: baseType.range, cooldown: baseType.cooldown 
+            }));
+        }
+
+        let frameCount = 0;
+        function gameLoop() {
+            if (!isPlaying) return;
+            frameCount++;
+            
+            if (currentPhase === 'BATTLE') {
+                let cats = units.filter(u => u.isCat && u.hp > 0);
+                let monsters = units.filter(u => !u.isCat && u.hp > 0);
+
+                cats.forEach(c => c.update(monsters));
+                monsters.forEach(m => m.update(cats));
+                units = units.filter(u => u.hp > 0);
+
+                let spawnInterval = Math.max(25, 75 - (currentRound * 10)); 
+                if (frameCount % spawnInterval === 0) spawnMonster();
+            }
+
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function updateBPM() {
+            if (currentPhase !== 'JUMP') return;
+            const now = Date.now();
+            
+            jumpTimestamps = jumpTimestamps.filter(t => now - t < 10000);
+            
+            let currentBPM = 0;
+            const paceEl = document.getElementById('pace-indicator');
+            
+            if (jumpTimestamps.length > 2) {
+                currentBPM = jumpTimestamps.length * 6; 
+            }
+
+            if (currentBPM === 0) {
+                paceEl.innerText = '準備起跳！保持 60~80 下/分的節奏';
+                paceEl.style.borderColor = '#fff';
+                paceEl.style.color = '#fff';
+            } else if (currentBPM >= 60 && currentBPM <= 85) {
+                paceEl.innerText = `完美節奏！(${currentBPM}下/分) 金幣加成中`;
+                paceEl.style.borderColor = '#2ed573';
+                paceEl.style.color = '#2ed573';
+            } else if (currentBPM > 85) {
+                paceEl.innerText = `太快了容易累，放慢一點 (${currentBPM}下/分)`;
+                paceEl.style.borderColor = '#ff4757';
+                paceEl.style.color = '#ff4757';
+            } else {
+                paceEl.innerText = `稍微加快一點點喔 (${currentBPM}下/分)`;
+                paceEl.style.borderColor = '#ffd700';
+                paceEl.style.color = '#ffd700';
+            }
+        }
+
+        function startRound(isNewGame) {
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'none';
+            
+            if (isNewGame) {
+                currentRound = 1;
+                coins = 0;
+                kills = 0;
+                todayCompletedRounds = 0;
+                todayTotalJumps = 0;
+                document.getElementById('kill-display').innerText = 0;
+            }
+            
+            document.getElementById('round-display').innerText = currentRound;
+            frameCount = 0;
+            isPlaying = true;
+            
+            if (isNewGame) addCoins(20); 
+            
+            startJumpPhase(); 
+            gameLoop();
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                let mins = Math.floor(timeRemaining / 60);
+                let secs = timeRemaining % 60;
+                
+                let maxTime = currentPhase === 'JUMP' ? JUMP_TIME : BATTLE_TIME;
+                document.getElementById('time-bar').style.width = (timeRemaining / maxTime) * 100 + '%';
+                
+                let phaseIcon = currentPhase === 'JUMP' ? `🏃‍♂️ 第 ${currentRound} 局 備戰中` : '⚔️ 怪物來襲！';
+                document.getElementById('phase-text').innerText = `${phaseIcon} ${mins}:${secs.toString().padStart(2, '0')}`;
+
+                updateBPM(); 
+
+                if (currentPhase === 'JUMP') {
+                    if (timeRemaining <= 60) {
+                        battlefield.style.backgroundColor = '#2c3e50'; 
+                    } else if (timeRemaining <= 120) {
+                        battlefield.style.backgroundColor = '#feca57'; 
+                    } else {
+                        battlefield.style.backgroundColor = '#87CEEB'; 
+                    }
+                }
+
+                if (timeRemaining <= 0) {
+                    if (currentPhase === 'JUMP') startBattlePhase();
+                    else showRoundResult(); 
+                }
+            }, 1000);
+        }
+
+        function showRoundResult() {
+            isPlaying = false;
+            clearInterval(timerInterval);
+            cancelAnimationFrame(gameLoopId);
+            if (metronomeInterval) clearInterval(metronomeInterval);
+            
+            lifetimeJumps += roundJumps;
+            todayTotalJumps += roundJumps;
+            todayCompletedRounds++;
+            
+            if (savedDate !== todayDate) {
+                consecutiveDays++;
+                savedDate = todayDate; 
+                localStorage.setItem('consecutiveDays', consecutiveDays);
+                localStorage.setItem('lastPlayDate', todayDate);
+                
+                if (consecutiveDays >= 7) catLevel = 3;
+                else if (consecutiveDays >= 3) catLevel = 2;
+                else catLevel = 1;
+                
+                document.getElementById('streak-display').innerText = `連續跳繩：${consecutiveDays} 天 (貓咪 Lv.${catLevel})`;
+                document.getElementById('summary-streak').innerText = `目前連續跳繩：${consecutiveDays} 天`;
+                let lvTags = document.querySelectorAll('.cat-lv-display');
+                lvTags.forEach(tag => tag.innerText = `Lv.${catLevel}`);
+                updateCatCardStats(); 
+            }
+            localStorage.setItem('lifetimeJumps', lifetimeJumps);
+
+            document.getElementById('result-title').innerText = `第 ${currentRound} 局 防守成功！`;
+            document.getElementById('growth-feedback').innerText = "💪 太棒了！稍微喝口水，準備迎接下一局的挑戰！";
+            document.getElementById('result-jumps').innerText = roundJumps;
+            document.getElementById('result-coins').innerText = coins;
+            
+            if (currentRound === 2) {
+                document.getElementById('growth-feedback').innerText = "🎉 堅持不懈！即將解鎖超強的【機器貓】！";
+            }
+            
+            document.getElementById('result-screen').style.display = 'flex';
+        }
+
+        function showDailySummary() {
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('daily-summary-screen').style.display = 'flex';
+            if (metronomeInterval) clearInterval(metronomeInterval);
+            
+            document.getElementById('summary-rounds').innerText = todayCompletedRounds;
+            document.getElementById('summary-jumps').innerText = todayTotalJumps;
+            document.getElementById('summary-streak').innerText = `目前連續跳繩：${consecutiveDays} 天`;
+            
+            let nextRewardText = "";
+            if (consecutiveDays < 3) {
+                let daysLeft = 3 - consecutiveDays;
+                nextRewardText = `🌟 再堅持連續跳 ${daysLeft} 天，貓咪軍團將進化到 Lv.2！`;
+            } else if (consecutiveDays < 7) {
+                let daysLeft = 7 - consecutiveDays;
+                nextRewardText = `🌟 再堅持連續跳 ${daysLeft} 天，貓咪軍團將進化到究極 Lv.3！`;
+            } else {
+                nextRewardText = `🔥 你已經是自律大師了！繼續保持滿級戰力稱霸戰場吧！`;
+            }
+            document.getElementById('next-reward-preview').innerText = nextRewardText;
+        }
+
+        function triggerJump() {
+            if (!isPlaying || currentPhase !== 'JUMP') return; 
+            
+            // 將防連點間隔拉長到 450 毫秒，避免一次跳躍被重複感測
+            const now = Date.now();
+            if (now - lastJumpTime < 450) return; 
+            lastJumpTime = now;
+            
+            roundJumps++;
+            jumpTimestamps.push(now);
+            document.getElementById('jump-display').innerText = roundJumps;
+            
+            let currentBPM = jumpTimestamps.length * 6;
+            let paceBonus = (currentBPM >= 60 && currentBPM <= 85) ? 2 : 1;
+
+            let coinsEarned = (1 + currentRound) * coinMultiplier * paceBonus;
+            addCoins(coinsEarned); 
+            
+            sceneryPos -= 50;
+            scenery.style.transform = `translateX(${sceneryPos}px)`;
+            scoutCat.style.bottom = '35%';
+            setTimeout(() => scoutCat.style.bottom = '30%', 100);
+
+            document.querySelectorAll('.bg-prop').forEach(prop => {
+                let currentX = parseFloat(prop.dataset.x) || 0;
+                let speed = parseFloat(prop.dataset.speed) || 20;
+                currentX -= speed;
+                prop.dataset.x = currentX;
+                prop.style.transform = `translateX(${currentX}px)`;
+                
+                if (currentX < -100) {
+                    prop.remove();
+                }
+            });
+
+            if (Math.random() < 0.25) {
+                let isCloud = Math.random() < 0.4; 
+                let prop = document.createElement('div');
+                prop.className = 'bg-prop';
+                prop.innerText = isCloud ? '☁️' : (Math.random() < 0.5 ? '🌲' : '🌳');
+                
+                prop.dataset.x = window.innerWidth;
+                prop.style.transform = `translateX(${window.innerWidth}px)`;
+                
+                if (isCloud) {
+                    prop.style.top = (Math.random() * 30 + 5) + '%';
+                    prop.style.fontSize = (Math.random() * 30 + 40) + 'px';
+                    prop.dataset.speed = 25; 
+                    prop.style.opacity = '0.7';
+                    prop.style.zIndex = 2;
+                } else {
+                    prop.style.bottom = '30%';
+                    prop.style.fontSize = (Math.random() * 20 + 50) + 'px';
+                    prop.dataset.speed = 50; 
+                    prop.style.zIndex = 3;
+                }
+                
+                battlefield.appendChild(prop);
+            }
+
+            if (roundJumps > 0 && roundJumps % 50 === 0) {
+                let bonusAmount = (20 + (currentRound * 10)) * coinMultiplier;
+                addCoins(bonusAmount);
+                const bonus = document.createElement('div');
+                bonus.className = 'bonus-text';
+                bonus.innerText = `🎁 寶箱獎勵 +${bonusAmount} 🪙`;
+                battlefield.appendChild(bonus);
+                setTimeout(() => bonus.remove(), 1500);
+            }
+        }
+
+        let buttonCooldowns = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        function buyCat(typeId) {
+            if (!isPlaying || currentPhase !== 'BATTLE') return; 
+            if (lifetimeJumps < CAT_TYPES[typeId].reqJumps || currentRound < CAT_TYPES[typeId].reqRound) return; 
+            
+            const now = Date.now();
+            if (now - buttonCooldowns[typeId] < 300) return; 
+            buttonCooldowns[typeId] = now;
+
+            const typeData = CAT_TYPES[typeId];
+            if (coins >= typeData.price) {
+                addCoins(-typeData.price);
+                units.push(new Unit(true, typeData));
+                cards[typeId].classList.add('active');
+                setTimeout(() => cards[typeId].classList.remove('active'), 150);
+            }
+        }
+
+        // 鍵盤控制
+        let lastJumpTime = 0;
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { e.preventDefault(); triggerJump(); }
+            if (e.code === 'Digit1') buyCat(1);
+            if (e.code === 'Digit2') buyCat(2);
+            if (e.code === 'Digit3') buyCat(3);
+            if (e.code === 'Digit4') buyCat(4);
+            if (e.code === 'Digit5') buyCat(5);
+            
+            if (e.code === 'KeyT' && isPlaying) {
+                timeRemaining = Math.max(1, timeRemaining - 10);
+            }
+            
+            if (e.code === 'KeyD') {
+                consecutiveDays++;
+                localStorage.setItem('consecutiveDays', consecutiveDays);
+                
+                if (consecutiveDays >= 7) catLevel = 3;
+                else if (consecutiveDays >= 3) catLevel = 2;
+                else catLevel = 1;
+                
+                document.getElementById('streak-display').innerText = `連續跳繩：${consecutiveDays} 天 (貓咪 Lv.${catLevel})`;
+                document.getElementById('summary-streak').innerText = `目前連續跳繩：${consecutiveDays} 天`;
+                let lvTags = document.querySelectorAll('.cat-lv-display');
+                lvTags.forEach(tag => tag.innerText = `Lv.${catLevel}`);
+                updateCatCardStats(); 
+                showSysMsg(`測試成功：天數已增加至 ${consecutiveDays} 天`);
+            }
+        });
+
+        document.getElementById('cheat-day-btn').addEventListener('click', () => {
+            consecutiveDays++;
+            localStorage.setItem('consecutiveDays', consecutiveDays);
+            
+            if (consecutiveDays >= 7) catLevel = 3;
+            else if (consecutiveDays >= 3) catLevel = 2;
+            else catLevel = 1;
+            
+            document.getElementById('streak-display').innerText = `連續跳繩：${consecutiveDays} 天 (貓咪 Lv.${catLevel})`;
+            document.getElementById('summary-streak').innerText = `目前連續跳繩：${consecutiveDays} 天`;
+            let lvTags = document.querySelectorAll('.cat-lv-display');
+            lvTags.forEach(tag => tag.innerText = `Lv.${catLevel}`);
+            updateCatCardStats(); 
+            showSysMsg(`模擬換日！目前：${consecutiveDays} 天`);
+        });
+
+        document.getElementById('kb-start-btn').addEventListener('click', () => startRound(true));
+        
+        document.getElementById('next-round-btn').addEventListener('click', () => {
+            currentRound++;
+            startRound(false); 
+        });
+
+        document.getElementById('end-training-btn').addEventListener('click', () => {
+            showDailySummary();
+        });
+
+        document.getElementById('final-close-btn').addEventListener('click', () => {
+            location.reload(); 
+        });
+
+        // --- Joy-Con 連線 ---
+        const connectBtn = document.getElementById('connect-btn');
+        const statusText = document.getElementById('connection-status');
+        // 將判斷起跳的力道門檻值提高，避免細微震動被算進去
+        const JUMP_THRESHOLD = 12000; 
+
+        async function sendJoyconCommand(device, subcommand, args) {
+            const payload = new Uint8Array(40);
+            payload[0] = Math.floor(Math.random() * 256); 
+            payload[1] = 0x00; payload[2] = 0x01; payload[3] = 0x40; payload[4] = 0x40;
+            payload[5] = 0x00; payload[6] = 0x01; payload[7] = 0x40; payload[8] = 0x40;
+            payload[9] = subcommand;
+            for (let i = 0; i < args.length; i++) payload[10 + i] = args[i];
+            await device.sendReport(0x01, payload);
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            try {
+                const devices = await navigator.hid.requestDevice({ filters: [] });
+                if (devices.length === 0) return;
+
+                const joycon = devices[0];
+                await joycon.open();
+                connectedDevicesCount++;
+                
+                statusText.innerText = `設定第 ${connectedDevicesCount} 支感測器中...`;
+                statusText.style.color = '#333';
+                
+                await sendJoyconCommand(joycon, 0x40, [0x01]);
+                await new Promise(resolve => setTimeout(resolve, 50));
+                await sendJoyconCommand(joycon, 0x03, [0x30]);
+
+                if (playMode === 'ROPE') {
+                    if (connectedDevicesCount === 1) {
+                        statusText.innerText = "已連線第一支。請再次點擊按鈕，連線第二支手把。";
+                        connectBtn.innerText = "連線第二支 Joy-Con";
+                    } 
+                } 
+                
+                updateStartButtonStatus();
+
+                joycon.addEventListener('inputreport', (event) => {
+                    if (event.reportId === 0x30) {
+                        const data = event.data;
+                        if (data.byteLength >= 18) {
+                            const x = data.getInt16(12, true);
+                            const y = data.getInt16(14, true);
+                            const z = data.getInt16(16, true);
+                            const magnitude = Math.sqrt(x*x + y*y + z*z);
+                            if (magnitude > JUMP_THRESHOLD) triggerJump();
+
+                            // 修正按鈕讀取位置：將原本的 3 和 5 改成 2 和 4
+                            const rightButtons = data.getUint8(2);
+                            const leftButtons = data.getUint8(4);
+                            
+                            if ((rightButtons & 0x08) !== 0 || (leftButtons & 0x04) !== 0) buyCat(1); 
+                            if ((rightButtons & 0x04) !== 0 || (leftButtons & 0x01) !== 0) buyCat(2); 
+                            if ((rightButtons & 0x02) !== 0 || (leftButtons & 0x02) !== 0) buyCat(3); 
+                            if ((rightButtons & 0x01) !== 0 || (leftButtons & 0x08) !== 0) buyCat(4); 
+                            
+                            if ((rightButtons & 0x40) !== 0 || (rightButtons & 0x80) !== 0 || 
+                                (leftButtons & 0x40) !== 0 || (leftButtons & 0x80) !== 0) buyCat(5); 
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = "連線失敗，請確定手把已經配對到電腦，或是檢查系統藍牙權限。";
+            }
+        });
+        
+        document.getElementById('start-btn').addEventListener('click', () => startRound(true));
+
+        checkUnlocks();
+
+    </script>
+</body>
+</html>
