@@ -6,11 +6,14 @@ const allPosts = await getCollection('blog');
 // 自動找出所有的專題系列 (排除重複且不為空的)
 const allSeries = [...new Set(allPosts.map(p => (p.data as any).series).filter(Boolean))];
 
-// 針對每個系列計算文章數，這次把限制數量的 .slice(0, 3) 拿掉，讓全部系列都能顯示
+// 針對每個系列計算文章數
 const seriesData = allSeries.map(seriesName => {
   const count = allPosts.filter(p => (p.data as any).series === seriesName).length;
   return { name: seriesName, count };
 });
+
+// 定義 canonical URL
+const canonicalURL = new URL(Astro.url.pathname, "https://smilecloud.tw");
 ---
 
 <!DOCTYPE html>
@@ -19,11 +22,31 @@ const seriesData = allSeries.map(seriesName => {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  {/* SEO 優化：升級標題與加入網頁描述 */}
   <title>蕭宇超醫師 | 兒童腸胃與健康體位專家 ‧ Smilecloud 微笑雲朵</title>
   <meta name="description" content="我是小兒腸胃科蕭宇超醫師。在 Smilecloud 微笑雲朵，我們提供兒童減重、健康體位管理與實用的育兒知識，透過趣味互動遊戲，陪伴孩子健康成長。" />
   <meta name="keywords" content="蕭宇超, 蕭宇超醫師, 兒童腸胃科, 兒童減重, 兒童肥胖, 兒童體位, Smilecloud, 微笑雲朵" />
   <meta name="author" content="蕭宇超醫師" />
+  <link rel="canonical" href={canonicalURL} />
+  
+  {/* Open Graph / Social Media 標籤：讓分享連結更吸引人 */}
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:title" content="蕭宇超醫師 | 兒童腸胃與健康體位專家" />
+  <meta property="og:description" content="陪伴孩子健康成長，提供專業兒童減重與腸胃衛教資訊。" />
+  <meta property="og:image" content="/your-og-image.jpg" />
+
+  {/* JSON-LD 結構化資料：告訴 Google 這是一位醫師的官方網站 */}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Physician",
+      "name": "蕭宇超",
+      "medicalSpecialty": "Pediatric Gastroenterology",
+      "url": "https://smilecloud.tw",
+      "description": "小兒腸胃科醫師，專長於兒童健康體位管理與衛教互動開發。",
+      "image": "https://smilecloud.tw/your-photo.jpg"
+    }
+  </script>
   
   <meta name="google-site-verification" content="wDCPtth5oqEJOlkxgPeB4oUaEv6s6pC4-cCqqtGCGjE" />
   
@@ -87,7 +110,6 @@ const seriesData = allSeries.map(seriesName => {
       
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         
-        {/* SEO 優化：將整個區域包在 H1 裡面，提升名字在搜尋引擎中的權重 */}
         <h1 class="flex flex-col items-center">
           <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-100 text-sky-700 font-semibold mb-8 text-sm">
             <i data-lucide="heart" class="text-sky-500 w-4 h-4"></i>
@@ -209,7 +231,7 @@ const seriesData = allSeries.map(seriesName => {
       </div>
     </section>
 
-    <!-- 知識加油站預覽區塊 (改為顯示所有系列) -->
+    <!-- 知識加油站預覽區塊 -->
     <section id="blog" class="py-20 bg-white">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
