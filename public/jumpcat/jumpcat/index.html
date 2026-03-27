@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貓咪跳繩大戰爭</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; }
+        body {
+            font-family: '微軟正黑體', sans-serif;
+            margin: 0; padding: 0; height: 100vh;
+            background: #87CEEB;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        .header {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .stats { font-size: 14px; font-weight: bold; color: #ffd700; display: flex; flex-direction: column; align-items: center; }
+        .stats span { font-size: 22px; }
+        
+        .timer-container {
+            flex-grow: 1;
+            margin: 0 20px;
+            text-align: center;
+        }
+        #phase-text { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #fff; text-shadow: 2px 2px 0 #333; }
+        .progress-bar {
+            width: 100%; height: 16px;
+            background: #555; border-radius: 8px; overflow: hidden;
+            border: 2px solid #fff;
+        }
+        #time-bar {
+            width: 100%; height: 100%;
+            background: #2ed573; transition: width 0.5s linear, background 0.5s;
+        }
+
+        #pace-indicator {
+            position: absolute; top: 85px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; padding: 8px 20px;
+            border-radius: 20px; font-weight: bold; font-size: 16px; z-index: 25;
+            display: none; border: 2px solid #fff; white-space: nowrap;
+        }
+
+        #battlefield {
+            flex-grow: 1;
+            position: relative;
+            background-color: #87CEEB;
+            background-image: linear-gradient(to bottom, transparent 70%, #8B4513 70%);
+            border-bottom: 10px solid #2ed573; 
+            overflow: hidden;
+            transition: background-color 1s ease, border-bottom-color 1s ease, background-image 1s ease;
+        }
+
+        .scenery {
+            position: absolute;
+            bottom: 30%;
+            width: 100%;
+            height: 100px;
+            background-image: repeating-linear-gradient(90deg, transparent 0, transparent 100px, rgba(255,255,255,0.2) 100px, rgba(255,255,255,0.2) 120px);
+            transition: background-position 0.2s ease-out;
+            z-index: 1;
+        }
+
+        #scout-cat {
+            position: absolute;
+            bottom: 30%;
+            left: 20%;
+            font-size: 60px;
+            z-index: 10;
+            display: none;
+            transform: scaleX(-1) translateY(0); 
+        }
+
+        @keyframes catJump {
+            0% { transform: scaleX(-1) translateY(0); }
+            50% { transform: scaleX(-1) translateY(-40px); }
+            100% { transform: scaleX(-1) translateY(0); }
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-40px); opacity: 0; }
+        }
+
+        .bg-prop {
+            position: absolute;
+            z-index: 2;
+            transition: transform 0.2s ease-out;
+            pointer-events: none;
+        }
+
+        .unit {
+            position: absolute;
+            bottom: 30%;
+            font-size: 45px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: left 0.1s linear, opacity 0.3s, transform 0.3s;
+            z-index: 5;
+        }
+        .unit.dead { opacity: 0; transform: scale(1.5); pointer-events: none; }
+        .hp-bar-bg { width: 40px; height: 6px; background: red; margin-bottom: 5px; border-radius: 3px; }
+        .hp-bar { height: 100%; background: #2ed573; border-radius: 3px; width: 100%; transition: width 0.2s; }
+        
+        .damage-text {
+            position: absolute; color: red; font-weight: bold; font-size: 26px;
+            text-shadow: 2px 2px 0 #fff;
+            animation: floatUp 0.8s ease-out forwards; pointer-events: none; z-index: 30;
+        }
+        
+        .shop {
+            background: #222; padding: 10px 5px;
+            display: flex; justify-content: center; gap: 6px;
+            z-index: 20; position: relative; flex-wrap: wrap;
+        }
+        #shop-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 25; display: flex;
+            justify-content: center; align-items: center;
+            color: white; font-size: 18px; font-weight: bold;
+            pointer-events: none; 
+        }
+        
+        .cat-card {
+            background: #fff; border-radius: 10px; padding: 5px;
+            text-align: center; width: 85px; border: 3px solid #ccc;
+            opacity: 0.5; transition: 0.3s; position: relative;
+            cursor: pointer;
+        }
+        .cat-card.charged { opacity: 1; border-color: #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .cat-card.affordable { opacity: 1; border-color: #2ed573; }
+        .cat-card.locked { filter: grayscale(100%); opacity: 0.3; pointer-events: none; }
+        .cat-card.used { filter: grayscale(100%); opacity: 0.3; pointer-events: none; }
+
+        .cat-card .icon { font-size: 24px; }
+        .cat-card .price { color: #ff4757; font-weight: bold; font-size: 11px; margin: 2px 0; }
+        .cat-card .hint { background: #555; color: white; border-radius: 4px; font-size: 9px; padding: 3px 1px; margin-top: 2px; line-height: 1.2; }
+        .cat-card .level-tag { color: #3742fa; font-size: 10px; font-weight: bold; }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.96);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; text-align: center;
+        }
+
+        .btn-group { display: flex; gap: 12px; margin-top: 15px; flex-wrap: wrap; justify-content: center;}
+        button {
+            background: #ff4757; color: white; border: none; padding: 10px 20px;
+            font-size: 16px; font-weight: bold; border-radius: 25px; cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-secondary { background: #3742fa; }
+        .btn-success { background: #2ed573; }
+        .btn-gold { background: #ffa502; }
+
+        #daily-chest-btn, #bonus-chest-3, #bonus-chest-5, #passport-btn, #upgrade-base-btn {
+            background: #ffd700; color: #d35400; font-size: 18px; padding: 12px 24px;
+            border-radius: 12px; border: 2px solid #e67e22; font-weight: bold;
+            margin: 5px; cursor: pointer;
+        }
+        #daily-chest-btn { animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        #sys-msg {
+            position: absolute; top: 130px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: #ffd700; padding: 10px 30px;
+            border-radius: 20px; font-size: 20px; font-weight: bold; z-index: 50;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+
+        #phase-transition {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255, 71, 87, 0.95); color: white; padding: 20px 50px;
+            border-radius: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 200;
+            display: none; animation: popIn 0.3s ease-out; pointer-events: none;
+        }
+        @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+
+        .passport-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-width: 600px;
+            max-height: 50vh;
+            overflow-y: auto;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f1f2f6;
+            border-radius: 15px;
+            border: 4px solid #dfe4ea;
+        }
+        .stamp {
+            background: #fff; border: 2px dashed #ccc; border-radius: 10px;
+            padding: 10px; display: flex; flex-direction: column; align-items: center;
+            filter: grayscale(100%); opacity: 0.5;
+        }
+        .stamp.unlocked { filter: grayscale(0%); opacity: 1; border-color: #ff4757; }
+        .stamp.locked { filter: grayscale(100%); opacity: 0.4; }
+        .stamp .icon { font-size: 30px; margin-bottom: 5px; }
+        .stamp .name { font-size: 12px; font-weight: bold; color: #333; }
+        
+        .today-record-panel {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 8px 20px;
+            border-radius: 15px;
+            border: 2px solid #3742fa;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="reward-modal" class="overlay" style="display: none; background: rgba(0,0,0,0.9); z-index: 200;">
+        <h1 style="color: #ffd700; font-size: 40px;">開箱成功！</h1>
+        <p id="reward-text" style="color: #fff; font-size: 24px;"></p>
+        <button id="close-reward-btn" class="btn-success">收下獎勵</button>
+    </div>
+
+    <!-- 結束訓練專屬結算視窗 -->
+    <div id="end-summary-modal" class="overlay" style="display: none; z-index: 300;">
+        <h1 style="color: #ff4757; font-size: 40px; margin-bottom: 5px;">今日訓練完成！</h1>
+        <p id="end-phrase" style="font-size: 18px; color: #555; font-weight: bold; margin: 10px 0;"></p>
+        <div style="background: #f1f2f6; padding: 20px; border-radius: 15px; border: 3px solid #dfe4ea; margin: 20px 0; width: 80%; max-width: 400px;">
+            <p style="font-size: 20px; margin: 10px 0; color: #333;">今日完成局數：<span id="end-rounds" style="color:#3742fa; font-weight:bold; font-size: 26px;">0</span> 局</p>
+            <p style="font-size: 20px; margin: 10px 0; color: #333;">今日總跳躍數：<span id="end-jumps" style="color:#2ed573; font-weight:bold; font-size: 26px;">0</span> 下</p>
+        </div>
+        <button id="final-close-btn" class="btn-success">好好休息，明天見！</button>
+    </div>
+
+    <div id="upgrade-modal" class="overlay" style="display: none; z-index: 160;">
+        <h1 style="color: #e67e22; font-size: 36px; margin-bottom: 0;">貓咪升級基地</h1>
+        <p style="margin-top: 5px; font-weight: bold; color: #555;">目前擁有罐頭：<span id="upgrade-cans-display">0</span> 🥫</p>
+        <div class="passport-grid" id="upgrade-grid" style="grid-template-columns: repeat(5, 1fr);"></div>
+        <button id="close-upgrade-btn" class="btn-secondary">返回首頁</button>
+    </div>
+
+    <div id="passport-modal" class="overlay" style="display: none; z-index: 150;">
+        <h1 style="color: #3742fa; font-size: 36px; margin-bottom: 0;">環遊世界護照</h1>
+        <p style="margin-top: 5px; font-weight: bold; color: #ff4757; font-size: 18px;">全球總累積：<span id="passport-total-rounds">0</span> 局 / <span id="passport-total-jumps">0</span> 下</p>
+        <p style="margin-top: 0px; font-weight: bold; color: #555;">收集進度：<span id="unlocked-count">1</span> / 24</p>
+        <div class="passport-grid" id="passport-grid"></div>
+        <button id="close-passport-btn" class="btn-secondary">關閉護照</button>
+    </div>
+
+    <div id="setup-screen" class="overlay">
+        <!-- 密碼解鎖開發者按鈕 -->
+        <button id="unlock-dev-btn" style="position: absolute; top: 15px; left: 15px; font-size: 16px; padding: 5px 8px; background: transparent; border: none; cursor: pointer; z-index: 90;" title="開發者設定">⚙️</button>
+        
+        <!-- 被鎖定的開發者面板 -->
+        <div id="dev-panel" style="display: none; position: absolute; top: 15px; left: 15px; gap: 5px; flex-direction: column; z-index: 100;">
+            <div style="display: flex; gap: 5px;">
+                <button id="cheat-day-btn" style="font-size: 12px; padding: 8px; background: #555;">模擬換日</button>
+                <button id="cheat-world-btn" style="font-size: 12px; padding: 8px; background: #e1b12c;">飛往下個國家</button>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button id="kb-start-btn" style="font-size: 12px; padding: 8px; background: #3742fa;">鍵盤開始</button>
+                <button id="reset-all-btn" style="font-size: 12px; padding: 8px; background: #ff4757;">全部重置</button>
+            </div>
+        </div>
+        
+        <h1>貓咪跳繩大戰爭</h1>
+        <div class="streak-badge" id="streak-display">累積運動：1 天 | 連續跳繩：1 天</div>
+        
+        <div class="today-record-panel">
+            今日紀錄：完成 <span id="today-rounds-display" style="color: #ff4757;">0</span> 局 / 共 <span id="today-jumps-display" style="color: #2ed573;">0</span> 下
+        </div>
+
+        <div style="color: #e67e22; font-weight: bold; margin-bottom: 10px;">勇氣罐頭：<span id="cans-display">0</span> 🥫</div>
+        
+        <div id="chests-area" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 10px;">
+            <button id="upgrade-base-btn" style="background: #e67e22; color: #fff; border-color: #d35400;">⛺ 貓咪基地 (升級)</button>
+            <button id="passport-btn" style="background: #3498db; color: #fff; border-color: #2980b9;">🗺️ 查看旅遊護照</button>
+            <button id="daily-chest-btn" style="display: none;">🎁 領取今日寶箱</button>
+            <button id="bonus-chest-3" style="display: none;">🥉 完成 3 局獎勵</button>
+            <button id="bonus-chest-5" style="display: none;">🥇 完成 5 局獎勵</button>
+        </div>
+
+        <div id="mode-selection" class="btn-group">
+            <button id="mode-rope-btn" class="btn-gold">有繩挑戰 (獎勵加成)</button>
+            <button id="mode-norope-btn" class="btn-secondary">無繩休閒</button>
+        </div>
+
+        <div id="connect-section" style="display: none; flex-direction: column; align-items: center;">
+            <p id="connection-status" style="color: #ff4757; font-weight: bold;">請連線 Joy-Con</p>
+            <div class="btn-group">
+                <button id="connect-btn">連線</button>
+                <button id="start-btn" class="btn-success" style="display:none;">開始挑戰</button>
+            </div>
+            <button id="metronome-toggle-btn" style="background: #34495e; color: white; margin-top: 10px; font-size: 12px;">節拍器：關閉</button>
+            <button id="back-mode-btn" style="background: transparent; color: #888; font-size: 12px;">重新選擇</button>
+        </div>
+
+        <div style="position: absolute; bottom: 15px; font-size: 14px; color: #888;">
+            蕭宇超製作 一起健康生活
+        </div>
+    </div>
+
+    <div id="result-screen" class="overlay" style="display: none;">
+        <h1 id="result-title">成功防守！</h1>
+        <p id="growth-feedback" style="color: #2ed573; font-weight: bold;"></p>
+        <p>本局跳躍：<span id="result-jumps" style="color:#ff4757;">0</span> 下</p>
+        <p>獲得金幣：<span id="result-coins" style="color:#ffd700;">0</span> 🪙</p>
+        <p>獲得罐頭：<span id="result-cans" style="color:#e67e22;">0</span> 🥫</p>
+        <div class="btn-group">
+            <button id="next-round-btn" class="btn-success">繼續挑戰</button>
+            <button id="end-training-btn" class="btn-secondary">結束訓練</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="stats">局數<br><span id="round-display">1</span></div>
+        <div class="stats">金幣<br><span id="coin-display">0</span></div>
+        <div class="timer-container">
+            <div id="phase-text">備戰中</div>
+            <div class="progress-bar"><div id="time-bar"></div></div>
+        </div>
+        <div class="stats">擊殺<br><span id="kill-display">0</span></div>
+        <div class="stats">次數<br><span id="jump-display">0</span></div>
+    </div>
+
+    <div id="pace-indicator">節奏測量中</div>
+
+    <div id="battlefield">
+        <div class="scenery" id="scenery"></div>
+        <div id="scout-cat">🐈</div>
+    </div>
+    
+    <div id="sys-msg"></div>
+    <div id="phase-transition" style="display: none;">
+        <h2 id="transition-title" style="margin: 0;">怪物來襲！</h2>
+    </div>
+
+    <div class="shop" id="shop">
+        <div id="shop-overlay">跳躍中...</div>
+        <div class="cat-card" id="card-1" onclick="buyCat(1)">
+            <div class="icon">🐈</div><div class="level-tag" id="lv-1">Lv.1</div>
+            <div class="price">10 🪙</div><div class="hint" id="stats-1"></div>
+            <div class="hint">鍵1<br>手把 A</div>
+        </div>
+        <div class="cat-card" id="card-2" onclick="buyCat(2)">
+            <div class="icon">🛡️</div><div class="level-tag" id="lv-2">Lv.1</div>
+            <div class="price">30 🪙</div><div class="hint" id="stats-2"></div>
+            <div class="hint">鍵2<br>手把 B</div>
+        </div>
+        <div class="cat-card" id="card-3" onclick="buyCat(3)">
+            <div class="icon">😼</div><div class="level-tag" id="lv-3">Lv.1</div>
+            <div class="price">50 🪙</div><div class="hint" id="stats-3"></div>
+            <div class="hint">鍵3<br>手把 X</div>
+        </div>
+        <div class="cat-card locked" id="card-4" onclick="buyCat(4)">
+            <div class="icon">✨</div><div class="level-tag" id="lv-4">Lv.1</div>
+            <div class="price">150 🪙</div><div class="hint" id="stats-4"></div>
+            <div class="hint">鍵4<br>手把 Y</div>
+        </div>
+        <div class="cat-card locked" id="card-5" onclick="buyCat(5)">
+            <div class="icon">🤖</div><div class="level-tag" id="lv-5">Lv.1</div>
+            <div class="price">300 🪙</div><div class="hint" id="stats-5"></div>
+            <div class="hint">鍵5<br>手把 R</div>
+        </div>
+        <div class="cat-card locked" id="card-6" onclick="buyCat(6)">
+            <div class="icon">🦁</div><div class="level-tag">絕招</div>
+            <div class="price">400 🪙</div><div class="hint">全場秒殺</div>
+            <div class="hint">鍵6<br>手把 ZR</div>
+        </div>
+    </div>
+
+    <script>
+        const WORLDS = [
+            { name: '台灣', sky: '#87CEEB', ground: '#8B4513', border: '#2ed573', prop: ['🌴', '🌳', '☁️', '🧋'], monsters: ['👾', '🦇', '👹'] },
+            { name: '日本', sky: '#ffb8b8', ground: '#2f3542', border: '#ff9ff3', prop: ['🌸', '⛩️', '☁️', '🗻'], monsters: ['🥷', '👺', '👹'] },
+            { name: '韓國', sky: '#c7ecee', ground: '#95afc0', border: '#535c68', prop: ['🍚', '🏯', '☁️', '🌲'], monsters: ['👻', '🦊', '🐯'] },
+            { name: '泰國', sky: '#f8efba', ground: '#e1b12c', border: '#f39c12', prop: ['🐘', '🛕', '🌴', '☀️'], monsters: ['🐒', '🐍', '🐊'] },
+            { name: '法國', sky: '#a4b0be', ground: '#57606f', border: '#747d8c', prop: ['🥐', '🎨', '☁️', '☕'], monsters: ['🐀', '🦨', '🐺'] },
+            { name: '英國', sky: '#d1d8e0', ground: '#4b6584', border: '#778ca3', prop: ['🚌', '💂', '🌧️', '☁️'], monsters: ['🦇', '🕷️', '🧛'] },
+            { name: '義大利', sky: '#7bed9f', ground: '#ff7f50', border: '#eccc68', prop: ['🍕', '🛵', '🏛️', '☀️'], monsters: ['🐗', '🦅', '🐗'] },
+            { name: '希臘', sky: '#70a1ff', ground: '#dfe4ea', border: '#1e90ff', prop: ['🏺', '🌊', '☀️', '🏛️'], monsters: ['🦅', '🦂', '🐂'] },
+            { name: '埃及', sky: '#feca57', ground: '#e1b12c', border: '#d35400', prop: ['🐪', '🏜️', '☀️', '🌵'], monsters: ['🦂', '🐍', '🧻'] },
+            { name: '肯亞', sky: '#ff9f43', ground: '#ee5253', border: '#c8d6e5', prop: ['🦁', '🦒', '🌳', '☀️'], monsters: ['🐆', '🦏', '🦍'] },
+            { name: '杜拜', sky: '#f8a5c2', ground: '#c44569', border: '#f78fb3', prop: ['🏢', '🏎️', '🐪', '☀️'], monsters: ['🦅', '🦂', '🐅'] },
+            { name: '土耳其', sky: '#ffda79', ground: '#cc8e35', border: '#b33939', prop: ['🎈', '🕌', '☕', '☁️'], monsters: ['🐺', '🦅', '🐻'] },
+            { name: '美國', sky: '#70a1ff', ground: '#2f3640', border: '#1e90ff', prop: ['🍔', '🗽', '☁️', '🦅'], monsters: ['🧟', '👽', '🤡'] },
+            { name: '加拿大', sky: '#c8d6e5', ground: '#576574', border: '#8395a7', prop: ['🍁', '🦌', '🏔️', '❄️'], monsters: ['🐻', '🐺', '🫎'] },
+            { name: '墨西哥', sky: '#ffbe76', ground: '#eb4d4b', border: '#f0932b', prop: ['🌮', '🌵', '🎸', '☀️'], monsters: ['🦂', '🐍', '🦅'] },
+            { name: '巴西', sky: '#badc58', ground: '#6ab04c', border: '#f9ca24', prop: ['🦜', '⚽', '🌴', '☀️'], monsters: ['🐆', '🐊', '🦍'] },
+            { name: '澳洲', sky: '#ffeaa7', ground: '#f0932b', border: '#e1b12c', prop: ['🦘', '🐨', '🏄', '☀️'], monsters: ['🕷️', '🐍', '🐊'] },
+            { name: '紐西蘭', sky: '#b8e994', ground: '#78e08f', border: '#38ada9', prop: ['🥝', '🐑', '🏔️', '☁️'], monsters: ['🐗', '🦅', '🦈'] },
+            { name: '南極', sky: '#c7ecee', ground: '#ffffff', border: '#81ecec', prop: ['🐧', '🧊', '❄️', '⛄'], monsters: ['🦭', '🦈', '🐻‍❄️'] },
+            { name: '夏威夷', sky: '#81ecec', ground: '#f6e58d', border: '#00cec9', prop: ['🌺', '🏄', '🌋', '🍍'], monsters: ['🦀', '🦈', '🐙'] },
+            { name: '太空', sky: '#130f40', ground: '#30336b', border: '#535c68', prop: ['🌌', '🛰️', '🌠', '☄️'], monsters: ['👾', '🛸', '🛰️'] },
+            { name: '月球', sky: '#2d3436', ground: '#718093', border: '#b2bec3', prop: ['🌕', '👽', '🌑', '🛸'], monsters: ['👽', '🤖', '👾'] },
+            { name: '火星', sky: '#eb4d4b', ground: '#b33939', border: '#ff7979', prop: ['🔴', '🚀', '🌋', '🛰️'], monsters: ['🛸', '👽', '🌋'] },
+            { name: '貓咪星', sky: '#ff9ff3', ground: '#feca57', border: '#f368e0', prop: ['🐾', '🐟', '🧶', '🏰'], monsters: ['🐶', '🐭', '🦅'] }
+        ];
+
+        let storage = {
+            consecutiveDays: parseInt(localStorage.getItem('conDays') || '1'),
+            totalDays: parseInt(localStorage.getItem('totalDays') || '1'),
+            todayDate: localStorage.getItem('todayDate') || new Date().toLocaleDateString(),
+            todayRounds: parseInt(localStorage.getItem('todayRounds') || '0'),
+            todayJumps: parseInt(localStorage.getItem('todayJumps') || '0'),
+            lifetimeJumps: parseInt(localStorage.getItem('lifeJumps') || '0'),
+            cans: parseInt(localStorage.getItem('cans') || '0'),
+            catLevels: JSON.parse(localStorage.getItem('catLvs') || '{"1":1,"2":1,"3":1,"4":1,"5":1}'),
+            lastDraw: localStorage.getItem('lastDraw') || '',
+            lastBonus3: localStorage.getItem('lastBonus3') || '',
+            lastBonus5: localStorage.getItem('lastBonus5') || '',
+            maxWorld: parseInt(localStorage.getItem('maxWorld') || '0'),
+            worldStats: JSON.parse(localStorage.getItem('worldStats') || '{}')
+        };
+
+        const ROUNDS_PER_WORLD = 35; 
+
+        function saveGame() {
+            localStorage.setItem('conDays', storage.consecutiveDays);
+            localStorage.setItem('totalDays', storage.totalDays);
+            localStorage.setItem('todayDate', storage.todayDate);
+            localStorage.setItem('todayRounds', storage.todayRounds);
+            localStorage.setItem('todayJumps', storage.todayJumps);
+            localStorage.setItem('lifeJumps', storage.lifetimeJumps);
+            localStorage.setItem('cans', storage.cans);
+            localStorage.setItem('catLvs', JSON.stringify(storage.catLevels));
+            localStorage.setItem('lastDraw', storage.lastDraw);
+            localStorage.setItem('lastBonus3', storage.lastBonus3);
+            localStorage.setItem('lastBonus5', storage.lastBonus5);
+            localStorage.setItem('maxWorld', storage.maxWorld);
+            localStorage.setItem('worldStats', JSON.stringify(storage.worldStats));
+            document.getElementById('cans-display').innerText = storage.cans;
+        }
+
+        function checkNewDay() {
+            const today = new Date().toLocaleDateString();
+            if (storage.todayDate !== today) {
+                let lastD = new Date(storage.todayDate);
+                let todayD = new Date(today);
+                let diffDays = Math.round((todayD - lastD) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === 1) {
+                    storage.consecutiveDays++;
+                } else if (diffDays > 1) {
+                    storage.consecutiveDays = 1;
+                }
+                
+                storage.totalDays++;
+                storage.todayDate = today;
+                storage.todayRounds = 0;
+                storage.todayJumps = 0;
+                saveGame();
+            }
+        }
+
+        let currentRound = 1;
+        let coins = 0;
+        let kills = 0;
+        let roundJumps = 0;
+        let isPlaying = false;
+        let playMode = 'NOROPE';
+        let requiredJoycons = 1;
+        let connectedDevicesCount = 0;
+        let jumpTimestamps = [];
+        let currentBPM = 0;
+        let audioCtx, metronomeInterval, isMetronomeOn = false;
+        let lastJumpTime = 0;
+        let lionUsed = false;
+        let units = [];
+        let timeRemaining = 180;
+        let currentPhase = 'NONE';
+        let gameLoopId, timerInterval;
+        let sceneryPos = 0;
+
+        function getCurrentWorldIndex() {
+            return Math.floor((storage.totalDays - 1) / 7) % WORLDS.length;
+        }
+
+        function checkWorldProgress() {
+            let absWorld = Math.floor((storage.totalDays - 1) / 7);
+            if (absWorld > storage.maxWorld) {
+                storage.maxWorld = absWorld;
+                saveGame();
+            }
+        }
+
+        const CAT_BASE = {
+            1: { icon: '🐈', price: 10, hp: 50, atk: 15, speed: 2, range: 40, cd: 50 },
+            2: { icon: '🛡️', price: 30, hp: 250, atk: 5, speed: 1, range: 40, cd: 80 },
+            3: { icon: '😼', price: 50, hp: 40, atk: 40, speed: 4, range: 50, cd: 40 },
+            4: { icon: '✨', price: 150, hp: 750, atk: 10, speed: 1, range: 40, cd: 80 },
+            5: { icon: '🤖', price: 300, hp: 600, atk: 200, speed: 1.5, range: 60, cd: 120 }
+        };
+
+        const MONSTERS_BASE = [
+            { baseHp: 80, atk: 10, speed: 1.5, range: 40, cd: 60 },
+            { baseHp: 40, atk: 15, speed: 3.5, range: 40, cd: 40 },
+            { baseHp: 300, atk: 30, speed: 1, range: 50, cd: 90 }
+        ];
+
+        function updateUI() {
+            checkNewDay();
+            
+            document.getElementById('streak-display').innerText = `累積運動：${storage.totalDays} 天 | 連續跳繩：${storage.consecutiveDays} 天`;
+            document.getElementById('cans-display').innerText = storage.cans;
+            document.getElementById('today-rounds-display').innerText = storage.todayRounds;
+            document.getElementById('today-jumps-display').innerText = storage.todayJumps;
+            
+            for(let id in storage.catLevels) {
+                let lv = storage.catLevels[id];
+                document.getElementById(`lv-${id}`).innerText = `Lv.${lv}`;
+                let hp = Math.floor(CAT_BASE[id].hp * (1 + (lv-1)*0.2));
+                let atk = Math.floor(CAT_BASE[id].atk * (1 + (lv-1)*0.2));
+                document.getElementById(`stats-${id}`).innerText = `血${hp} 攻${atk}`;
+            }
+
+            const today = new Date().toLocaleDateString();
+            document.getElementById('daily-chest-btn').style.display = (storage.lastDraw !== today) ? 'block' : 'none';
+            document.getElementById('bonus-chest-3').style.display = (storage.todayRounds >= 3 && storage.lastBonus3 !== today) ? 'block' : 'none';
+            document.getElementById('bonus-chest-5').style.display = (storage.todayRounds >= 5 && storage.lastBonus5 !== today) ? 'block' : 'none';
+            
+            checkUnlocks();
+        }
+
+        function checkUnlocks() {
+            if (storage.lifetimeJumps >= 500) document.getElementById('card-4').classList.remove('locked');
+            if (currentRound >= 3) document.getElementById('card-5').classList.remove('locked');
+            if (storage.todayRounds >= 5) document.getElementById('card-6').classList.remove('locked');
+        }
+
+        function openChest(type) {
+            let gold = 0, cans = 0;
+            const today = new Date().toLocaleDateString();
+            
+            if (type === 'daily') { 
+                let streakBonusGold = Math.min(storage.consecutiveDays * 10, 300);
+                let streakBonusCans = Math.floor(Math.min(storage.consecutiveDays, 30) / 2);
+                
+                gold = Math.floor(Math.random() * 151) + 50 + streakBonusGold; 
+                cans = Math.floor(Math.random() * 6) + 5 + streakBonusCans;   
+                storage.lastDraw = today; 
+            }
+            else if (type === 'bonus3') { gold = 300; cans = 50; storage.lastBonus3 = today; }
+            else if (type === 'bonus5') { gold = 600; cans = 100; storage.lastBonus5 = today; }
+            
+            storage.cans += cans;
+            coins += gold;
+            document.getElementById('reward-text').innerText = `獲得金幣 x${gold}，罐頭 x${cans}！`;
+            document.getElementById('reward-modal').style.display = 'flex';
+            saveGame(); updateUI();
+        }
+
+        document.getElementById('daily-chest-btn').onclick = () => openChest('daily');
+        document.getElementById('bonus-chest-3').onclick = () => openChest('bonus3');
+        document.getElementById('bonus-chest-5').onclick = () => openChest('bonus5');
+        document.getElementById('close-reward-btn').onclick = () => document.getElementById('reward-modal').style.display = 'none';
+
+        document.getElementById('passport-btn').onclick = () => {
+            const grid = document.getElementById('passport-grid');
+            grid.innerHTML = '';
+            let unlockedCount = 0;
+            let totalRounds = 0;
+            let totalJumps = 0;
+            
+            for (let i = 0; i < WORLDS.length; i++) {
+                let isUnlocked = i <= storage.maxWorld;
+                if (isUnlocked) unlockedCount++;
+                let w = WORLDS[i];
+                let stats = storage.worldStats[i] || { rounds: 0, jumps: 0 };
+                
+                totalRounds += stats.rounds;
+                totalJumps += stats.jumps;
+                
+                let stamp = document.createElement('div');
+                stamp.className = `stamp ${isUnlocked ? 'unlocked' : ''}`;
+                
+                let statsHtml = isUnlocked ? `<div style="font-size: 11px; margin-top: 4px; color: #555; text-align: center; line-height: 1.3;">${stats.rounds}局<br>${stats.jumps}下</div>` : '';
+                
+                stamp.innerHTML = `<div class="icon">${isUnlocked ? w.prop[0] : '❓'}</div>
+                                   <div class="name">${isUnlocked ? w.name : '未解鎖'}</div>
+                                   ${statsHtml}`;
+                grid.appendChild(stamp);
+            }
+            document.getElementById('unlocked-count').innerText = unlockedCount;
+            document.getElementById('passport-total-rounds').innerText = totalRounds;
+            document.getElementById('passport-total-jumps').innerText = totalJumps;
+            document.getElementById('passport-modal').style.display = 'flex';
+        };
+        document.getElementById('close-passport-btn').onclick = () => document.getElementById('passport-modal').style.display = 'none';
+
+        function renderUpgradeBase() {
+            const grid = document.getElementById('upgrade-grid');
+            grid.innerHTML = '';
+            document.getElementById('upgrade-cans-display').innerText = storage.cans;
+
+            for (let i = 1; i <= 5; i++) {
+                let lv = storage.catLevels[i];
+                let base = CAT_BASE[i];
+                let cost = lv * 20;
+
+                let isLocked = false;
+                if (i === 4 && storage.lifetimeJumps < 500) isLocked = true;
+                if (i === 5 && currentRound < 3) isLocked = true;
+
+                let card = document.createElement('div');
+                card.className = `stamp ${isLocked ? 'locked' : 'unlocked'}`;
+                
+                if (isLocked) {
+                    card.innerHTML = `<div class="icon">❓</div><div class="name">尚未解鎖</div>`;
+                } else {
+                    let hp = Math.floor(base.hp * (1 + (lv-1)*0.2));
+                    let atk = Math.floor(base.atk * (1 + (lv-1)*0.2));
+                    let nextHp = Math.floor(base.hp * (1 + lv*0.2));
+                    let nextAtk = Math.floor(base.atk * (1 + lv*0.2));
+
+                    let btnColor = storage.cans >= cost ? '#2ed573' : '#ccc';
+                    let btnStyle = `font-size:12px; padding:5px 10px; border-radius:15px; border:none; color:white; font-weight:bold; background:${btnColor}; cursor:${storage.cans >= cost ? 'pointer' : 'not-allowed'}`;
+
+                    card.innerHTML = `
+                        <div class="icon">${base.icon}</div>
+                        <div class="name">Lv.${lv}</div>
+                        <div style="font-size:10px; color:#666; margin: 5px 0;">血 ${hp} 🡒 ${nextHp}<br>攻 ${atk} 🡒 ${nextAtk}</div>
+                        <button class="upgrade-btn" data-id="${i}" style="${btnStyle}">升級 (${cost}🥫)</button>
+                    `;
+                }
+                grid.appendChild(card);
+            }
+
+            document.querySelectorAll('.upgrade-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    let id = parseInt(e.target.getAttribute('data-id'));
+                    let cost = storage.catLevels[id] * 20;
+                    if (storage.cans >= cost) {
+                        storage.cans -= cost;
+                        storage.catLevels[id]++;
+                        saveGame();
+                        updateUI();
+                        renderUpgradeBase();
+                    }
+                };
+            });
+        }
+
+        document.getElementById('upgrade-base-btn').onclick = () => {
+            renderUpgradeBase();
+            document.getElementById('upgrade-modal').style.display = 'flex';
+        };
+        document.getElementById('close-upgrade-btn').onclick = () => document.getElementById('upgrade-modal').style.display = 'none';
+
+        function updateBPM() {
+            if (currentPhase !== 'JUMP') return;
+            const paceEl = document.getElementById('pace-indicator');
+            if (!paceEl) return;
+
+            const now = Date.now();
+            
+            if (now - lastJumpTime > 2500) {
+                jumpTimestamps = [];
+                currentBPM = 0;
+            } else if (jumpTimestamps.length >= 2) {
+                let duration = jumpTimestamps[jumpTimestamps.length - 1] - jumpTimestamps[0];
+                let intervals = jumpTimestamps.length - 1;
+                if (duration > 0) {
+                    currentBPM = Math.round(60000 / (duration / intervals));
+                }
+            }
+
+            if (currentBPM === 0) {
+                paceEl.innerText = '準備起跳！保持 60~150 下/分的節奏';
+                paceEl.style.borderColor = '#fff'; paceEl.style.color = '#fff';
+            } else if (currentBPM >= 60 && currentBPM <= 150) {
+                paceEl.innerText = `完美節奏！(${currentBPM}下/分) 金幣加成中`;
+                paceEl.style.borderColor = '#2ed573'; paceEl.style.color = '#2ed573';
+            } else if (currentBPM > 150) {
+                paceEl.innerText = `太快了，放慢一點 (${currentBPM}下/分)`;
+                paceEl.style.borderColor = '#ff4757'; paceEl.style.color = '#ff4757';
+            } else {
+                paceEl.innerText = `稍微加快喔 (${currentBPM}下/分)`;
+                paceEl.style.borderColor = '#ffd700'; paceEl.style.color = '#ffd700';
+            }
+        }
+
+        class Unit {
+            constructor(isCat, id, typeData) {
+                this.isCat = isCat;
+                let lv = isCat ? storage.catLevels[id] || 1 : 1;
+                let mult = 1 + (lv - 1) * 0.2;
+                this.hp = Math.floor((typeData.hp || typeData.baseHp || 10) * mult);
+                if (!isCat) this.hp *= (1 + (currentRound-1)*0.5); 
+                this.maxHp = this.hp;
+                this.atk = Math.floor((typeData.atk || 0) * mult);
+                this.speed = typeData.speed || 2;
+                this.range = typeData.range || 40;
+                this.cdMax = typeData.cd || 60;
+                this.cd = 0;
+                
+                const bf = document.getElementById('battlefield');
+                this.x = isCat ? 0 : bf.clientWidth - 80;
+                this.id = Math.random().toString(36).substr(2,9);
+                this.el = this.createDOM(typeData.icon || '❓');
+                bf.appendChild(this.el);
+            }
+            createDOM(icon) {
+                const el = document.createElement('div');
+                el.className = 'unit';
+                el.innerHTML = `<div class="hp-bar-bg"><div class="hp-bar" id="hp-${this.id}"></div></div>
+                                <div class="emoji-icon" style="transform:scaleX(${this.isCat?-1:1})">${icon}</div>`;
+                el.style.left = this.x + 'px';
+                return el;
+            }
+            takeDamage(dmg) {
+                this.hp -= dmg;
+                const hpBar = document.getElementById(`hp-${this.id}`);
+                if(hpBar && this.maxHp > 0) hpBar.style.width = Math.max(0, (this.hp/this.maxHp)*100) + '%';
+                if(this.hp <= 0) {
+                    this.el.classList.add('dead');
+                    setTimeout(() => this.el.remove(), 300);
+                    if(!this.isCat) {
+                        coins += 10; 
+                        kills++;
+                        let killEl = document.getElementById('kill-display');
+                        if(killEl) killEl.innerText = kills;
+                        let coinEl = document.getElementById('coin-display');
+                        if(coinEl) coinEl.innerText = coins;
+                    }
+                }
+            }
+            update(enemies) {
+                if(this.hp <= 0) return;
+                let nearest = null, minDist = Infinity;
+                enemies.forEach(e => {
+                    let d = Math.abs(e.x - this.x);
+                    if(d < minDist) { minDist = d; nearest = e; }
+                });
+                if(nearest && minDist <= this.range) {
+                    if(this.cd <= 0) { nearest.takeDamage(this.atk); this.cd = this.cdMax; }
+                } else {
+                    const bfWidth = document.getElementById('battlefield').clientWidth;
+                    if (this.isCat) {
+                        this.x = Math.min(this.x + this.speed, bfWidth - 60);
+                    } else {
+                        this.x -= this.speed;
+                    }
+                    this.el.style.left = this.x + 'px';
+                }
+                if(this.cd > 0) this.cd--;
+            }
+        }
+
+        let lastBuyTime = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+        function buyCat(id) {
+            if(!isPlaying || currentPhase !== 'BATTLE') return;
+            
+            const now = Date.now();
+            if (now - lastBuyTime[id] < 300) return; 
+            lastBuyTime[id] = now;
+
+            if(id === 6) {
+                if(storage.todayRounds >= 5 && coins >= 400 && !lionUsed) {
+                    lionUsed = true; 
+                    coins -= 400;
+                    units.filter(u => !u.isCat).forEach(m => m.takeDamage(9999));
+                    showSysMsg("獅子王絕招！");
+                    document.getElementById('coin-display').innerText = coins;
+                }
+            } else {
+                let base = CAT_BASE[id];
+                if(coins >= base.price) {
+                    if (id === 4 && storage.lifetimeJumps < 500) { showSysMsg("魔法貓尚未解鎖！"); return; }
+                    if (id === 5 && currentRound < 3) { showSysMsg("機器貓尚未解鎖！"); return; }
+                    
+                    coins -= base.price;
+                    units.push(new Unit(true, id, base));
+                    document.getElementById('coin-display').innerText = coins;
+                }
+            }
+        }
+
+        function startGame() {
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'none';
+            isPlaying = true;
+            kills = 0;
+            document.getElementById('kill-display').innerText = 0;
+            
+            if (coins < 30) {
+                coins = 30; 
+            }
+            document.getElementById('coin-display').innerText = coins;
+            
+            checkNewDay();
+            checkWorldProgress();
+            
+            startJumpPhase();
+            gameLoop();
+        }
+
+        function applyWorldTheme() {
+            let world = WORLDS[getCurrentWorldIndex()];
+            const bf = document.getElementById('battlefield');
+            bf.style.backgroundColor = world.sky;
+            bf.style.backgroundImage = `linear-gradient(to bottom, transparent 70%, ${world.ground} 70%)`;
+            bf.style.borderBottomColor = world.border;
+            showSysMsg(`抵達新國家：${world.name}！`);
+        }
+
+        function startJumpPhase() {
+            currentPhase = 'JUMP';
+            timeRemaining = 180;
+            roundJumps = 0;
+            lionUsed = false;
+            jumpTimestamps = [];
+            currentBPM = 0;
+            
+            let m = Math.floor(timeRemaining / 60);
+            let s = timeRemaining % 60;
+            document.getElementById('phase-text').innerText = `第 ${currentRound} 局：衝刺中 ${m}:${s.toString().padStart(2, '0')}`;
+            
+            applyWorldTheme();
+            
+            document.getElementById('shop-overlay').style.display = 'flex';
+            document.getElementById('scout-cat').style.display = 'block';
+            document.getElementById('pace-indicator').style.display = 'block';
+            updateBPM();
+            
+            units.forEach(u => u.el.remove()); units = [];
+            document.querySelectorAll('.bg-prop').forEach(el => el.remove());
+
+            if (isMetronomeOn) {
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                if (metronomeInterval) clearInterval(metronomeInterval);
+                metronomeInterval = setInterval(playBeatSound, 60000 / 70); 
+            }
+        }
+
+        function startBattlePhase() {
+            currentPhase = 'BATTLE';
+            timeRemaining = 60;
+            frameCount = 0; 
+            
+            if (metronomeInterval) clearInterval(metronomeInterval);
+
+            let m = Math.floor(timeRemaining / 60);
+            let s = timeRemaining % 60;
+            document.getElementById('phase-text').innerText = `怪獸襲擊！ ${m}:${s.toString().padStart(2, '0')}`;
+            
+            document.getElementById('shop-overlay').style.display = 'none';
+            document.getElementById('scout-cat').style.display = 'none';
+            document.getElementById('pace-indicator').style.display = 'none';
+            
+            document.querySelectorAll('.bg-prop').forEach(el => el.remove());
+
+            let pt = document.getElementById('phase-transition');
+            if(pt) {
+                pt.style.display = 'block';
+                setTimeout(() => pt.style.display = 'none', 1500);
+            }
+        }
+
+        function spawnMonster() {
+            let roll = Math.random() * 100;
+            let mTypeIndex = 0;
+            let batWeight = timeRemaining < 40 ? 40 : 10;
+            let bossWeight = timeRemaining < 20 ? 30 : 0;
+
+            if (roll < bossWeight) mTypeIndex = 2;
+            else if (roll < batWeight + bossWeight) mTypeIndex = 1;
+            
+            const baseType = MONSTERS_BASE[mTypeIndex];
+            let currentWorld = WORLDS[getCurrentWorldIndex()];
+            let monsterIcon = currentWorld.monsters[mTypeIndex]; 
+            
+            units.push(new Unit(false, 0, { icon: monsterIcon, ...baseType }));
+        }
+
+        function gameLoop() {
+            if(!isPlaying) return;
+            if(currentPhase === 'BATTLE') {
+                let cats = units.filter(u => u.isCat && u.hp > 0);
+                let monsters = units.filter(u => !u.isCat && u.hp > 0);
+                cats.forEach(c => c.update(monsters));
+                monsters.forEach(m => m.update(cats));
+                units = units.filter(u => u.hp > 0 || u.el.parentNode);
+                
+                let spawnInterval = Math.floor(Math.max(25, 75 - (currentRound * 10)) / 0.8); 
+                if(frameCount % spawnInterval === 0) spawnMonster();
+            }
+            frameCount++;
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        let frameCount = 0;
+
+        setInterval(() => {
+            if(!isPlaying) return;
+            timeRemaining--;
+            let m = Math.floor(timeRemaining/60), s = timeRemaining%60;
+            let timeStr = `${m}:${s.toString().padStart(2, '0')}`;
+            
+            document.getElementById('time-bar').style.width = (timeRemaining/ (currentPhase === 'JUMP' ? 180 : 60)) * 100 + '%';
+            
+            if(currentPhase === 'JUMP') {
+                updateBPM();
+                document.getElementById('phase-text').innerText = `第 ${currentRound} 局：衝刺中 ${timeStr}`;
+                const bf = document.getElementById('battlefield');
+                if (timeRemaining <= 60) bf.style.backgroundColor = '#2c3e50'; 
+                else if (timeRemaining <= 120) bf.style.backgroundColor = '#feca57'; 
+                else {
+                    let world = WORLDS[getCurrentWorldIndex()];
+                    bf.style.backgroundColor = world.sky;
+                }
+            } else {
+                document.getElementById('phase-text').innerText = `怪獸襲擊！ ${timeStr}`;
+            }
+            
+            if(timeRemaining <= 0) {
+                if(currentPhase === 'JUMP') startBattlePhase();
+                else endRound();
+            }
+        }, 1000);
+
+        function endRound() {
+            isPlaying = false;
+            
+            storage.todayRounds++;
+            storage.todayJumps += roundJumps;
+            storage.lifetimeJumps += roundJumps;
+            let earnedCans = Math.floor(roundJumps / 10);
+            storage.cans += earnedCans;
+
+            let wIdx = getCurrentWorldIndex();
+            if (!storage.worldStats[wIdx]) {
+                storage.worldStats[wIdx] = { rounds: 0, jumps: 0 };
+            }
+            storage.worldStats[wIdx].rounds += 1;
+            storage.worldStats[wIdx].jumps += roundJumps;
+
+            saveGame();
+            
+            if (metronomeInterval) clearInterval(metronomeInterval);
+
+            document.getElementById('result-jumps').innerText = roundJumps;
+            document.getElementById('result-coins').innerText = coins;
+            document.getElementById('result-cans').innerText = earnedCans;
+            document.getElementById('result-screen').style.display = 'flex';
+            updateUI();
+        }
+
+        function triggerJump() {
+            try {
+                if(!isPlaying || currentPhase !== 'JUMP') return;
+                const now = Date.now();
+                if(now - lastJumpTime < 300) return;
+                lastJumpTime = now;
+                
+                jumpTimestamps.push(now);
+                if (jumpTimestamps.length > 8) jumpTimestamps.shift(); 
+                
+                updateBPM();
+                
+                roundJumps++;
+                let inZone = (currentBPM >= 60 && currentBPM <= 150);
+                let baseCoin = inZone ? 4 : 2;
+                coins += (playMode === 'ROPE' ? baseCoin * 2 : baseCoin);
+                
+                document.getElementById('jump-display').innerText = roundJumps;
+                document.getElementById('coin-display').innerText = coins;
+
+                if (roundJumps > 0 && roundJumps % 50 === 0) {
+                    let multiplier = Math.floor(roundJumps / 50);
+                    let bonusCoins = (Math.floor(Math.random() * 30) + 20) * multiplier; 
+                    let bonusCans = 2 * multiplier;
+                    coins += bonusCoins;
+                    storage.cans += bonusCans;
+                    document.getElementById('coin-display').innerText = coins;
+                    
+                    let dropMsg = document.createElement('div');
+                    dropMsg.className = 'damage-text';
+                    dropMsg.style.left = '35%';
+                    dropMsg.style.top = '30%';
+                    dropMsg.style.color = '#ffd700';
+                    dropMsg.style.fontSize = '24px';
+                    dropMsg.style.zIndex = '150';
+                    dropMsg.innerHTML = `🎁 寶箱！金幣+${bonusCoins} 罐頭+${bonusCans}`;
+                    document.getElementById('battlefield').appendChild(dropMsg);
+                    setTimeout(() => dropMsg.remove(), 1500);
+                }
+                
+                let cat = document.getElementById('scout-cat');
+                if (cat) {
+                    cat.style.animation = 'none';
+                    void cat.offsetWidth; 
+                    cat.style.animation = 'catJump 0.3s ease-out';
+                }
+
+                let worldIdx = getCurrentWorldIndex();
+                let moveSpeed = 50;
+                if (worldIdx === 18) moveSpeed = 25; 
+                else if (worldIdx === 20 || worldIdx === 21) moveSpeed = 80;
+
+                sceneryPos = (sceneryPos + moveSpeed) % 100000;
+                document.getElementById('scenery').style.backgroundPosition = `-${sceneryPos}px 0`;
+                
+                const bf = document.getElementById('battlefield');
+
+                document.querySelectorAll('.bg-prop').forEach(prop => {
+                    let currentX = parseFloat(prop.dataset.x) || 0;
+                    let speed = parseFloat(prop.dataset.speed) || 20;
+                    currentX -= speed;
+                    prop.dataset.x = currentX;
+                    prop.style.transform = `translateX(${currentX}px)`;
+                    if (currentX < -100) prop.remove();
+                });
+
+                if (Math.random() < 0.3) {
+                    let world = WORLDS[worldIdx];
+                    let prop = document.createElement('div');
+                    prop.className = 'bg-prop';
+                    prop.innerText = world.prop[Math.floor(Math.random() * world.prop.length)];
+                    prop.dataset.x = bf.clientWidth;
+                    prop.style.transform = `translateX(${bf.clientWidth}px)`;
+                    
+                    if (Math.random() < 0.4) {
+                        prop.style.top = (Math.random() * 30 + 5) + '%';
+                        prop.style.fontSize = (Math.random() * 30 + 40) + 'px';
+                        prop.dataset.speed = 25; 
+                        prop.style.opacity = '0.7';
+                        prop.style.zIndex = 2;
+                    } else {
+                        prop.style.bottom = '30%';
+                        prop.style.fontSize = (Math.random() * 20 + 50) + 'px';
+                        prop.dataset.speed = 50; 
+                        prop.style.zIndex = 3;
+                    }
+                    bf.appendChild(prop);
+                }
+            } catch(e) { console.log("保護機制：略過異常", e); }
+        }
+
+        function showSysMsg(t) {
+            let m = document.getElementById('sys-msg');
+            if (m) {
+                m.innerText = t;
+                m.style.opacity = 1;
+                setTimeout(() => m.style.opacity = 0, 2000);
+            }
+        }
+
+        window.addEventListener('keydown', e => {
+            if(e.code === 'Space') triggerJump();
+            if(e.key >= '1' && e.key <= '5') {
+                buyCat(parseInt(e.key));
+            }
+            if(e.key === '6') buyCat(6);
+            
+            if(e.code === 'KeyT' && isPlaying) {
+                timeRemaining = Math.max(1, timeRemaining - 10);
+            }
+        });
+
+        // 密碼解鎖開發者面板
+        document.getElementById('unlock-dev-btn').addEventListener('click', () => {
+            let pwd = prompt("請輸入測試密碼：");
+            if (pwd === "1234") {
+                document.getElementById('dev-panel').style.display = 'flex';
+                document.getElementById('unlock-dev-btn').style.display = 'none';
+            } else if (pwd !== null) {
+                alert("密碼錯誤！");
+            }
+        });
+
+        // 全部重置按鈕
+        document.getElementById('reset-all-btn').addEventListener('click', () => {
+            if (confirm("確定要清除所有遊戲進度嗎？這個動作無法復原喔！")) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
+
+        document.getElementById('cheat-day-btn').addEventListener('click', () => {
+            storage.consecutiveDays++;
+            storage.totalDays++;
+            storage.lastDraw = '';       
+            storage.lastBonus3 = '';     
+            storage.lastBonus5 = '';     
+            storage.todayRounds = 0;
+            storage.todayJumps = 0;
+            saveGame();
+            updateUI();
+            showSysMsg(`模擬換日！累積 ${storage.totalDays} 天 / 連續 ${storage.consecutiveDays} 天`);
+        });
+
+        document.getElementById('cheat-world-btn').addEventListener('click', () => {
+            storage.totalDays += 7;
+            checkWorldProgress(); 
+            updateUI();
+            showSysMsg(`模擬滿七天！飛往下個國家`);
+        });
+
+        document.getElementById('mode-rope-btn').onclick = () => { 
+            playMode = 'ROPE'; 
+            requiredJoycons = 2;
+            document.getElementById('mode-selection').style.display = 'none';
+            document.getElementById('connect-section').style.display = 'flex'; 
+            document.getElementById('connection-status').innerText = "有繩挑戰：請連線第一支手把";
+            document.getElementById('connection-status').style.color = '#ff4757';
+        };
+        document.getElementById('mode-norope-btn').onclick = () => { 
+            playMode = 'NOROPE'; 
+            requiredJoycons = 1;
+            document.getElementById('mode-selection').style.display = 'none';
+            document.getElementById('connect-section').style.display = 'flex'; 
+            document.getElementById('connection-status').innerText = "無繩休閒：請連線 1 支手把";
+            document.getElementById('connection-status').style.color = '#ff4757';
+        };
+        document.getElementById('back-mode-btn').onclick = () => {
+            document.getElementById('connect-section').style.display = 'none';
+            document.getElementById('mode-selection').style.display = 'flex';
+        };
+        document.getElementById('kb-start-btn').onclick = startGame;
+        document.getElementById('start-btn').onclick = startGame;
+        document.getElementById('next-round-btn').onclick = () => { currentRound++; startGame(); };
+        
+        // 結束訓練按鈕，呼叫專屬結算畫面
+        const emotionalPhrases = [
+            "太棒了！你今天的努力，身體都記住了喔！",
+            "每一次跳躍，都是讓自己變得更強大的魔法！",
+            "流下的汗水都是閃閃發光的勳章，今天也辛苦囉！",
+            "好厲害！堅持下去的你，比昨天更棒了呢！"
+        ];
+        
+        function showEndSummary() {
+            document.getElementById('result-screen').style.display = 'none';
+            let phrase = emotionalPhrases[Math.floor(Math.random() * emotionalPhrases.length)];
+            document.getElementById('end-phrase').innerText = phrase;
+            document.getElementById('end-rounds').innerText = storage.todayRounds;
+            document.getElementById('end-jumps').innerText = storage.todayJumps;
+            document.getElementById('end-summary-modal').style.display = 'flex';
+        }
+
+        document.getElementById('end-training-btn').onclick = showEndSummary;
+        document.getElementById('final-close-btn').onclick = () => location.reload();
+        
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) { }
+        }
+        document.addEventListener('click', requestWakeLock, { once: true });
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') requestWakeLock();
+        });
+
+        document.getElementById('metronome-toggle-btn').addEventListener('click', (e) => {
+            isMetronomeOn = !isMetronomeOn;
+            if (isMetronomeOn) {
+                e.target.innerText = '輔助節拍器：開啟 (70 BPM)';
+                e.target.style.background = '#2ed573';
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } else {
+                e.target.innerText = '輔助節拍器：關閉';
+                e.target.style.background = '#34495e';
+            }
+        });
+
+        function playBeatSound() {
+            try {
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
+                gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.1);
+            } catch (e) { }
+        }
+
+        const connectBtn = document.getElementById('connect-btn');
+        const statusText = document.getElementById('connection-status');
+        const JUMP_THRESHOLD = 12000; 
+
+        async function sendJoyconCommand(device, subcommand, args) {
+            const payload = new Uint8Array(40);
+            payload[0] = Math.floor(Math.random() * 256); 
+            payload[1] = 0x00; payload[2] = 0x01; payload[3] = 0x40; payload[4] = 0x40;
+            payload[5] = 0x00; payload[6] = 0x01; payload[7] = 0x40; payload[8] = 0x40;
+            payload[9] = subcommand;
+            for (let i = 0; i < args.length; i++) payload[10 + i] = args[i];
+            await device.sendReport(0x01, payload);
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            try {
+                const devices = await navigator.hid.requestDevice({ filters: [] });
+                if (devices.length === 0) return;
+                const joycon = devices[0];
+                if (!joycon.opened) {
+                    await joycon.open();
+                }
+                connectedDevicesCount++;
+                
+                statusText.innerText = `設定第 ${connectedDevicesCount} 支感測器中...`;
+                statusText.style.color = '#333';
+                
+                await sendJoyconCommand(joycon, 0x40, [0x01]);
+                await new Promise(resolve => setTimeout(resolve, 50));
+                await sendJoyconCommand(joycon, 0x03, [0x30]);
+
+                if (playMode === 'ROPE' && connectedDevicesCount === 1) {
+                    statusText.innerText = "已連線第一支。請再次點擊連線第二支手把。";
+                    connectBtn.innerText = "連線第二支 Joy-Con";
+                } 
+                
+                if (connectedDevicesCount >= requiredJoycons) {
+                    document.getElementById('start-btn').style.display = 'inline-block';
+                    document.getElementById('connect-btn').style.display = 'none';
+                    document.getElementById('connection-status').innerText = "太棒了！手把準備就緒。";
+                    document.getElementById('connection-status').style.color = '#2ed573';
+                }
+
+                joycon.addEventListener('inputreport', (event) => {
+                    if (event.reportId === 0x30) {
+                        const data = event.data;
+                        if (data.byteLength >= 18) {
+                            const x = data.getInt16(12, true);
+                            const y = data.getInt16(14, true);
+                            const z = data.getInt16(16, true);
+                            const magnitude = Math.sqrt(x*x + y*y + z*z);
+                            if (magnitude > JUMP_THRESHOLD) triggerJump();
+
+                            const rightButtons = data.getUint8(2);
+                            const leftButtons = data.getUint8(4);
+                            
+                            let buyId = 0;
+                            if ((rightButtons & 0x08) !== 0 || (leftButtons & 0x04) !== 0) buyId = 1; 
+                            else if ((rightButtons & 0x04) !== 0 || (leftButtons & 0x01) !== 0) buyId = 2; 
+                            else if ((rightButtons & 0x02) !== 0 || (leftButtons & 0x02) !== 0) buyId = 3; 
+                            else if ((rightButtons & 0x01) !== 0 || (leftButtons & 0x08) !== 0) buyId = 4; 
+                            else if ((rightButtons & 0x40) !== 0 || (leftButtons & 0x40) !== 0) buyId = 5; 
+                            else if ((rightButtons & 0x80) !== 0 || (leftButtons & 0x80) !== 0) buyId = 6; 
+
+                            if (buyId > 0) buyCat(buyId);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Joy-Con 連線錯誤:", error);
+                statusText.innerText = "連線失敗，請檢查系統藍牙設定。";
+            }
+        });
+
+        updateUI();
+    </script>
+</body>
+</html>
