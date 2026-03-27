@@ -243,6 +243,20 @@
         <button id="final-close-btn" class="btn-success">好好休息，明天見！</button>
     </div>
 
+    <!-- 新增：連線失敗急救指南視窗 -->
+    <div id="connection-error-modal" class="overlay" style="display: none; z-index: 350;">
+        <h1 style="color: #ff4757; font-size: 32px; margin-bottom: 5px;">哎呀！貓咪找不到手把訊號 🙀</h1>
+        <div style="background: #f1f2f6; padding: 20px; border-radius: 15px; border: 3px solid #dfe4ea; margin: 20px 0; width: 85%; max-width: 450px; text-align: left; color: #333; line-height: 1.6;">
+            <p style="font-weight: bold; margin-top: 0; font-size: 18px;">請試試以下三招急救方法：</p>
+            <ol style="margin-bottom: 0; padding-left: 20px;">
+                <li style="margin-bottom: 10px;"><b>戳一下重置：</b>拿筆尖或牙籤，戳一下手把側邊滑軌上的小圓點（Sync鍵），再隨便按個鈕喚醒它。</li>
+                <li style="margin-bottom: 10px;"><b>重新配對：</b>打開電腦的藍牙設定，把舊的 Joy-Con 紀錄刪掉，重新配對一次。</li>
+                <li><b>基本檢查：</b>確認電腦藍牙有開，而且手把還有電喔！</li>
+            </ol>
+        </div>
+        <button id="close-error-btn" class="btn-success">好，我去試試看！</button>
+    </div>
+
     <div id="upgrade-modal" class="overlay" style="display: none; z-index: 160;">
         <h1 style="color: #e67e22; font-size: 36px; margin-bottom: 0;">貓咪升級基地</h1>
         <p style="margin-top: 5px; font-weight: bold; color: #555;">目前擁有罐頭：<span id="upgrade-cans-display">0</span> 🥫</p>
@@ -302,8 +316,13 @@
                 <button id="connect-btn">連線</button>
                 <button id="start-btn" class="btn-success" style="display:none;">開始挑戰</button>
             </div>
-            <button id="metronome-toggle-btn" style="background: #34495e; color: white; margin-top: 10px; font-size: 12px;">節拍器：關閉</button>
-            <button id="back-mode-btn" style="background: transparent; color: #888; font-size: 12px;">重新選擇</button>
+            <div style="display: flex; align-items: center; gap: 5px; margin-top: 10px;">
+                <button id="metronome-toggle-btn" style="background: #34495e; color: white; font-size: 12px; margin: 0; padding: 8px 15px;">節拍器：關閉</button>
+                <button id="bpm-down-btn" style="background: #555; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; display: none;">-</button>
+                <span id="bpm-value-text" style="color: #333; font-size: 14px; font-weight: bold; width: 60px; text-align: center; display: none;">70 BPM</span>
+                <button id="bpm-up-btn" style="background: #555; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; display: none;">+</button>
+            </div>
+            <button id="back-mode-btn" style="background: transparent; color: #888; font-size: 12px; margin-top: 5px;">重新選擇</button>
         </div>
 
         <div style="position: absolute; bottom: 15px; font-size: 14px; color: #888;">
@@ -475,6 +494,7 @@
         let jumpTimestamps = [];
         let currentBPM = 0;
         let audioCtx, metronomeInterval, isMetronomeOn = false;
+        let currentMetronomeBPM = 70;
         let lastJumpTime = 0;
         let lionUsed = false;
         let units = [];
@@ -840,7 +860,7 @@
             if (isMetronomeOn) {
                 if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 if (metronomeInterval) clearInterval(metronomeInterval);
-                metronomeInterval = setInterval(playBeatSound, 60000 / 70); 
+                metronomeInterval = setInterval(playBeatSound, 60000 / currentMetronomeBPM); 
             }
         }
 
@@ -1152,6 +1172,9 @@
         document.getElementById('end-training-btn').onclick = showEndSummary;
         document.getElementById('final-close-btn').onclick = () => location.reload();
         
+        // 新增：關閉連線錯誤視窗的按鈕事件
+        document.getElementById('close-error-btn').onclick = () => document.getElementById('connection-error-modal').style.display = 'none';
+        
         let wakeLock = null;
         async function requestWakeLock() {
             try {
@@ -1167,15 +1190,47 @@
 
         document.getElementById('metronome-toggle-btn').addEventListener('click', (e) => {
             isMetronomeOn = !isMetronomeOn;
+            const downBtn = document.getElementById('bpm-down-btn');
+            const upBtn = document.getElementById('bpm-up-btn');
+            const valSpan = document.getElementById('bpm-value-text');
+            
             if (isMetronomeOn) {
-                e.target.innerText = '輔助節拍器：開啟 (70 BPM)';
+                e.target.innerText = '節拍器：開啟';
                 e.target.style.background = '#2ed573';
+                downBtn.style.display = 'inline-block';
+                upBtn.style.display = 'inline-block';
+                valSpan.style.display = 'inline-block';
+                valSpan.innerText = `${currentMetronomeBPM} BPM`;
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                
+                if (currentPhase === 'JUMP') {
+                    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                    if (metronomeInterval) clearInterval(metronomeInterval);
+                    metronomeInterval = setInterval(playBeatSound, 60000 / currentMetronomeBPM);
+                }
             } else {
-                e.target.innerText = '輔助節拍器：關閉';
+                e.target.innerText = '節拍器：關閉';
                 e.target.style.background = '#34495e';
+                downBtn.style.display = 'none';
+                upBtn.style.display = 'none';
+                valSpan.style.display = 'none';
+                if (metronomeInterval) clearInterval(metronomeInterval);
             }
         });
+
+        function adjustMetronomeBPM(delta) {
+            currentMetronomeBPM += delta;
+            if (currentMetronomeBPM < 60) currentMetronomeBPM = 60;
+            if (currentMetronomeBPM > 100) currentMetronomeBPM = 100;
+            document.getElementById('bpm-value-text').innerText = `${currentMetronomeBPM} BPM`;
+            if (isMetronomeOn && currentPhase === 'JUMP') {
+                if (metronomeInterval) clearInterval(metronomeInterval);
+                metronomeInterval = setInterval(playBeatSound, 60000 / currentMetronomeBPM);
+            }
+        }
+
+        document.getElementById('bpm-down-btn').addEventListener('click', () => adjustMetronomeBPM(-5));
+        document.getElementById('bpm-up-btn').addEventListener('click', () => adjustMetronomeBPM(5));
 
         function playBeatSound() {
             try {
@@ -1264,7 +1319,8 @@
 
             } catch (error) {
                 console.error("Joy-Con 連線錯誤:", error);
-                statusText.innerText = "連線失敗，請檢查系統藍牙設定。";
+                statusText.innerText = "連線失敗，請參考急救指南。";
+                document.getElementById('connection-error-modal').style.display = 'flex';
             }
         });
 
