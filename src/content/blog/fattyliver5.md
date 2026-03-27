@@ -24,5 +24,5 @@ tags: ["久坐危機", "HIIT", "超慢跑", "運動處方"]
 ## **看到這裡，讓我們從離開椅子開始吧！**
 
 不知道怎麼開始嗎?<br>可以試試這個，設計一個專屬於你的運動處方<br>
-[**專屬運動處方：**] (https://smilecloud.tw/gogoexercise/)<br>
+[**專屬運動處方**](https://smilecloud.tw/gogoexercise/)<br>
 ![脂肪肝運動](/image/fattyliver6.jpg)
