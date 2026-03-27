@@ -1,0 +1,22 @@
+---
+import { getCollection, render } from 'astro:content';
+import BlogPost from '../../layouts/BlogPost.astro';
+
+// 這個函數告訴系統：去把 blog 倉庫裡面的文章全部找出來，幫每一篇建立專屬網址
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: post,
+  }));
+}
+
+const post = Astro.props;
+// 把 Markdown 文字轉換成網頁能看懂的內容
+const { Content } = await render(post);
+---
+
+<!-- 把內容套進我們辛苦做好的 BlogPost 衣服裡 -->
+<BlogPost frontmatter={post.data}>
+  <Content />
+</BlogPost>
