@@ -51,10 +51,14 @@ tags: ["原子習慣", "行為設計", "減重心理", "意志力"]
 
 今天就從找出你的「小開關」開始吧！
 我把剛才講的習慣建立原則做成一個小小遊戲，歡迎大家來試試看。<br>
-👉 [**點我進入：建立一個好習慣**](https://smilecloud.tw/game/habbit/)
+👉 [**點我進入：建立一個好習慣**](https://smilecloud.tw/game/habbits/)
 
-(概念發想自《原子習慣》、《AI思維：原子習慣：把意志力換成可被維持的行為系統》)
+概念發想自《原子習慣》、《AI思維：原子習慣：把意志力換成可被維持的行為系統》
 
+
+<br>![habbit1](/image/habbit1.jpg)<br>
+<br>![habbit2](/image/habbit2.jpg)<br>
+<br>![habbit3](/image/habbit3.jpg)<br>
 ---
 
 ### 關於習慣與減重的常見問答 (FAQ)
