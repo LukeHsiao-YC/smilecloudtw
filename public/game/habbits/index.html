@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>習慣設計聊天室</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
+    .chat-container { height: 100vh; display: flex; flex-direction: column; max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .messages-area { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; background-color: #f8fafc; }
+    .input-area { padding: 15px 20px; background-color: #ffffff; border-top: 1px solid #e2e8f0; }
+    
+    .msg-enter { animation: slideUp 0.3s ease-out forwards; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .messages-area::-webkit-scrollbar { width: 6px; }
+    .messages-area::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000; 
+
+    const FooterCredits = () => (
+      <div className="mt-5 pt-4 border-t border-slate-200 text-center">
+        <p className="text-[11px] text-slate-500 leading-relaxed mb-3">
+          概念發想自《原子習慣 詹姆斯·克萊爾著》、《AI思維: 原子習慣: 把意志力換成可被維持的行為系統 洪錦魁著》<br/>有興趣可以找來學習更完整的知識!
+        </p>
+        <p className="text-xs text-slate-700 font-bold mb-3">蕭宇超醫師製作 一起告別雲朵身材</p>
+        <div className="flex justify-center gap-5 text-slate-400">
+          <a href="https://www.facebook.com/share/1FoPpvVSZs/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition" title="Facebook">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" /></svg>
+          </a>
+          <a href="https://www.instagram.com/goodbyecloudkids_drhsiao?igsh=cWhkZXhwcjNoZnpm&utm_source=qr" target="_blank" rel="noopener noreferrer" className="hover:text-pink-600 transition" title="Instagram">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path fillRule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.46 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clipRule="evenodd" /></svg>
+          </a>
+          <a href="https://lin.ee/fAzcScx" target="_blank" rel="noopener noreferrer" className="hover:text-green-500 transition" title="Line 官方帳號">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M22.5 10.25c0-4.55-4.71-8.25-10.5-8.25S1.5 5.7 1.5 10.25c0 4.09 3.82 7.55 8.9 8.16.35.08 1.05.24 1.2.56.13.27.08.68.04.94l-.15 1c-.05.29-.22 1.07.94.58s6.16-3.62 8.35-6.17c1.47-1.63 1.72-3.31 1.72-5.07zM8.38 12.87H6.1c-.26 0-.47-.21-.47-.47V7.6c0-.26.21-.47.47-.47s.47.21.47.47v4.33h1.81c.26 0 .47.21.47.47s-.21.47-.47.47zm2.93 0h-.94c-.26 0-.47-.21-.47-.47V7.6c0-.26.21-.47.47-.47s.47.21.47.47v4.8c0 .26-.21.47-.47.47zm3.89 0h-.94c-.11 0-.21-.04-.29-.11l-2.02-2.73v2.37c0 .26-.21.47-.47.47s-.47-.21-.47-.47V7.6c0-.26.21-.47.47-.47s.47.21.47.47v2.85l1.96-2.65c.08-.1.19-.16.32-.16h.94c.26 0 .47.21.47.47 0 .15-.07.28-.18.36L13.8 10.2l2.33 2.1c.14.12.2.3.15.47-.06.18-.23.3-.41.3zM18.66 8.54h-1.81v1.1h1.81c.26 0 .47.21.47.47s-.21.47-.47.47h-1.81v1.81c0 .26-.21.47-.47.47s-.47-.21-.47-.47V7.6c0-.26.21-.47.47-.47h2.28c.26 0 .47.21.47.47s-.21.47-.47.47z"/></svg>
+          </a>
+        </div>
+      </div>
+    );
+
+    function App() {
+      const [messages, setMessages] = useState([]);
+      const [inputMode, setInputMode] = useState('menu'); 
+      const [inputText, setInputText] = useState('');
+      const [isTyping, setIsTyping] = useState(false);
+      const [copyStatus, setCopyStatus] = useState('點我複製這段報告');
+      const [resetConfirm, setResetConfirm] = useState(false);
+      
+      const [habitData, setHabitData] = useState({
+        category: "", 
+        badHabit: "",
+        entryPoint: "",
+        highGoal: "",
+        lowGoal: "",
+        weekRecord: [false, false, false, false, false, false, false],
+        class1DoneAt: null,
+        class2DoneAt: null,
+        class3DoneAt: null
+      });
+
+      const [now, setNow] = useState(Date.now());
+      const messagesEndRef = useRef(null);
+
+      useEffect(() => {
+        const timer = setInterval(() => setNow(Date.now()), 60000);
+        return () => clearInterval(timer);
+      }, []);
+
+      const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      };
+
+      useEffect(() => {
+        scrollToBottom();
+      }, [messages, isTyping]);
+
+      useEffect(() => {
+        const savedData = localStorage.getItem('chatHabitDataV5');
+        const savedMessages = localStorage.getItem('chatMessagesV5');
+        const savedInputMode = localStorage.getItem('chatInputModeV5');
+
+        if (savedData && savedMessages && savedInputMode) {
+          setHabitData(JSON.parse(savedData));
+          setMessages(JSON.parse(savedMessages));
+          setInputMode(savedInputMode);
+        } else {
+          startWelcome();
+        }
+      }, []);
+
+      useEffect(() => {
+        if (messages.length > 0) {
+          localStorage.setItem('chatHabitDataV5', JSON.stringify(habitData));
+          localStorage.setItem('chatMessagesV5', JSON.stringify(messages));
+          localStorage.setItem('chatInputModeV5', inputMode);
+        }
+      }, [habitData, messages, inputMode]);
+
+      const updateData = (field, value) => {
+        setHabitData(prev => ({ ...prev, [field]: value }));
+      };
+
+      const addBotMessage = (text, type = 'text') => {
+        setMessages(prev => [...prev, { id: Date.now() + Math.random(), sender: 'bot', text, type }]);
+      };
+
+      const addUserMessage = (text) => {
+        setMessages(prev => [...prev, { id: Date.now() + Math.random(), sender: 'user', text, type: 'text' }]);
+      };
+
+      const botReply = (text, nextMode, type = 'text', delay = 800) => {
+        setInputMode('typing');
+        setIsTyping(true);
+        setTimeout(() => {
+          setIsTyping(false);
+          addBotMessage(text, type);
+          if (nextMode) setInputMode(nextMode);
+        }, delay);
+      };
+
+      // ================= 流程控制 =================
+
+      const startWelcome = () => {
+        addBotMessage("哈囉，我是你的習慣設計小幫手。");
+        botReply("我們常以為減重或運動失敗，是因為自己缺乏意志力。但今天我們換個角度，把你當作一位生活工程師。", null, 'text', 1000);
+        setTimeout(() => {
+          botReply("接下來會有三堂課，準備好就從下方選單開始吧。", "menu", "text", 1000);
+        }, 1500);
+      };
+
+      const backToMenu = (delay = 1000) => {
+        setTimeout(() => {
+          botReply("已經為你返回主選單，請選擇你想進行的動作：", "menu");
+        }, delay);
+      };
+
+      // --- 第一堂課 ---
+      const startClass1 = () => {
+        addUserMessage("進入第一堂課：隱形的開關");
+        botReply("第一堂課，我們來找出生活中隱形的開關。你想先從哪一個項目開始改善？", "category");
+      };
+
+      const handleCategorySelect = (cat) => {
+        updateData('category', cat);
+        const catName = cat === 'diet' ? '飲食管理' : '運動培養';
+        addUserMessage(`我想先看：${catName}`);
+        
+        let introText = cat === 'diet'
+          ? "好的，我們來聊聊吃這件事。很多人會覺得很自責，覺得自己白天明明做得到，晚上卻總是破功。"
+          : "沒問題，我們來聊聊運動。很多人總是計畫得很好，但下班回家後，卻連換上運動鞋的力氣都沒有。";
+        
+        botReply(introText, null, 'text', 1000);
+        
+        setTimeout(() => {
+          const q1Text = cat === 'diet' 
+            ? "回想一下最近一次忍不住亂吃宵夜或零食，你當時心裡第一個念頭是什麼？"
+            : "回想一下最近一次放棄運動的計畫，你當時心裡第一個念頭是什麼？";
+          botReply(q1Text, "q1");
+        }, 2500);
+      };
+
+      const handleQ1Select = (text) => {
+        addUserMessage(text);
+        const isDiet = habitData.category === "diet";
+        
+        botReply("其實，這都不是你的錯。我們常以為是自己定力不夠，但事實上，意志力就像手機電池，到了晚上通常只剩不到百分之五。", null, 'text', 1200);
+        
+        setTimeout(() => {
+          let explainText = isDiet 
+            ? "這時候大腦會自動切換到省電模式，尋找最不費力的選項。所以你不是突然貪吃，而是環境太容易取得食物，或者你剛好做了一個啟動自動導航的小動作（例如去翻家裡的零食、跑去超商買飲料）。"
+            : "這時候大腦會評估準備運動的成本太高了。所以你不是懶，而是環境沒有幫你降低門檻，或者你有一個啟動放棄的小動作（例如回家先坐上沙發）。";
+          botReply(explainText, null, 'text', 1500);
+          
+          setTimeout(() => {
+            botReply("我們把這個小動作稱為「小開關」。現在，告訴我你最想改善的具體行為是什麼？", "badHabit");
+          }, 2500);
+        }, 1500);
+      };
+
+      // --- 第二堂課 ---
+      const startClass2 = () => {
+        addUserMessage("進入第二堂課：完美的陷阱");
+        const isDiet = habitData.category === "diet";
+        
+        botReply(`歡迎回來！這幾天過得還好嗎？上一次我們找出了你的小開關「${habitData.entryPoint || '未知'}」。不管這幾天你有沒有成功避開它，都沒關係。光是願意花時間觀察自己，你就已經比以前進步很多了。今天，我們要來對付另一個大魔王：完美主義。`, null, 'text', 1000);
+        
+        setTimeout(() => {
+          const q2Text = isDiet 
+            ? "減重過程最常發生的狀況是，給自己訂了嚴格的菜單，結果某天聚餐破戒，隔天就覺得『反正都斷了，乾脆放縱吃』。你平常下定決心控制飲食時，通常會怎麼設定目標？"
+            : "很多人訂了『每天跑半小時』的目標，結果某天加班太累沒跑，隔天就覺得『反正都斷了，乾脆放棄』。你平常下定決心運動時，通常會怎麼設定目標？";
+          botReply(q2Text, "q2");
+        }, 3500);
+      };
+
+      const handleQ2Select = (text) => {
+        addUserMessage(text);
+        
+        botReply("這就是全有或全無的陷阱。高標準雖然看起來很棒，但它只能在你吃飽睡好、時間充裕的完美日子裡發生。", null, 'text', 1500);
+        
+        setTimeout(() => {
+          botReply("想要讓習慣活下去，我們不允許不開始，但我們絕對允許做得少。現在，請先寫下你心裡最理想的目標是什麼？", "highGoal");
+        }, 2000);
+      };
+
+      // --- 第三堂課 ---
+      const startClass3 = () => {
+        addUserMessage("進入第三堂課：長久存活的設計");
+        botReply(`來到最後一堂課囉！這陣子辛苦了。我們之前找出了你的小開關「${habitData.entryPoint || '未知'}」，也設計了就算再累也能做的保底計畫「${habitData.lowGoal || '未知'}」。你能走到這一步，願意為自己的生活花心思，真的很不容易。現在防護網已經建好一半了。`, null, 'text', 1000);
+        
+        setTimeout(() => {
+          botReply("最後一塊拼圖，是大腦的薪水。", null, 'text', 3500);
+          
+          setTimeout(() => {
+            botReply("在這之前，想先請你選選看。你覺得為什麼吃零食、滑手機這些壞習慣不用教就會，但運動、控制飲食這種好習慣卻超難堅持？", "q3_habit_diff", 'text', 2000);
+          }, 1500);
+        }, 3500);
+      };
+
+      const handleQ3HabitDiffSelect = (text) => {
+        addUserMessage(text);
+        
+        botReply("沒錯，關鍵就在時間差。大腦是非常現實的，它只看現在。吃一口零食，大腦一秒鐘後就覺得好開心；但運動半小時，大腦可能要等一個月看到體重下降才會高興。", null, 'text', 1500);
+        
+        setTimeout(() => {
+          botReply("因為好習慣的薪水發得太慢了，大腦覺得划不來，下次就不想做了。", null, 'text', 2500);
+          
+          setTimeout(() => {
+            botReply("所以，我們不能等一個月後才給大腦發薪水。你覺得我們每天做什麼事，最能立刻給大腦發薪水，讓它願意繼續撐下去？", "q3_reward", 'text', 2000);
+          }, 2000);
+        }, 3000);
+      };
+
+      const handleQ3RewardSelect = (text) => {
+        addUserMessage(text);
+        
+        botReply("大餐犒賞很容易把習慣變成一種交易，而體重數字常常不動如山，容易讓人挫折。", null, 'text', 1500);
+        
+        setTimeout(() => {
+          botReply("最穩定、最長久的動力，其實來自於『我看見自己做到了』的確定感。這就是為什麼簡單的打勾記錄這麼有效。", null, 'text', 2000);
+          
+          setTimeout(() => {
+            botReply(`我們來做個模擬實驗。假設今天你遇到了你的小開關「${habitData.entryPoint || '未知'}」，雖然很累，但你沒有放棄，而是啟動了保底版本的「${habitData.lowGoal || '未知'}」。`, null, 'text', 2000);
+            
+            setTimeout(() => {
+              botReply("請試著連續點擊下方的天數打勾，感受一下把努力變成趨勢的感覺。繼續點下去，你會發現不同的階段，大腦得到的驚喜都不一樣喔！", "tracker", "tracker");
+            }, 2500);
+          }, 2000);
+        }, 1500);
+      };
+
+      // --- 文字輸入處理 ---
+      const handleTextInput = () => {
+        if (!inputText.trim()) return;
+        const text = inputText.trim();
+        addUserMessage(text);
+        setInputText('');
+
+        const isDiet = habitData.category === "diet";
+        const unsureWords = ['不知道', '不確定', '忘了', '想不起來', '沒注意', '不清楚', '沒想法', '很難想'];
+        const isUnsure = unsureWords.some(word => text.includes(word));
+
+        if (inputMode === 'badHabit') {
+          if (isUnsure) {
+            botReply("沒關係，這有時候的確很難立刻想到。你可以先想想最近一次讓你覺得「啊，我又破功了」的那個瞬間，當時你在做什麼？（例如：吃宵夜、沒去跑步）隨便寫一個就好。", "badHabit", 'text', 1000);
+          } else {
+            updateData('badHabit', text);
+            const askEntry = isDiet 
+              ? "那在發生這個亂吃行為前的 5 秒鐘，你做的第一個小動作是什麼？（例如：去翻家裡的零食、跑去超商買飲料）"
+              : "那在決定放棄運動前的 5 秒鐘，讓你停住的第一個小動作是什麼？（例如：走到沙發坐下、把包包丟在地上）";
+            botReply(askEntry, "entryPoint");
+          }
+        } 
+        else if (inputMode === 'entryPoint') {
+          if (isUnsure) {
+            botReply("沒關係，這的確需要一點時間觀察。你可以試著回想看看，在那個當下，你是坐在哪裡，或者是手裡正拿著什麼東西呢？隨便猜一個你覺得最有可能的動作就好。", "entryPoint", 'text', 1000);
+          } else {
+            updateData('entryPoint', text);
+            botReply(`看來我們找到關鍵了！你的小開關就是「${text}」。`, null, 'text', 1000);
+            
+            setTimeout(() => {
+              botReply(`這週的任務，就是單純觀察這個小開關。不要急著改變，只要在發生的那一刻意識到『啊！小開關被打開了』就好。我們下次見！`, null, 'text', 2000);
+              updateData('class1DoneAt', Date.now());
+              backToMenu(3500);
+            }, 1500);
+          }
+        }
+        else if (inputMode === 'highGoal') {
+          if (isUnsure) {
+            botReply("沒關係，一開始不知道怎麼定目標是很正常的。你可以先隨便想一個，例如『每天自己帶便當』或『去健身房運動一小時』，反正這只是理想狀況，我們先抓一個大方向就好。", "highGoal", 'text', 1000);
+          } else {
+            updateData('highGoal', text);
+            const askLow = isDiet
+              ? "那如果今天極度疲倦、情緒很差，你的最低保底動作是什麼？（例如：吃大餐前，先喝一杯白開水）"
+              : "那如果今天極度疲倦、還要加班，你的最低保底動作是什麼？（例如：換上運動鞋在原地踏步1分鐘）";
+            botReply(askLow, "lowGoal");
+          }
+        }
+        else if (inputMode === 'lowGoal') {
+          if (isUnsure) {
+            botReply("這題確實比較難想。你可以試著想一個只要一分鐘，甚至只要『有準備就算過關』的動作。例如：把運動鞋拿出來放門口、或是吃大餐前喝一口水。隨便挑一個你覺得最沒壓力的就好。", "lowGoal", 'text', 1000);
+          } else {
+            updateData('lowGoal', text);
+            botReply(`太棒了！把保底設為「${text}」，就像是在懸崖邊架了一張安全網。`, null, 'text', 1000);
+            
+            setTimeout(() => {
+              botReply(`這週的任務，就是在狀態不好的日子裡，勇敢地使用你的保底計畫。告訴自己做得少，總比沒做好。我們下次見！`, null, 'text', 2000);
+              updateData('class2DoneAt', Date.now());
+              backToMenu(3500);
+            }, 1500);
+          }
+        }
+      };
+
+      const handleTrackerClick = (index) => {
+        const newRecord = [...habitData.weekRecord];
+        newRecord[index] = !newRecord[index];
+        updateData('weekRecord', newRecord);
+        
+        const count = newRecord.filter(Boolean).length;
+        
+        if (count === 1 && !messages.some(m => m.text && m.text.includes("第一點：努力看得見了"))) {
+          botReply("第一點：努力看得見了！你把模糊的努力變成了實實在在的成績。請繼續往下點！", "tracker", "text", 500);
+        } else if (count === 3 && !messages.some(m => m.text && m.text.includes("第二點：抓出小趨勢"))) {
+          botReply("第二點：抓出小趨勢！大腦最喜歡這種穩定的綠色進度了。快點滿一週看看！", "tracker", "text", 500);
+        } else if (count === 5 && !messages.some(m => m.text && m.text.includes("第三點：正向的回饋"))) {
+          botReply("第三點：正向的回饋！你正在向自己證明，你是一個能掌握生活節奏的人。快完成最後兩天！", "tracker", "text", 500);
+        } else if (count === 7 && !messages.some(m => m.text && m.text.includes("太棒了！7 天全滿"))) {
+          
+          botReply("太棒了！7 天全滿！\n\n很多人會問，習慣到底要維持多久才能真正建立？其實，研究發現，大腦在乎的不是天數，而是頻率和有沒有中斷。這 7 天就是一個最棒的系統啟動！", null, "text", 500);
+          
+          setTimeout(() => {
+            botReply("在看報告之前，我們快速總複習一下這三堂課的精華：\n\n1. 面對壞習慣，我們不怪意志力，而是找出【小開關】。\n2. 面對好習慣，我們不追求完美，而是設定再累也能做的【保底版本】。\n3. 為了讓習慣活下去，我們每天給自己【打勾的成就感】。", null, "text", 3000);
+            
+            setTimeout(() => {
+              botReply("恭喜你完成了三週的設計！點擊下方按鈕，領取你的專屬習慣設計報告吧。", "done", "report", 4000);
+              updateData('class3DoneAt', Date.now());
+            }, 3500);
+          }, 3000);
+        }
+      };
+
+      const getReportText = () => {
+        const catName = habitData.category === "diet" ? "飲食管理" : "運動培養";
+        const completedDays = habitData.weekRecord.filter(Boolean).length;
+        return `【習慣設計報告：${catName}】\n\n發現卡點：平常容易 ${habitData.badHabit || '未知'}\n找出小開關：習慣先 ${habitData.entryPoint || '未知'}\n\n理想目標：${habitData.highGoal || '未知'}\n保底版本：${habitData.lowGoal || '未知'}\n\n本週進度：完成 ${completedDays}/7 天\n狀態：已完成三週練習，系統穩定度建立！\n\n概念發想自《原子習慣 詹姆斯·克萊爾著》、《AI思維: 原子習慣: 把意志力換成可被維持的行為系統 洪錦魁著》 有興趣可以找來學習更完整的知識!\n\n蕭宇超醫師製作 一起告別雲朵身材`;
+      };
+
+      const copyToClipboard = () => {
+        const text = getReportText();
+        const el = document.createElement('textarea');
+        el.value = text;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        setCopyStatus('已複製成功！');
+        setTimeout(() => setCopyStatus('點我複製這段報告'), 3000);
+      };
+
+      const handleResetRequest = () => {
+        if (resetConfirm) {
+          localStorage.removeItem('chatHabitDataV5');
+          localStorage.removeItem('chatMessagesV5');
+          localStorage.removeItem('chatInputModeV5');
+          setHabitData({ category: "", badHabit: "", entryPoint: "", highGoal: "", lowGoal: "", weekRecord: [false, false, false, false, false, false, false], class1DoneAt: null, class2DoneAt: null, class3DoneAt: null });
+          setMessages([]);
+          setInputMode('start');
+          setResetConfirm(false);
+          startWelcome();
+        } else {
+          setResetConfirm(true);
+          setTimeout(() => setResetConfirm(false), 3000);
+        }
+      };
+
+      const formatTimeLeft = (doneAt) => {
+        if (!doneAt) return "";
+        const diff = SEVEN_DAYS_MS - (now - doneAt);
+        if (diff <= 0) return "[ 點此進入 ]";
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        return `[ 鎖定中 ] 請在生活中實踐，${days}天${hours}小時後解鎖`;
+      };
+
+      const isClass2Locked = false;
+      const isClass3Locked = habitData.class2DoneAt ? (now - habitData.class2DoneAt < SEVEN_DAYS_MS) : true;
+
+      const isDiet = habitData.category === "diet";
+
+      return (
+        <div className="chat-container">
+          <div className="bg-slate-800 text-white py-3 px-5 flex justify-between items-center shadow-sm z-10">
+            <div className="font-bold">習慣設計實驗室</div>
+            <div className="flex gap-3">
+              <button onClick={handleResetRequest} className={`text-xs px-2 py-1 rounded transition ${resetConfirm ? 'bg-red-500 text-white font-bold' : 'text-slate-300 hover:text-white'}`}>
+                {resetConfirm ? '確定重新開始?' : '重新開始'}
+              </button>
+            </div>
+          </div>
+
+          <div className="messages-area">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`flex mb-4 msg-enter ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.sender === 'bot' && (
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2 flex-shrink-0 text-blue-600 font-bold text-xs">
+                    小幫手
+                  </div>
+                )}
+                
+                <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.sender === 'user' ? 'bg-slate-800 text-white rounded-br-none' : 'bg-white text-slate-700 shadow-sm border border-slate-100 rounded-bl-none'}`}>
+                  {msg.type === 'text' && <span className="whitespace-pre-wrap">{msg.text}</span>}
+                  
+                  {msg.type === 'tracker' && (
+                    <div className="mt-2">
+                      <div className="flex justify-between items-center mb-3 px-1">
+                        {habitData.weekRecord.map((checked, index) => (
+                          <button key={index} onClick={() => handleTrackerClick(index)} className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-300 ${checked ? 'bg-green-500 border-green-500 text-white scale-in' : 'bg-slate-50 border-slate-300 text-slate-300'}`}>
+                            {checked && <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2 mb-1 overflow-hidden">
+                        <div className="bg-green-500 h-2 transition-all duration-500 ease-out" style={{ width: `${(habitData.weekRecord.filter(Boolean).length / 7) * 100}%` }}></div>
+                      </div>
+                      <div className="text-right text-xs font-bold text-slate-400">進度：{habitData.weekRecord.filter(Boolean).length} / 7 天</div>
+                    </div>
+                  )}
+
+                  {msg.type === 'report' && (
+                    <div className="mt-2 w-full">
+                      <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-700 whitespace-pre-wrap mb-3 border border-slate-200 shadow-inner leading-relaxed">
+                        {getReportText()}
+                      </div>
+                      <button onClick={copyToClipboard} className={`w-full font-semibold py-2 px-4 rounded-lg transition duration-200 ${copyStatus === '已複製成功！' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-slate-800 hover:bg-slate-700 text-white'}`}>
+                        {copyStatus}
+                      </button>
+                      <FooterCredits />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div className="flex mb-4 justify-start msg-enter">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2 flex-shrink-0">
+                   <span className="text-blue-600 text-xs font-bold">小幫手</span>
+                </div>
+                <div className="bg-white shadow-sm border border-slate-100 rounded-2xl rounded-bl-none px-4 py-3 flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-slate-300 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="input-area shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            {inputMode === 'typing' && (
+              <div className="text-center text-slate-400 text-sm py-2">對方正在輸入中...</div>
+            )}
+
+            {inputMode === 'menu' && (
+              <div className="flex flex-col gap-2">
+                <button onClick={startClass1} disabled={habitData.class1DoneAt !== null} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${!habitData.class1DoneAt ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                  <div className="font-bold">第一堂課：隱形的開關</div>
+                  <div className="text-xs mt-1">{habitData.class1DoneAt ? "[ 已完成 ]" : "[ 點此進入 ]"}</div>
+                </button>
+
+                <button onClick={startClass2} disabled={isClass2Locked || habitData.class2DoneAt !== null} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${!isClass2Locked && !habitData.class2DoneAt ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                  <div className="font-bold">第二堂課：完美的陷阱</div>
+                  <div className="text-xs mt-1">
+                    {habitData.class2DoneAt ? "[ 已完成 ]" : "[ 點此進入 ]"}
+                  </div>
+                </button>
+
+                <button onClick={startClass3} disabled={isClass3Locked || habitData.class3DoneAt !== null} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${!isClass3Locked && !habitData.class3DoneAt ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                  <div className="font-bold">第三堂課：長久存活的設計</div>
+                  <div className="text-xs mt-1">
+                    {!habitData.class2DoneAt ? "[ 鎖定中 ] 需先完成第二堂課" : habitData.class3DoneAt ? "[ 已完成 ]" : formatTimeLeft(habitData.class2DoneAt)}
+                  </div>
+                </button>
+
+                <FooterCredits />
+              </div>
+            )}
+
+            {inputMode === 'category' && (
+              <div className="flex gap-2">
+                <button onClick={() => handleCategorySelect('diet')} className="flex-1 bg-white hover:bg-orange-50 text-orange-700 border border-orange-200 font-bold py-3 px-4 rounded-xl transition">飲食管理</button>
+                <button onClick={() => handleCategorySelect('exercise')} className="flex-1 bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 font-bold py-3 px-4 rounded-xl transition">運動培養</button>
+              </div>
+            )}
+
+            {inputMode === 'q1' && (
+              <div className="flex flex-col gap-2">
+                <button onClick={() => handleQ1Select(isDiet ? "今天過得好累，吃點東西犒賞自己吧" : "我真的太累了，今天沒力氣做")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  {isDiet ? "今天過得好累，吃點東西犒賞自己吧" : "我真的太累了，今天沒力氣做"}
+                </button>
+                <button onClick={() => handleQ1Select(isDiet ? "我就是管不住嘴" : "我就是太懶了")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  {isDiet ? "我就是管不住嘴" : "我就是太懶了"}
+                </button>
+                <button onClick={() => handleQ1Select(isDiet ? "剛好手邊有零食，順手就拿了" : "想到要準備就覺得好麻煩")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  {isDiet ? "剛好手邊有零食，順手就拿了" : "想到要準備就覺得好麻煩"}
+                </button>
+              </div>
+            )}
+
+            {inputMode === 'q2' && (
+              <div className="flex flex-col gap-2">
+                <button onClick={() => handleQ2Select(isDiet ? "嚴格規定自己絕對不碰澱粉" : "要做就做最好，至少運動30分鐘")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  {isDiet ? "嚴格規定自己絕對不碰澱粉" : "要做就做最好，至少運動30分鐘"}
+                </button>
+                <button onClick={() => handleQ2Select(isDiet ? "憑感覺少吃一點" : "有動就好，但常不知道動什麼")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  {isDiet ? "憑感覺少吃一點" : "有動就好，但常不知道動什麼"}
+                </button>
+              </div>
+            )}
+
+            {inputMode === 'q3_habit_diff' && (
+              <div className="flex flex-col gap-2">
+                <button onClick={() => handleQ3HabitDiffSelect("因為人天生就喜歡輕鬆耍廢")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  因為人天生就喜歡輕鬆耍廢
+                </button>
+                <button onClick={() => handleQ3HabitDiffSelect("因為壞習慣的快樂馬上給，好習慣要很久才給")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  因為壞習慣的快樂馬上給，好習慣要很久才給
+                </button>
+              </div>
+            )}
+
+            {inputMode === 'q3_reward' && (
+              <div className="flex flex-col gap-2">
+                <button onClick={() => handleQ3RewardSelect("吃一頓大餐犒賞自己")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  吃一頓大餐犒賞自己
+                </button>
+                <button onClick={() => handleQ3RewardSelect("站上體重計看數字下降")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  站上體重計看數字下降
+                </button>
+                <button onClick={() => handleQ3RewardSelect("建立簡單的記錄打勾")} className="w-full text-left bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm py-3 px-4 rounded-xl transition">
+                  建立簡單的記錄打勾
+                </button>
+              </div>
+            )}
+
+            {(inputMode === 'badHabit' || inputMode === 'entryPoint' || inputMode === 'highGoal' || inputMode === 'lowGoal') && (
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleTextInput()}
+                  placeholder="請輸入你的答案..." 
+                  className="flex-1 border border-slate-300 rounded-full py-3 px-4 text-sm focus:outline-none focus:border-slate-800"
+                />
+                <button 
+                  onClick={handleTextInput}
+                  disabled={!inputText.trim()}
+                  className="bg-slate-800 disabled:bg-slate-300 hover:bg-slate-700 text-white rounded-full w-11 h-11 flex items-center justify-center transition"
+                >
+                  送出
+                </button>
+              </div>
+            )}
+
+            {inputMode === 'tracker' && (
+              <div className="text-center text-slate-500 text-sm py-2">請點擊上方對話框中的圈圈來打勾喔！</div>
+            )}
+
+            {inputMode === 'done' && (
+              <div className="text-center text-slate-500 text-sm py-2">所有課程已完成，請從上方對話框複製報告。</div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
