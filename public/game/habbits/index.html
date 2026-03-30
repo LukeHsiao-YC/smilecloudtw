@@ -388,14 +388,14 @@
       const formatTimeLeft = (doneAt) => {
         if (!doneAt) return "";
         const diff = SEVEN_DAYS_MS - (now - doneAt);
-        if (diff <= 0) return "[ 點此進入 ]";
+        if (diff <= 0) return "可進入";
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        return `[ 鎖定中 ] 請在生活中實踐，${days}天${hours}小時後解鎖`;
+        return `[ 鎖定中 ] 請在生活中觀察，${days}天${hours}小時後解鎖`;
       };
 
       const isClass2Locked = false;
-      const isClass3Locked = habitData.class2DoneAt ? (now - habitData.class2DoneAt < SEVEN_DAYS_MS) : true;
+      const isClass3Locked = false;
 
       const isDiet = habitData.category === "diet";
 
@@ -480,17 +480,17 @@
                   <div className="text-xs mt-1">{habitData.class1DoneAt ? "[ 已完成 ]" : "[ 點此進入 ]"}</div>
                 </button>
 
-                <button onClick={startClass2} disabled={isClass2Locked || habitData.class2DoneAt !== null} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${!isClass2Locked && !habitData.class2DoneAt ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <button onClick={startClass2} disabled={habitData.class2DoneAt !== null} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${!habitData.class2DoneAt ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
                   <div className="font-bold">第二堂課：完美的陷阱</div>
                   <div className="text-xs mt-1">
                     {habitData.class2DoneAt ? "[ 已完成 ]" : "[ 點此進入 ]"}
                   </div>
                 </button>
 
-                <button onClick={startClass3} disabled={isClass3Locked || habitData.class3DoneAt !== null} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${!isClass3Locked && !habitData.class3DoneAt ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
+                <button onClick={startClass3} disabled={habitData.class3DoneAt !== null} className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 ${!habitData.class3DoneAt ? 'border-blue-300 bg-blue-50 text-blue-800' : 'border-slate-200 bg-slate-50 text-slate-400'}`}>
                   <div className="font-bold">第三堂課：長久存活的設計</div>
                   <div className="text-xs mt-1">
-                    {!habitData.class2DoneAt ? "[ 鎖定中 ] 需先完成第二堂課" : habitData.class3DoneAt ? "[ 已完成 ]" : formatTimeLeft(habitData.class2DoneAt)}
+                    {habitData.class3DoneAt ? "[ 已完成 ]" : "[ 點此進入 ]"}
                   </div>
                 </button>
 
