@@ -3,15 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>7-11 健康選食助手 (雲端版) - 蕭宇超醫師製作</title>
+  <title>超商健康選食助手 (雲端版) - 蕭宇超醫師製作</title>
   
+  <!-- 載入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- 載入 React 核心套件 -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
+  <!-- 載入 Babel -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
+  <!-- 載入 Lucide Icons 圖示庫 -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
@@ -212,7 +216,6 @@
 
           <div className="p-4 space-y-6 max-w-md mx-auto mt-2">
             
-            {/* 各個衛教區塊 */}
             <div ref={section1Ref} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 scroll-mt-32">
               <div className="flex items-center gap-2 mb-4">
                 <div className="bg-blue-100 p-2 rounded-xl text-blue-600"><Calculator className="w-5 h-5" /></div>
@@ -506,16 +509,23 @@
         { id: 'ds3', name: '舒迷雞胸肉', cal: 136, pro: 24.5, fib: 0, sod: 679, carb: 1, price: 59, type: 'protein' },
         { id: 'ds4', name: '統一AB無糖優酪乳', cal: 119, pro: 6.4, fib: 0, sod: 107, carb: 17.3, price: 28, type: 'protein' },
         { id: 'ds5', name: '石安牧場溫泉蛋', cal: 53, pro: 5.4, fib: 0, sod: 204, carb: 1.4, price: 46, type: 'protein' },
+        
         { id: 'df1', name: '一日野菜-和風海藻', cal: 37, pro: 1.4, fib: 2.6, sod: 101, carb: 6, price: 49, type: 'fiber' },
         { id: 'df2', name: '一日野菜-活力彩蔬', cal: 98, pro: 8.6, fib: 3.5, sod: 86, carb: 14.4, price: 55, type: 'fiber' },
         { id: 'df3', name: '關東煮-白蘿蔔兩塊', cal: 16, pro: 0, fib: 1.0, sod: 120, carb: 0, price: 20, type: 'fiber' },
         { id: 'df4', name: '微波-鹽味毛豆', cal: 97, pro: 7.9, fib: 0, sod: 315, carb: 7.5, price: 39, type: 'fiber' }, 
         { id: 'df5', name: '微波-青花菜', cal: 30, pro: 2, fib: 3, sod: 100, carb: 4, price: 39, type: 'fiber' },
+        
         { id: 'de1', name: '上等蕉 (1根)', cal: 90, pro: 1.5, fib: 2.0, sod: 0, carb: 23, price: 20, type: 'extra' },
         { id: 'de2', name: 'CityCafe 無糖拿鐵(中)', cal: 150, pro: 8, fib: 0, sod: 100, carb: 10, price: 45, type: 'extra' },
         { id: 'de3', name: '切片蘋果', cal: 55, pro: 0.2, fib: 1.8, sod: 2, carb: 14.5, price: 39, type: 'extra' },
         { id: 'de4', name: '無加糖燕麥奶(290ml)', cal: 128, pro: 2.9, fib: 2.3, sod: 110, carb: 21, price: 35, type: 'extra' },
         { id: 'de5', name: '統一無糖綠茶', cal: 0, pro: 0, fib: 0, sod: 10, carb: 0, price: 20, type: 'extra' },
+        
+        { id: 'de6', name: '現烤地瓜(小:滑鼠大/約30元)', cal: 135, pro: 1.5, fib: 3.0, sod: 44, carb: 31, price: 30, type: 'extra' },
+        { id: 'de7', name: '現烤地瓜(中:女拳頭/約35元)', cal: 185, pro: 2.0, fib: 4.1, sod: 60, carb: 42, price: 35, type: 'extra' },
+        { id: 'de8', name: '現烤地瓜(大:男手掌/約45元)', cal: 245, pro: 2.6, fib: 5.5, sod: 80, carb: 56, price: 45, type: 'extra' },
+        { id: 'de9', name: '現蒸馬鈴薯(中:拳頭大/約35元)', cal: 115, pro: 3.0, fib: 2.5, sod: 10, carb: 26, price: 35, type: 'extra' },
       ];
 
       const [mainMeals, setMainMeals] = useState([]);
@@ -1015,7 +1025,6 @@
                   {selectedMain.pro < 15 && selectedMain.category !== '輕食' && <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded font-bold border border-blue-200">⚠️ 低蛋白</span>}
                 </div>
 
-                {/* 修改點 1：主餐份量輸入框 */}
                 <div className="mt-3 mb-2 flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200 w-max">
                   <span className="text-xs font-bold text-slate-500 ml-1">食用份量</span>
                   <div className="flex items-center">
@@ -1128,6 +1137,7 @@
                     <input type="number" placeholder="碳水(g)" className="w-full text-base p-2.5 bg-white border border-purple-200 rounded-xl outline-none text-center placeholder:text-xs" value={inlineCustom.carb} onChange={e => setInlineCustom({...inlineCustom, carb: e.target.value})} />
                     <input type="number" placeholder="蛋白質(g)" className="w-full text-base p-2.5 bg-white border border-purple-200 rounded-xl outline-none text-center placeholder:text-xs" value={inlineCustom.pro} onChange={e => setInlineCustom({...inlineCustom, pro: e.target.value})} />
                     
+                    {/* 行內蔬菜推估小工具 */}
                     <div className="col-span-3 bg-white p-2 rounded-xl border border-purple-200 flex items-center gap-2 mt-1">
                       <Calculator className="w-4 h-4 text-purple-400 flex-shrink-0"/>
                       <select className="text-xs bg-purple-50 text-purple-700 border-none outline-none rounded p-1" value={vegType} onChange={(e) => setVegType(e.target.value)}>
@@ -1154,7 +1164,6 @@
             <div className="max-w-md mx-auto">
               {addedSides.length > 0 && (
                 <div className="flex gap-2 overflow-x-auto mb-3 pb-1 no-scrollbar">
-                  {/* 修改點 2：配菜推車支援自訂輸入份量 */}
                   {addedSides.map((side) => (
                     <span key={side.id} className="bg-slate-100 text-xs pl-3 pr-2 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap shadow-sm border border-slate-200/50">
                       <span className="font-medium text-slate-700">{side.name}</span>
@@ -1167,7 +1176,6 @@
                           value={side.portion}
                           onChange={(e) => updateSidePortion(side.id, e.target.value)}
                           onBlur={(e) => { 
-                            // 若使用者清空或填寫 0 以下，直接從清單中移除
                             if(!e.target.value || Number(e.target.value) <= 0) removeSideById(side.id); 
                           }}
                         />
@@ -1178,15 +1186,13 @@
                   ))}
                 </div>
               )}
-              <div className="flex justify-between items-end">
-                <div><div className="text-xs text-slate-500 mb-1">總計 (建議 {userQuota.kcal}kcal)</div><div className="flex items-baseline gap-2"><span className={`text-2xl font-black ${totals.cal > userQuota.kcal ? 'text-red-500' : 'text-slate-800'}`}>{Math.round(totals.cal)}</span><span className="text-xs text-slate-500">kcal</span></div></div>
-                <div className="text-right"><div className="text-xs text-slate-500 mb-1">金額</div><div className="text-xl font-bold text-slate-700">${Math.round(totals.price)}</div></div>
+              <div className="flex justify-between items-end mb-3">
+                <div><div className="text-xs text-slate-500 mb-1">本餐總計 (建議 {userQuota.kcal}kcal)</div><span className={`text-2xl font-black ${totals.cal > userQuota.kcal ? 'text-red-500' : 'text-slate-800'}`}>{Math.round(totals.cal)}</span><span className="text-xs text-slate-500 ml-1">kcal</span></div>
+                <div className="text-right font-bold text-slate-700">金額 ${Math.round(totals.price)}</div>
               </div>
-              {isPerfect211 ? (
-                <button onClick={() => handleCheckout(true)} className="w-full mt-3 bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 hover:bg-emerald-700 active:scale-[0.98] transition-all"><CheckCircle2 className="w-5 h-5" /> 完美餐盤！紀錄並結帳</button>
-              ) : (
-                <button onClick={() => handleCheckout(false)} className="w-full mt-3 bg-slate-800 text-white font-bold py-4 rounded-xl shadow-md flex justify-center items-center gap-2 hover:bg-slate-700 active:scale-[0.98] transition-all"><ShoppingBag className="w-5 h-5" /> {excessCarb ? '澱粉過多，紀錄這餐 (少吃白飯)' : (excessProtein ? '蛋白超量，紀錄這餐' : '尚未達標，紀錄就這樣吃')}</button>
-              )}
+              <button onClick={() => { alert(isPerfect211 ? '🎉 太棒了！紀錄已儲存！' : '📝 已紀錄。下次試著補更多菜喔！'); resetSelection(); }} className={`w-full py-4 rounded-2xl font-bold shadow-lg flex justify-center items-center gap-2 transition-all active:scale-95 ${isPerfect211 ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-white'}`}>
+                {isPerfect211 ? <CheckCircle2 className="w-5 h-5"/> : <ShoppingBag className="w-5 h-5" />} {isPerfect211 ? '完美餐盤！紀錄並結帳' : '尚未達標，紀錄這餐'}
+              </button>
             </div>
           </div>
         </div>
@@ -1220,3 +1226,5 @@
   </script>
 </body>
 </html>
+
+
