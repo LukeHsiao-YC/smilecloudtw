@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6歲以下生長遲滯 (FTT) 臨床決策輔助系統</title>
+    <style>
+        :root {
+            --primary: #337ab7;
+            --success: #3c763d;
+            --danger: #d9534f;
+            --warning: #8a6d3b;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 { margin: 0; font-size: 1.2rem; }
+        .header p { margin: 5px 0 0; font-size: 0.9rem; opacity: 0.9; }
+
+        .content {
+            padding: 30px 25px;
+            flex-grow: 1;
+        }
+
+        .question-box {
+            animation: fadeIn 0.4s ease;
+        }
+
+        .step-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .main-question {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .detail-text {
+            background-color: #f8f9fa;
+            border-left: 4px solid #ddd;
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #555;
+            white-space: pre-line; /* 保留換行 */
+        }
+
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+
+        button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* 按鈕樣式 */
+        .btn-action { background-color: #e6f3ff; color: var(--primary); border: 1px solid #bce8f1; }
+        .btn-danger { background-color: #f2dede; color: var(--danger); border: 1px solid #ebccd1; }
+        .btn-success { background-color: #dff0d8; color: var(--success); border: 1px solid #d6e9c6; }
+        .btn-reset { margin-top: 20px; width: 100%; text-align: center; background: #eee; color: #666; }
+
+        /* 結果卡片樣式 */
+        .result-card {
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 0;
+            text-align: center;
+        }
+        .result-critical { background-color: #ffcccc; color: #a94442; border: 2px solid #d9534f; }
+        .result-safe { background-color: #dff0d8; color: #3c763d; border: 2px solid #3c763d; }
+        .result-action { background-color: #e6f3ff; color: #31708f; border: 2px solid #31708f; }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>FTT 臨床決策輔助</h1>
+        <p>基於 Evidence-Based Medicine 流程</p>
+    </div>
+
+    <div class="content" id="app">
+        </div>
+</div>
+
+<script>
+    // 邏輯資料結構
+    const steps = {
+        start: {
+            title: "Step 1: 定義篩檢",
+            question: "是否符合生長遲滯 (FTT) 定義？",
+            detail: "1. 體重 < 3rd 百分位\n2. 生長曲線跨越 2 條主要百分位線下降\n3. 體重/身高比例 (Weight-for-Length) < 10th",
+            options: [
+                { text: "是 (符合任一項)", next: "red_flags", style: "btn-action" },
+                { text: "否 (只是瘦，曲線平穩)", next: "end_safe", style: "btn-success" }
+            ]
+        },
+        red_flags: {
+            title: "Step 2: 排除急症",
+            question: "有無警示徵兆 (Red Flags)?",
+            detail: "• 生命徵象不穩 (喘/休克/心搏過速)\n• 嚴重脫水 / 水腫\n• 懷疑兒虐 (多處傷痕)\n• 神經學異常 / 發展退化",
+            options: [
+                { text: "有 (危急)", next: "end_emergency", style: "btn-danger" },
+                { text: "無 (病人穩定)", next: "history", style: "btn-action" }
+            ]
+        },
+        history: {
+            title: "Step 3: 病史與試驗",
+            question: "飲食日誌與試驗性治療結果？",
+            detail: "進行詳細病史詢問 (Input/Output/Demand) 並給予高熱量飲食指導與介入 2-4 週。",
+            options: [
+                { text: "體重回升 (有效)", next: "end_inadequate", style: "btn-success" },
+                { text: "無效 / 體重持續停滯", next: "tier1_labs", style: "btn-action" }
+            ]
+        },
+        tier1_labs: {
+            title: "Step 4: Tier 1 初階篩檢",
+            question: "初階檢查結果為何？",
+            detail: "項目：CBC, Ferritin, CRP/ESR, Urinalysis+Culture, Electrolytes/BUN/Cr",
+            options: [
+                { text: "異常：貧血 / 發炎 / UTI / 酸血症", next: "end_tier1_abnormal", style: "btn-action" },
+                { text: "全部正常", next: "tier2_phenotype", style: "btn-action" }
+            ]
+        },
+        tier2_phenotype: {
+            title: "Step 5: Tier 2 進階分流",
+            question: "病人的臨床表型 (Phenotype) 最像哪一種？",
+            detail: "請依據身高、體重關係及合併症狀選擇",
+            options: [
+                { text: "A. 腸胃症狀 (腹瀉/油便/脹氣)", next: "end_gi", style: "btn-action" },
+                { text: "B. 身高停滯 + 體重重 (Short & Heavy)", next: "end_hypo", style: "btn-action" },
+                { text: "C. 身高正常/快 + 體重瘦 + 心跳快 (Tall & Thin)", next: "end_hyper", style: "btn-action" },
+                { text: "D. 發展遲緩 / 外觀異常", next: "end_neuro", style: "btn-action" },
+                { text: "E. 無上述特徵 (特發性)", next: "end_idiopathic", style: "btn-action" }
+            ]
+        },
+        // --- 終點 (Endpoints) ---
+        end_safe: {
+            type: "result",
+            class: "result-safe",
+            tag: "Safe / Discharge",
+            title: "衛教與追蹤",
+            detail: "解除家長焦慮，衛教均衡飲食。\n建議每 3-6 個月回診追蹤生長曲線。"
+        },
+        end_emergency: {
+            type: "result",
+            class: "result-critical",
+            tag: "Critical / Refer",
+            title: "立即轉診或急診",
+            detail: "病人處於不穩定狀態。\n請立即聯絡急診或轉送醫學中心。"
+        },
+        end_inadequate: {
+            type: "result",
+            class: "result-safe",
+            tag: "Diagnosis",
+            title: "熱量攝取不足 (Non-organic FTT)",
+            detail: "最常見原因 (90%)。\n繼續維持高熱量飲食衛教，密切追蹤體重。\n無需過度檢查。"
+        },
+        end_tier1_abnormal: {
+            type: "result",
+            class: "result-action",
+            tag: "Treatable / Refer",
+            title: "針對異常數值治療",
+            detail: "• 貧血：補鐵\n• UTI：抗生素 + 超音波\n• RTA (酸血症)：轉診腎臟科\n• 發炎指數高：尋找感染源或 IBD"
+        },
+        end_gi: {
+            type: "result",
+            class: "result-action",
+            tag: "Tier 2 Workup",
+            title: "懷疑吸收不良 (Malabsorption)",
+            detail: "建議檢查：\n1. IgA-tTG (排除乳糜瀉)\n2. Sweat Test (囊腫纖維化)\n3. 糞便分析\n\n處置：轉診小兒腸胃科。"
+        },
+        end_hypo: {
+            type: "result",
+            class: "result-action",
+            tag: "Tier 2 Workup",
+            title: "懷疑內分泌低下 (Hypo-)",
+            detail: "建議檢查：\n1. TSH, Free T4\n2. IGF-1\n3. Karyotype (女童)\n\n處置：轉診小兒內分泌科 (補充荷爾蒙)。"
+        },
+        end_hyper: {
+            type: "result",
+            class: "result-action",
+            tag: "Tier 2 Workup",
+            title: "懷疑甲狀腺亢進 (Hyperthyroidism)",
+            detail: "特徵：Tall & Thin, Tachycardia。\n建議檢查：\n1. TSH (Low), Free T4 (High)\n2. Anti-TSH-R Ab\n\n處置：轉診小兒內分泌科 (抗甲狀腺藥物)。\n*若治療後體重仍不升，請點選下方按鈕。",
+            extraOption: { text: "治療後體重仍未改善?", next: "failure_to_respond", style: "btn-danger" }
+        },
+        end_neuro: {
+            type: "result",
+            class: "result-action",
+            tag: "Tier 2 Workup",
+            title: "懷疑症候群/遺傳疾病",
+            detail: "建議檢查：\n1. 染色體晶片 (CMA)\n2. 腦部 MRI\n\n處置：轉診遺傳科 + 早療介入。"
+        },
+        end_idiopathic: {
+            type: "result",
+            class: "result-action",
+            tag: "Observation",
+            title: "特發性生長遲滯 (Idiopathic)",
+            detail: "檢查均正常但仍生長不良。\n建議：\n1. 考慮住院觀察 (Admission for feeding observation)\n2. 跨團隊評估 (社工/心理/營養師)"
+        },
+        // --- 特殊迴路：治療無效 ---
+        failure_to_respond: {
+            title: "Troubleshooting",
+            question: "治療穩定但體重停滯 (Failure to Respond)",
+            detail: "請依照 4D 原則排查：\n1. Demand: 熱量缺口是否補足 (需 150% RDA)?\n2. Dual Diagnosis: 有無共病 (Celiac, DM)?\n3. Drug/Data: 藥物順從性與數值真偽?\n4. Diet/Psych: 餵食行為與壓力?",
+            options: [
+                { text: "重新開始評估", next: "start", style: "btn-reset" }
+            ]
+        }
+    };
+
+    // 渲染引擎
+    const app = document.getElementById('app');
+
+    function renderStep(stepKey) {
+        const step = steps[stepKey];
+        app.innerHTML = ''; // 清空
+
+        const container = document.createElement('div');
+        container.className = 'question-box';
+
+        if (step.type === 'result') {
+            // 渲染結果頁
+            container.innerHTML = `
+                <div class="result-card ${step.class}">
+                    <div class="tag">${step.tag}</div>
+                    <h2 style="margin: 10px 0;">${step.title}</h2>
+                    <div style="text-align: left; margin-top: 20px; white-space: pre-line;">${step.detail}</div>
+                </div>
+            `;
+            
+            // 如果有額外選項 (例如甲亢治療失敗)
+            if (step.extraOption) {
+                const extraBtn = document.createElement('button');
+                extraBtn.textContent = step.extraOption.text;
+                extraBtn.className = step.extraOption.style;
+                extraBtn.style.marginTop = "15px";
+                extraBtn.style.width = "100%";
+                extraBtn.onclick = () => renderStep(step.extraOption.next);
+                container.appendChild(extraBtn);
+            }
+
+            // 重置按鈕
+            const resetBtn = document.createElement('button');
+            resetBtn.textContent = "🔄 開始新病人評估";
+            resetBtn.className = "btn-reset";
+            resetBtn.onclick = () => renderStep('start');
+            container.appendChild(resetBtn);
+
+        } else {
+            // 渲染問題頁
+            container.innerHTML = `
+                <div class="step-title">${step.title}</div>
+                <div class="main-question">${step.question}</div>
+                <div class="detail-text">${step.detail}</div>
+                <div class="options" id="options-container"></div>
+            `;
+
+            const optionsContainer = container.querySelector('#options-container');
+            step.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.textContent = opt.text;
+                btn.className = opt.style;
+                btn.onclick = () => renderStep(opt.next);
+                optionsContainer.appendChild(btn);
+            });
+            
+            // 過程中也可以重置
+            if(stepKey !== 'start') {
+                const backBtn = document.createElement('div');
+                backBtn.style.textAlign = 'center';
+                backBtn.style.marginTop = '20px';
+                backBtn.innerHTML = '<a href="#" onclick="renderStep(\'start\'); return false;" style="color: #999; text-decoration: none; font-size: 0.9rem;">重新開始</a>';
+                container.appendChild(backBtn);
+            }
+        }
+
+        app.appendChild(container);
+    }
+
+    // 初始化
+    renderStep('start');
+
+</script>
+
+</body>
+</html>

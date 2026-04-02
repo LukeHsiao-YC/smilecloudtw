@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>兒童生長評估決策輔助系統 - 蕭宇超醫師整理</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", "Heiti TC", sans-serif; background-color: #f0f2f5; padding: 20px; max-width: 900px; margin: 0 auto; color: #333; }
+        
+        .app-header { text-align: center; margin-bottom: 30px; }
+        .app-title { font-size: 2em; color: #2c3e50; margin: 0; font-weight: bold; }
+        .app-subtitle { color: #7f8c8d; font-size: 1.1em; margin-top: 8px; font-weight: 600; letter-spacing: 1px; }
+        .app-version { font-size: 0.8em; color: #bdc3c7; margin-top: 5px; }
+
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e1e4e8; }
+        h2 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 12px; margin-top: 0; font-size: 1.4em; }
+        .section-title { font-weight: bold; color: #7f8c8d; margin-top: 20px; margin-bottom: 10px; text-transform: uppercase; font-size: 0.9em; letter-spacing: 1px; }
+        
+        label { display: block; margin-top: 15px; font-weight: 600; color: #2c3e50; font-size: 1.05em; }
+        .sub-label { font-weight: normal; font-size: 0.9em; color: #666; margin-bottom: 5px; display: block; }
+        
+        input[type="number"], select { width: 100%; padding: 12px; margin-top: 5px; border: 2px solid #ecf0f1; border-radius: 8px; box-sizing: border-box; font-size: 16px; transition: border-color 0.3s; }
+        input[type="number"]:focus, select:focus { border-color: #3498db; outline: none; }
+        
+        .radio-group { margin-top: 8px; display: flex; gap: 20px; }
+        .radio-group label { display: flex; align-items: center; font-weight: normal; cursor: pointer; background: #f8f9fa; padding: 10px 20px; border-radius: 6px; border: 1px solid #dee2e6; }
+        .radio-group input { margin-right: 8px; }
+        
+        .info-display { background-color: #e8f6f3; border: 1px solid #1abc9c; color: #16a085; padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold; text-align: center; display: none; }
+        
+        /* 雙引擎 PAH 結果區塊 */
+        .pah-result-container { display: flex; gap: 15px; margin-top: 15px; margin-bottom: 15px; display: none; flex-wrap: wrap;}
+        .pah-box { flex: 1; padding: 15px; border-radius: 8px; text-align: center; min-width: 200px;}
+        .pah-bp { background-color: #f3e5f5; border: 1px solid #9b59b6; color: #6a1b9a; }
+        .pah-tw { background-color: #e3f2fd; border: 1px solid #3498db; color: #1565c0; }
+        .pah-title { font-size: 0.85em; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .pah-value { font-size: 1.4em; font-weight: bold; margin: 10px 0; }
+        .pah-note { font-size: 0.8em; opacity: 0.8; }
+        .th-msg { font-size: 0.9em; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(0,0,0,0.1); }
+
+        .toddler-warning { background-color: #ffebee; border: 2px solid #ef5350; color: #c62828; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; font-weight: bold; text-align: center; }
+
+        button { background-color: #2980b9; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; margin-top: 25px; width: 100%; transition: background 0.3s; box-shadow: 0 4px 6px rgba(41, 128, 185, 0.2); }
+        button:hover { background-color: #1c6ea4; transform: translateY(-1px); }
+        
+        .calc-btn { background-color: #8e44ad; color: white; padding: 8px 15px; border-radius: 6px; font-size: 0.9em; border: none; cursor: pointer; margin-top: 10px; width: auto; display: inline-block; }
+        .calc-btn:hover { background-color: #732d91; }
+
+        #resultArea { display: none; animation: fadeIn 0.5s; }
+        .recommendation-card { padding: 20px; border-radius: 8px; margin-top: 15px; border-left: 6px solid; background-color: #fff; }
+        
+        .workup-list { margin-top: 10px; padding-left: 20px; text-align: left; }
+        .workup-list li { margin-bottom: 5px; }
+
+        .alert-red { background-color: #fff5f5; border-color: #e53e3e; color: #c53030; }
+        .alert-yellow { background-color: #fffff0; border-color: #d69e2e; color: #b7791f; }
+        .alert-green { background-color: #f0fff4; border-color: #38a169; color: #2f855a; }
+        .alert-blue { background-color: #ebf8ff; border-color: #3182ce; color: #2b6cb0; }
+        .alert-gray { background-color: #f8f9fa; border-color: #95a5a6; color: #7f8c8d; }
+        .alert-orange { background-color: #fff3e0; border-color: #e67e22; color: #d35400; }
+        
+        .highlight-box { background: rgba(0,0,0,0.03); padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 0.95em; }
+        .hidden { display: none; }
+        .purple-label { color: #8e44ad; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <h1 class="app-title">兒童生長評估決策輔助系統</h1>
+        <div class="app-subtitle">蕭宇超醫師 整理</div>
+        <div class="app-version">Ver 5.2 (Dual-Engine: BP + Taiwan Z-score Projection)</div>
+    </div>
+
+    <!-- 幼兒警示 -->
+    <div id="toddlerAlert" class="toddler-warning">
+        ⚠️ 警示：本系統設計針對 6 歲以上學齡兒童與青少年。<br>
+        6 歲以下幼兒的生長標準不同 (GV通常 > 6cm)，請改用「幼兒生長遲滯 (FTT)」評估流程。
+    </div>
+
+    <div class="card">
+        <h2>🏥 階段一：基礎數據輸入</h2>
+        
+        <div class="section-title">基本資料</div>
+        <label>性別</label>
+        <select id="gender" onchange="calculateTH(); updateQuestions();">
+            <option value="male">男</option>
+            <option value="female">女</option>
+        </select>
+
+        <label>目前身高 (cm) <span style="color:red">*必填 (用於計算 PAH)</span></label>
+        <input type="number" id="currentHeight" placeholder="例如: 137" oninput="calculateTH()">
+
+        <label>實際年齡 (歲)</label>
+        <input type="number" id="age" placeholder="例如: 10.6" oninput="updateQuestions()">
+
+        <div class="section-title">遺傳資訊 (自動計算)</div>
+        <div style="display: flex; gap: 15px;">
+            <div style="flex: 1;">
+                <label style="margin-top:5px;">父親身高</label>
+                <input type="number" id="fatherHt" placeholder="cm" oninput="calculateTH()">
+            </div>
+            <div style="flex: 1;">
+                <label style="margin-top:5px;">母親身高</label>
+                <input type="number" id="motherHt" placeholder="cm" oninput="calculateTH()">
+            </div>
+        </div>
+        
+        <div id="thDisplay" class="info-display"></div>
+
+        <div class="section-title">生長指標</div>
+        <label>生長速率 (GV, cm/年)</label>
+        <span class="sub-label">穩定期 (4-6 cm/yr)；若進入衝刺期通常 >6 cm/yr</span>
+        <input type="number" id="gv" placeholder="過去一年長高幾公分?" oninput="updateQuestions()">
+
+        <label>BMI 狀態</label>
+        <select id="bmiStatus">
+            <option value="normal">正常或過重 (Normal/Overweight)</option>
+            <option value="thin">過輕 (Thin, BMI &lt; 3%)</option>
+        </select>
+        
+        <div class="section-title">病史</div>
+        <label>出生是否為 SGA?</label>
+        <div class="radio-group">
+            <label><input type="radio" name="sga" value="yes"> 是</label>
+            <label><input type="radio" name="sga" value="no" checked> 否</label>
+        </div>
+    </div>
+
+    <div class="card" id="dynamicQuestions">
+        <h2>🩺 階段二：進階評估 (自動偵測)</h2>
+        
+        <div id="q_puberty" class="hidden">
+            <label style="color: #e67e22;">⚠️ 性徵檢查</label>
+            <span class="sub-label">有提早發育徵兆? (女&lt;8 B2 / 男&lt;9 G2)</span>
+            <select id="pubertySign" onchange="updateDetailQuestions()">
+                <option value="no">無</option>
+                <option value="yes">有</option>
+            </select>
+            
+            <div id="q_puberty_detail" class="hidden highlight-box">
+                <label>進程速度?</label>
+                <select id="pubertyProgression">
+                    <option value="unknown">尚未評估</option>
+                    <option value="slow">進程慢 / LH 低</option>
+                    <option value="fast">進程快 / LH > 0.3</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="q_boneage" class="hidden">
+            <label style="color: #2980b9;">🦴 骨齡判讀 & 雙引擎 PAH 計算</label>
+            <span class="sub-label">建議拍攝骨齡，以確認生長潛力 (PAH)。</span>
+            
+            <select id="boneAgeStatus" onchange="updatePAHQuestion()">
+                <option value="unknown">尚未拍攝</option>
+                <option value="match">骨齡 ≈ 年齡 (相符)</option>
+                <option value="delay_mild">骨齡 < 年齡 (落後 1-2 年)</option>
+                <option value="delay_severe">骨齡 << 年齡 (嚴重落後 > 2 年)</option>
+                <option value="advance">骨齡 > 年齡 (超前)</option>
+            </select>
+            
+            <div id="q_pah" class="hidden highlight-box">
+                <label class="purple-label">🟣 預估成人身高 (PAH) 計算機</label>
+                
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label style="margin-top:0;">骨齡 (Bone Age, 歲)</label>
+                        <input type="number" id="boneAgeValue" placeholder="例如: 11" step="0.5">
+                    </div>
+                    <button type="button" class="calc-btn" onclick="calculateFullPAH()">計算 PAH</button>
+                </div>
+
+                <!-- 雙引擎顯示區 -->
+                <div id="pahResultContainer" class="pah-result-container">
+                    <!-- BP 引擎 -->
+                    <div class="pah-box pah-bp" id="boxBP">
+                        <div class="pah-title">🌍 國際標準 (BP 法)</div>
+                        <div class="pah-note">基於 Greulich-Pyle 大數據<br>(通常較為保守)</div>
+                        <div class="pah-value" id="valBP">-- cm</div>
+                        <div class="th-msg" id="msgBP"></div>
+                    </div>
+                    <!-- 台灣引擎 -->
+                    <div class="pah-box pah-tw" id="boxTW">
+                        <div class="pah-title">🇹🇼 台灣本土 (投影法)</div>
+                        <div class="pah-note">同榮總曲線 Z-score 投射<br>(符合本土生長軌跡)</div>
+                        <div class="pah-value" id="valTW">-- cm</div>
+                        <div class="th-msg" id="msgTW"></div>
+                    </div>
+                </div>
+
+                <label>最終 PAH 評估結果 (綜合判定)</label>
+                <select id="pahStatus">
+                    <option value="unknown">請先點擊計算</option>
+                    <option value="good">PAH 達標 (在遺傳範圍內)</option>
+                    <option value="poor">PAH 受損 (顯著低於遺傳身高)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="q_turner" class="hidden">
+            <label style="color: #8e44ad;">🧬 特納氏症篩檢</label>
+            <select id="turnerCheck">
+                <option value="no">否</option>
+                <option value="yes">是 (建議篩檢)</option>
+            </select>
+        </div>
+    </div>
+
+    <button onclick="analyze()">🚀 開始分析與產出建議</button>
+
+    <div id="resultArea"></div>
+
+    <script>
+        // 1. Bayley-Pinneau (BP) 國際標準數據庫 (完成度%)
+        const bpFullData = {
+            male: {
+                average: { 6:64.9, 7:69.5, 8:73.9, 9:78.0, 10:81.3, 11:84.8, 11.5:86.6, 12:88.3, 12.5:90.3, 13:92.2, 13.5:94.2, 14:96.0, 14.5:97.2, 15:98.2, 15.5:98.9, 16:99.4, 17:99.8, 18:100 },
+                accelerated: { 6:66.6, 7:71.3, 8:75.6, 9:79.5, 10:83.4, 11:86.7, 11.5:88.4, 12:90.0, 12.5:91.6, 13:93.4, 13.5:95.1, 14:96.6, 14.5:97.6, 15:98.5, 15.5:99.1, 16:99.6, 17:100 },
+                retarded: { 6:63.2, 7:67.7, 8:71.9, 9:75.9, 10:79.4, 11:82.7, 11.5:84.6, 12:86.5, 12.5:88.5, 13:90.7, 13.5:92.9, 14:95.0, 14.5:96.5, 15:97.7, 15.5:98.5, 16:99.1, 17:99.7, 18:100 }
+            },
+            female: {
+                average: { 6:69.5, 7:73.7, 8:77.8, 9:81.7, 10:85.3, 10.5:87.2, 11:89.2, 11.5:91.3, 12:93.3, 12.5:95.1, 13:96.6, 13.5:97.7, 14:98.5, 15:99.5, 16:100 },
+                accelerated: { 6:71.2, 7:75.3, 8:79.5, 9:83.2, 10:86.8, 10.5:88.6, 11:90.5, 11.5:92.3, 12:94.2, 12.5:95.8, 13:97.1, 13.5:98.1, 14:98.9, 15:99.7, 16:100 },
+                retarded: { 6:67.8, 7:72.1, 8:76.1, 9:80.0, 10:83.6, 10.5:85.5, 11:87.6, 11.5:89.8, 12:91.9, 12.5:94.1, 13:95.9, 13.5:97.3, 14:98.2, 15:99.3, 16:99.8 }
+            }
+        };
+
+        // 2. 台灣生長曲線近似數據庫 (Chen 2010) - {Mean, SD} 
+        const twGrowthData = {
+            male: {
+                adult: { m: 173.35, s: 5.6 }, // 18歲成人參考值
+                6: {m: 116.3, s: 5.0}, 7: {m: 121.3, s: 5.2}, 8: {m: 126.3, s: 5.4}, 9: {m: 131.3, s: 5.6},
+                10: {m: 136.5, s: 5.8}, 10.5: {m: 139.5, s: 6.0}, 11: {m: 143.5, s: 6.0}, 11.5: {m: 147.5, s: 6.2},
+                12: {m: 151.5, s: 6.5}, 12.5: {m: 156.0, s: 6.8}, 13: {m: 160.0, s: 6.8}, 13.5: {m: 163.5, s: 6.5},
+                14: {m: 166.5, s: 6.2}, 14.5: {m: 168.5, s: 6.0}, 15: {m: 170.0, s: 5.8}, 16: {m: 172.0, s: 5.6}
+            },
+            female: {
+                adult: { m: 160.5, s: 5.3 }, // 18歲成人參考值
+                6: {m: 115.0, s: 4.9}, 7: {m: 120.0, s: 5.1}, 8: {m: 125.0, s: 5.3}, 9: {m: 130.5, s: 5.6},
+                10: {m: 137.5, s: 6.0}, 10.5: {m: 141.5, s: 6.2}, 11: {m: 146.0, s: 6.2}, 11.5: {m: 150.0, s: 6.0},
+                12: {m: 153.5, s: 5.8}, 12.5: {m: 156.0, s: 5.6}, 13: {m: 157.5, s: 5.5}, 14: {m: 159.5, s: 5.4},
+                15: {m: 160.2, s: 5.3}, 16: {m: 160.4, s: 5.3}
+            }
+        };
+
+        // 台灣曲線內插法抓取資料
+        function getTwParam(gender, ba) {
+            const data = twGrowthData[gender];
+            if (ba >= 18) return data.adult;
+            if (data[ba]) return data[ba];
+            
+            let keys = Object.keys(data).filter(k => k !== 'adult').map(Number).sort((a,b)=>a-b);
+            if (ba <= keys[0]) return data[keys[0]];
+            if (ba >= keys[keys.length-1]) return data[keys[keys.length-1]];
+            
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (ba > keys[i] && ba < keys[i+1]) {
+                    let k1 = keys[i], k2 = keys[i+1];
+                    let ratio = (ba - k1) / (k2 - k1);
+                    return {
+                        m: data[k1].m + ratio * (data[k2].m - data[k1].m),
+                        s: data[k1].s + ratio * (data[k2].s - data[k1].s)
+                    };
+                }
+            }
+            return data.adult;
+        }
+
+        function calculateTH() {
+            const gender = document.getElementById('gender').value;
+            const father = parseFloat(document.getElementById('fatherHt').value);
+            const mother = parseFloat(document.getElementById('motherHt').value);
+            const displayDiv = document.getElementById('thDisplay');
+
+            if (father && mother) {
+                let midParentalHeight = (gender === 'male') ? (father + mother + 12) / 2 : (father + mother - 12) / 2;
+                const lower = (midParentalHeight - 7.5).toFixed(1);
+                const upper = (midParentalHeight + 7.5).toFixed(1);
+                displayDiv.dataset.midTh = midParentalHeight;
+                displayDiv.style.display = 'block';
+                displayDiv.innerHTML = `🧬 遺傳目標身高 (Target Height): <br><span style="font-size:1.2em">${midParentalHeight.toFixed(1)} cm</span> <br><span style="font-size:0.8em; font-weight:normal">(區間: ${lower} ~ ${upper} cm)</span>`;
+            } else {
+                displayDiv.style.display = 'none';
+                displayDiv.dataset.midTh = "";
+            }
+        }
+
+        function calculateFullPAH() {
+            const gender = document.getElementById('gender').value;
+            const age = parseFloat(document.getElementById('age').value);
+            const currentHt = parseFloat(document.getElementById('currentHeight').value);
+            const boneAge = parseFloat(document.getElementById('boneAgeValue').value);
+            
+            if (!currentHt || !boneAge || !age) {
+                alert("請輸入完整資料 (身高、年齡、骨齡)！");
+                return;
+            }
+
+            document.getElementById('pahResultContainer').style.display = 'flex';
+            const midTh = parseFloat(document.getElementById('thDisplay').dataset.midTh);
+            const statusSelect = document.getElementById('pahStatus');
+
+            // --- 引擎 1: BP 國際標準法 ---
+            let diff = boneAge - age;
+            let category = 'average';
+            if (diff >= 1) category = 'accelerated'; 
+            else if (diff <= -1) category = 'retarded'; 
+
+            let bpTable = bpFullData[gender][category];
+            let closestBA = Object.keys(bpTable).reduce((prev, curr) => {
+                return (Math.abs(curr - boneAge) < Math.abs(prev - boneAge) ? curr : prev);
+            });
+            let percent = bpTable[closestBA];
+            let pahBP = percent ? (currentHt / (percent / 100)) : 0;
+            
+            if (pahBP) {
+                document.getElementById('valBP').innerText = pahBP.toFixed(1) + ' cm';
+                if(midTh) {
+                    let gap = pahBP - midTh;
+                    let threshold = (gender === 'male') ? 7.5 : 5.5;
+                    document.getElementById('msgBP').innerHTML = (gap < -threshold) ? `<span style="color:#c0392b">📉 低於遺傳目標</span>` : `<span style="color:#27ae60">✅ 符合遺傳範圍</span>`;
+                } else { document.getElementById('msgBP').innerHTML = ""; }
+            } else {
+                document.getElementById('valBP').innerText = "超出範圍";
+            }
+
+            // --- 引擎 2: 台灣本土 Z-score 投影法 (同榮總) ---
+            let twParam = getTwParam(gender, boneAge);
+            let adultParam = twGrowthData[gender].adult;
+            let zScore = (currentHt - twParam.m) / twParam.s;
+            let pahTW = adultParam.m + (zScore * adultParam.s);
+            
+            document.getElementById('valTW').innerText = pahTW.toFixed(1) + ' cm';
+            if(midTh) {
+                let gapTW = pahTW - midTh;
+                let thresholdTW = (gender === 'male') ? 7.5 : 5.5;
+                document.getElementById('msgTW').innerHTML = (gapTW < -thresholdTW) ? `<span style="color:#c0392b">📉 低於遺傳目標</span>` : `<span style="color:#27ae60">✅ 符合遺傳範圍</span>`;
+            } else { document.getElementById('msgTW').innerHTML = ""; }
+
+            // --- 綜合判斷自動填入 (取平均做粗估) ---
+            if(midTh && pahBP) {
+                let avgPah = (pahBP + pahTW) / 2;
+                let gapAvg = avgPah - midTh;
+                let thresholdAvg = (gender === 'male') ? 7.5 : 5.5;
+                statusSelect.value = (gapAvg < -thresholdAvg) ? "poor" : "good";
+            }
+        }
+
+        function updateQuestions() {
+            const gender = document.getElementById('gender').value;
+            const age = parseFloat(document.getElementById('age').value);
+            const gv = parseFloat(document.getElementById('gv').value);
+
+            // 幼兒警示
+            if (age && age < 6) {
+                document.getElementById('toddlerAlert').style.display = 'block';
+            } else {
+                document.getElementById('toddlerAlert').style.display = 'none';
+            }
+
+            document.getElementById('q_puberty').classList.add('hidden');
+            document.getElementById('q_boneage').classList.add('hidden');
+            document.getElementById('q_turner').classList.add('hidden');
+            document.getElementById('q_pah').classList.add('hidden'); 
+
+            if (!age) return;
+            document.getElementById('q_puberty').classList.remove('hidden');
+            if (!gv && gv !== 0) return;
+
+            // 骨齡顯示邏輯
+            if (gv < 4) {
+                document.getElementById('q_boneage').classList.remove('hidden');
+                if (gender === 'female') document.getElementById('q_turner').classList.remove('hidden');
+            }
+            else if (gv >= 4 && gv <= 6) {
+                 document.getElementById('q_boneage').classList.remove('hidden');
+            }
+            else if (gv > 6) {
+                 if ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9)) {
+                     document.getElementById('q_boneage').classList.remove('hidden');
+                 }
+            }
+        }
+
+        function updateDetailQuestions() {
+            const sign = document.getElementById('pubertySign').value;
+            const detailDiv = document.getElementById('q_puberty_detail');
+            if (sign === 'yes') detailDiv.classList.remove('hidden');
+            else detailDiv.classList.add('hidden');
+        }
+
+        function updatePAHQuestion() {
+            const baStatus = document.getElementById('boneAgeStatus').value;
+            if (baStatus !== 'unknown') document.getElementById('q_pah').classList.remove('hidden');
+            else document.getElementById('q_pah').classList.add('hidden');
+        }
+
+        function analyze() {
+            const gender = document.getElementById('gender').value;
+            const age = parseFloat(document.getElementById('age').value);
+            const gv = parseFloat(document.getElementById('gv').value);
+            const bmiStatus = document.getElementById('bmiStatus').value;
+            const sga = document.querySelector('input[name="sga"]:checked').value;
+            const pubertySign = document.getElementById('pubertySign').value;
+            const boneAgeStatus = document.getElementById('boneAgeStatus').value;
+            const pahStatus = document.getElementById('pahStatus').value;
+            const turnerCheck = document.getElementById('turnerCheck').value;
+
+            if (!age || (gv !== 0 && !gv)) { alert("請先輸入年齡與生長速率！"); return; }
+            if (age < 6) { alert("此系統僅適用於 6 歲以上兒童。幼兒請轉介 FTT 評估流程。"); return; }
+
+            let html = "";
+            let title = "";
+            let colorClass = "";
+
+            let isGrowthClosing = (gv < 4) && ((gender === 'female' && age >= 14) || (gender === 'male' && age >= 16));
+            let isNormalPubertySpurt = (gv > 6) && ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9));
+            let isNormalPubertyOnset = (gv >= 4 && gv <= 6) && ((gender === 'female' && age >= 8) || (gender === 'male' && age >= 9)) && (pubertySign === 'yes');
+
+            if (isGrowthClosing) {
+                title = "🟢 生長趨緩/閉合期 (正常現象)";
+                colorClass = "alert-gray";
+                html = `<strong>判斷：</strong>青春期尾聲，生長板接近閉合。<br><strong>建議：</strong>不需轉介。`;
+            }
+            else if (sga === 'yes' && gv < 4 && age > 4) {
+                 title = "🔴 建議轉介 (SGA 適應症)";
+                 colorClass = "alert-red";
+                 html = `<strong>判斷：</strong>SGA 且未追趕生長。<br><strong>行動：</strong>轉介兒科內分泌。`;
+            }
+            else if ( ((gender === 'female' && age < 8) || (gender === 'male' && age < 9)) && pubertySign === 'yes' ) {
+                title = "🔴 建議轉介 (完整性早熟鑑別)";
+                colorClass = "alert-red";
+                html = `
+                    <strong>判斷：</strong>符合早熟年齡且有性徵 (無照駕駛)。<br>
+                    <strong>建議開立檢查套餐 (Workup Panel)：</strong>
+                    <ul class='workup-list'>
+                        <li><strong>1. 核心荷爾蒙：</strong>Basal LH, FSH, E2/Testo</li>
+                        <li><strong>2. 確診：</strong>GnRH 刺激測驗</li>
+                        <li><strong>3. 排它：</strong>TSH, Free T4, 17-OHP, Tumor markers</li>
+                        <li><strong>4. 影像：</strong>骨齡, 腦部 MRI</li>
+                    </ul>
+                `;
+            }
+            else if (isNormalPubertySpurt) {
+                if (pahStatus === 'poor') {
+                    title = "🟠 警示：青春期衝刺但預估身高受損 (RPP)";
+                    colorClass = "alert-orange";
+                    html = `<strong>判斷：</strong>長得快但骨齡老化更快 (CP值低)。<br><strong>比喻：</strong>「開著法拉利但油箱漏油」。<br><strong>建議：</strong>轉介討論延緩策略。`;
+                } else {
+                    title = "🟢 正常的青春期生長衝刺";
+                    colorClass = "alert-green";
+                    html = `<strong>判斷：</strong>長高效率佳 (CP值高)，正常生理現象。<br><strong>建議：</strong>觀察即可。`;
+                }
+            }
+            else if (isNormalPubertyOnset) {
+                if (pahStatus === 'poor') {
+                     title = "🟠 警示：正常發育但預估身高不佳";
+                     colorClass = "alert-orange";
+                     html = `<strong>判斷：</strong>雖為正常發育時程，但骨齡/預估身高不理想。<br><strong>建議：</strong>追蹤骨齡變化，必要時轉介。`;
+                } else {
+                     title = "🔵 正常青春期發育 (Normal Puberty)";
+                     colorClass = "alert-blue";
+                     html = `<strong>判斷：</strong>發育年齡正常，生長速率正常 (剛發育)。<br><strong>建議：</strong>追蹤骨齡與身高。`;
+                }
+            }
+            else if (gv > 6) {
+                title = "🟢 觀察即可 (單純高大)";
+                colorClass = "alert-green";
+                html = `<strong>判斷：</strong>生長快速但無性徵，可能為遺傳高大。`;
+            }
+            else if (gv < 4) {
+                 if (bmiStatus === 'thin') {
+                    title = "🔴 建議轉介 (腸胃/代謝型)";
+                    colorClass = "alert-red";
+                    html = `
+                        <strong>懷疑：</strong>營養不良、吸收不良 (Wasting)。<br>
+                        <strong>建議開立檢查 (GI Panel)：</strong>
+                        <ul class='workup-list'>
+                            <li><strong>1. 骨齡 (Bone Age) - 評估生長潛力</strong></li>
+                            <li>2. CBC, Ferritin (貧血)</li>
+                            <li>3. tTG-IgA (乳糜瀉)</li>
+                            <li>4. <strong>Ca, P, ALK-P</strong> (佝僂症/骨病)</li>
+                        </ul>
+                    `;
+                 } else {
+                    let turnerNote = (gender === 'female') ? "<li><strong>5. Karyotype (染色體) - 排除透納氏症</strong></li>" : "";
+                    title = "🔴 建議轉介 (內分泌型)";
+                    colorClass = "alert-red";
+                    html = `
+                        <strong>懷疑：</strong>內分泌故障 (胖+矮=高風險)。<br>
+                        <strong>建議開立檢查 (Endo Panel)：</strong>
+                        <ul class='workup-list'>
+                            <li><strong>1. 骨齡 (Bone Age)</strong></li>
+                            <li>2. IGF-1, IGF-BP3 (生長激素)</li>
+                            <li>3. TSH, Free T4 (甲狀腺)</li>
+                            <li>4. Ca, P, ALK-P (骨病)</li>
+                            ${turnerNote}
+                        </ul>
+                    `;
+                 }
+            }
+            else {
+                if (boneAgeStatus === 'delay_severe') {
+                    title = "⚠️ 警示：需排除隱藏病理";
+                    colorClass = "alert-yellow";
+                    html = `<strong>風險：</strong>GV 正常但骨齡嚴重落後 (>2年)。需排除甲狀腺或乳糜瀉。`;
+                } else if (gender === 'female' && turnerCheck === 'yes') {
+                    title = "⚠️ 警示：需排除特納氏症";
+                    colorClass = "alert-yellow";
+                    html = `<strong>建議：</strong>不明原因矮小女性，請驗染色體。`;
+                } else if (boneAgeStatus === 'delay_mild') {
+                     title = "🔵 體質性生長遲緩 (CDGP)";
+                     colorClass = "alert-blue";
+                     html = `<strong>判斷：</strong>骨齡落後，屬於晚發育體質 (油電混合車，省油開得久)。`;
+                } else if (boneAgeStatus === 'match') {
+                    title = "🔵 家族性矮小 (FSS)";
+                    colorClass = "alert-blue";
+                    html = `<strong>判斷：</strong>骨齡相符。依循父母遺傳軌跡生長 (小型車，引擎沒壞)。`;
+                } else {
+                    title = "🔵 正常生長監測";
+                    colorClass = "alert-blue";
+                    html = `<strong>建議：</strong>數據正常。建議拍攝骨齡以區分 FSS 或 CDGP。`;
+                }
+            }
+
+            const resultDiv = document.getElementById('resultArea');
+            resultDiv.innerHTML = `
+                <div class="recommendation-card ${colorClass}">
+                    <h3 style="margin-top:0;">${title}</h3>
+                    <div style="line-height: 1.6;">${html}</div>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
