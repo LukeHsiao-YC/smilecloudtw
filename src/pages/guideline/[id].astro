@@ -5,8 +5,9 @@ import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 
 export async function getStaticPaths() {
-  // 繞過系統的收集器，直接從資料夾把 md 檔案硬抓出來
-  const files = await Astro.glob('../../content/guideline/*.md');
+  // 【終極殺手鐧修正版】改用 import.meta.glob，這是系統底層合法允許的抓取方式
+  const matches = import.meta.glob('../../content/guideline/*.md', { eager: true });
+  const files = Object.entries(matches);
   
   if (!files || files.length === 0) {
      return [{
@@ -15,16 +16,16 @@ export async function getStaticPaths() {
      }];
   }
   
-  return files.map((file) => {
-    // 從檔案的絕對路徑中，把最後面的檔名切出來當作網址 (例如 fapds)
-    const filename = file.file.split('/').pop().replace(/\.md$/, '').toLowerCase();
+  return files.map(([filepath, fileModule]) => {
+    // 從檔案的路徑 (例如 '../../content/guideline/fapds.md') 把檔名切出來當網址
+    const filename = filepath.split('/').pop().replace(/\.md$/, '').toLowerCase();
     
     return {
       params: { id: filename },
       props: { 
         isMock: false, 
-        Content: file.Content, // Astro.glob 會直接幫我們轉換好內文
-        title: file.frontmatter.title // 直接讀取你寫的 title
+        Content: fileModule.default, // Markdown 轉換後的內容會放在 default 裡面
+        title: fileModule.frontmatter?.title // 讀取你設定的 title
       },
     };
   });
