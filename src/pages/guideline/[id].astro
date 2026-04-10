@@ -1,24 +1,26 @@
 ---
-import { getCollection } from 'astro:content';
+// 1. 必須同時呼叫 getCollection 和 render 這兩個新版工具
+import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 
 export async function getStaticPaths() {
-  const guidelines = await getCollection('guideline');
-  return guidelines.map(entry => ({
-    // 傳統寫法是抓取 slug 當作網址 (會自動把檔名轉成小寫)
-    params: { id: entry.slug },
+  // 加上 as any 讓編輯器不要因為還沒更新字典而碎碎念
+  const guidelines = await getCollection('guideline' as any) as any[];
+  return guidelines.map((entry: any) => ({
+    // 2. 最新版抓取檔名叫做 id，並且強制轉小寫，徹底解決 GitHub 的 404 大小寫問題
+    params: { id: entry.id.toLowerCase() },
     props: { entry },
   }));
 }
 
-const { entry } = Astro.props;
-// 換回原本最穩定的 render 寫法，負責把 Markdown 轉成網頁標籤
-const { Content } = await entry.render();
+const { entry } = Astro.props as any;
+// 3. 最新版將 Markdown 轉換為網頁的標準語法
+const { Content } = await render(entry);
 ---
 
-<Layout title={`${entry.data.title || '臨床指引'} | Smilecloud 微笑雲朵`}>
+<Layout title={`${entry.data?.title || '臨床指引'} | Smilecloud 微笑雲朵`}>
   <Navbar />
 
   <main class="pt-24 pb-32 bg-slate-50 min-h-screen">
@@ -38,7 +40,7 @@ const { Content } = await entry.render();
             醫師臨床指引
           </div>
           <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 leading-tight">
-            {entry.data.title || '未命名指引'}
+            {entry.data?.title || '未命名指引'}
           </h1>
         </div>
 
