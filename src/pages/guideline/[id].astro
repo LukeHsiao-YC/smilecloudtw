@@ -1,24 +1,21 @@
 ---
-// 這裡多叫了 render 這個工具進來
-import { getCollection, render } from 'astro:content';
+import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 
-// 1. 抓取所有 guideline 資料夾裡的 md 檔
 export async function getStaticPaths() {
-  // 強制讓編輯器略過型別檢查，並宣告抓出來的是陣列
-  const guidelines = await getCollection('guideline' as any) as any[];
-  return guidelines.map((entry: any) => ({
-    params: { id: entry.id },
+  const guidelines = await getCollection('guideline');
+  return guidelines.map(entry => ({
+    // 傳統寫法是抓取 slug 當作網址 (會自動把檔名轉成小寫)
+    params: { id: entry.slug },
     props: { entry },
   }));
 }
 
-// 2. 準備渲染內容，同樣加上 as any 略過檢查
-const { entry } = Astro.props as any;
-// 這裡換成新版的轉換寫法
-const { Content } = await render(entry);
+const { entry } = Astro.props;
+// 換回原本最穩定的 render 寫法，負責把 Markdown 轉成網頁標籤
+const { Content } = await entry.render();
 ---
 
 <Layout title={`${entry.data.title || '臨床指引'} | Smilecloud 微笑雲朵`}>
@@ -45,7 +42,7 @@ const { Content } = await render(entry);
           </h1>
         </div>
 
-        {/* Markdown 的內容會自動套用這裡的排版 */}
+        {/* 這裡就是套用排版魔法的地方 */}
         <div class="prose prose-slate prose-sky max-w-none prose-headings:font-bold prose-a:text-sky-600">
           <Content />
         </div>
