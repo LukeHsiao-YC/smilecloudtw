@@ -80,5 +80,50 @@ const { isMock, Content, title } = Astro.props;
     if (window.lucide) {
       window.lucide.createIcons();
     }
+
+    // 幫 Markdown 的表格加一層可以左右滑動的外套，對手機版超友善
+    document.querySelectorAll('.prose table').forEach(table => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-wrapper overflow-x-auto my-8 rounded-xl shadow-sm border border-slate-200';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+      table.style.margin = '0'; // 清除原本預設的邊距
+    });
   </script>
 </Layout>
+
+<style is:global>
+  /* 這裡負責把陽春的 Markdown 表格變漂亮 */
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+  }
+  .prose thead {
+    background-color: #f0f9ff; /* 淡淡的藍色當作標題底色 */
+    border-bottom: 2px solid #bae6fd;
+  }
+  .prose th {
+    color: #0369a1;
+    font-weight: 700;
+    padding: 1rem;
+    white-space: nowrap; /* 讓標題盡量不要斷行 */
+  }
+  .prose tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s ease;
+  }
+  .prose tbody tr:hover {
+    background-color: #f8fafc; /* 滑鼠移過去會有淡淡的底色提示 */
+  }
+  .prose td {
+    padding: 1rem;
+    color: #475569;
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  /* 讓表格裡的強調文字顏色更清楚 */
+  .prose td strong {
+    color: #0c4a6e;
+  }
+</style>
