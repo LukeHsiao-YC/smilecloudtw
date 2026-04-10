@@ -7,16 +7,16 @@ import Footer from '../../components/Footer.astro';
 
 // 1. 抓取所有 guideline 資料夾裡的 md 檔
 export async function getStaticPaths() {
-  // 這裡加上 'as any'，強制讓頑固的編輯器略過型別檢查
-  const guidelines = await getCollection('guideline' as any);
-  return guidelines.map(entry => ({
+  // 強制讓編輯器略過型別檢查，並宣告抓出來的是陣列
+  const guidelines = await getCollection('guideline' as any) as any[];
+  return guidelines.map((entry: any) => ({
     params: { id: entry.id },
     props: { entry },
   }));
 }
 
-// 2. 準備渲染內容
-const { entry } = Astro.props;
+// 2. 準備渲染內容，同樣加上 as any 略過檢查
+const { entry } = Astro.props as any;
 // 這裡換成新版的轉換寫法
 const { Content } = await render(entry);
 ---
