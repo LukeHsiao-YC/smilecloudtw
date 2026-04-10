@@ -1,5 +1,5 @@
 ---
-title  兒童功能性腸胃疾患 (FGID) 臨床實證指引
+title:兒童功能性腸胃疾患 (FGID) 臨床實證指引
 ---
 
 這是為門診兒科醫師整理的快速參考手冊，整合 ESPGHAN / NASPGHAN 最新建議與 Cochrane 實證。
