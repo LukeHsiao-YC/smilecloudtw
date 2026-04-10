@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Navbar from '../../components/Navbar.astro';
+import Footer from '../../components/Footer.astro';
+
+// 1. 抓取所有 guideline 資料夾裡的 md 檔
+export async function getStaticPaths() {
+  const guidelines = await getCollection('guideline');
+  return guidelines.map(entry => ({
+    params: { id: entry.id },
+    props: { entry },
+  }));
+}
+
+// 2. 準備渲染內容
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<Layout title={`${entry.data.title || '臨床指引'} | Smilecloud 微笑雲朵`}>
+  <Navbar />
+
+  <main class="pt-24 pb-32 bg-slate-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="mb-8">
+        <a href="/" class="text-sky-600 font-bold hover:text-sky-700 transition-colors flex items-center gap-2 inline-flex">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> 返回首頁
+        </a>
+      </div>
+
+      <article class="bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
+        
+        <div class="border-b border-slate-100 pb-8 mb-8">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-sm mb-4">
+            <i data-lucide="stethoscope" class="w-4 h-4"></i>
+            醫師臨床指引
+          </div>
+          <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 leading-tight">
+            {entry.data.title || '未命名指引'}
+          </h1>
+        </div>
+
+        {/* Markdown 的內容會自動套用這裡的排版 */}
+        <div class="prose prose-slate prose-sky max-w-none prose-headings:font-bold prose-a:text-sky-600">
+          <Content />
+        </div>
+        
+      </article>
+    </div>
+  </main>
+
+  <Footer />
+
+  <script is:inline>
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+  </script>
+</Layout>
