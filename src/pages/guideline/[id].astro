@@ -7,7 +7,8 @@ import Footer from '../../components/Footer.astro';
 
 // 1. 抓取所有 guideline 資料夾裡的 md 檔
 export async function getStaticPaths() {
-  const guidelines = await getCollection('guideline');
+  // 這裡加上 'as any'，強制讓頑固的編輯器略過型別檢查
+  const guidelines = await getCollection('guideline' as any);
   return guidelines.map(entry => ({
     params: { id: entry.id },
     props: { entry },
