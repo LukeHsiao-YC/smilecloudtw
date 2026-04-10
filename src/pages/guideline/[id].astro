@@ -1,45 +1,40 @@
 ---
-// @ts-nocheck 
-// ▲ 這行就是「無敵星星」，強制關閉所有型別檢查紅字，確保 GitHub 絕對不會罷工！
-
-import { getCollection, render } from 'astro:content';
+// @ts-nocheck
 import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 
 export async function getStaticPaths() {
-  const guidelines = await getCollection('guideline');
+  // 繞過系統的收集器，直接從資料夾把 md 檔案硬抓出來
+  const files = await Astro.glob('../../content/guideline/*.md');
   
-  // 防呆機制：如果系統還是沒抓到，給一個提示畫面而不是 404
-  if (!guidelines || guidelines.length === 0) {
+  if (!files || files.length === 0) {
      return [{
        params: { id: 'fapds' },
-       props: { entry: { id: 'fapds', data: { title: '系統找不到文章' }, _isMock: true } }
+       props: { isMock: true, title: '系統找不到文章' }
      }];
   }
   
-  return guidelines.map((entry) => {
-    const rawId = entry.slug || entry.id;
-    // 強制轉小寫，避開網址大小寫的 404 問題
-    const safeId = rawId.toLowerCase().replace(/\.mdx?$/, '');
+  return files.map((file) => {
+    // 從檔案的絕對路徑中，把最後面的檔名切出來當作網址 (例如 fapds)
+    const filename = file.file.split('/').pop().replace(/\.md$/, '').toLowerCase();
     
     return {
-      params: { id: safeId },
-      props: { entry },
+      params: { id: filename },
+      props: { 
+        isMock: false, 
+        Content: file.Content, // Astro.glob 會直接幫我們轉換好內文
+        title: file.frontmatter.title // 直接讀取你寫的 title
+      },
     };
   });
 }
 
-const { entry } = Astro.props;
-
-let Content;
-if (!entry._isMock) {
-    const rendered = await render(entry);
-    Content = rendered.Content;
-}
+// 接收抓出來的資料
+const { isMock, Content, title } = Astro.props;
 ---
 
-<Layout title={`${entry.data?.title || '臨床指引'} | Smilecloud 微笑雲朵`}>
+<Layout title={`${title || '臨床指引'} | Smilecloud 微笑雲朵`}>
   <Navbar />
 
   <main class="pt-24 pb-32 bg-slate-50 min-h-screen">
@@ -59,15 +54,15 @@ if (!entry._isMock) {
             醫師臨床指引
           </div>
           <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 leading-tight">
-            {entry.data?.title || '未命名指引'}
+            {title || '未命名指引'}
           </h1>
         </div>
 
         <div class="prose prose-slate prose-sky max-w-none prose-headings:font-bold prose-a:text-sky-600">
-          {entry._isMock ? (
+          {isMock ? (
             <div class="p-6 bg-rose-50 border-2 border-rose-200 rounded-xl text-rose-700 font-bold text-lg shadow-sm">
-              🚨 警告：網頁有成功生出來，但是系統抓不到 markdown 檔案！<br/><br/>
-              請檢查 fapds.md 最上方是否有加上 "---" 包住標題。
+              🚨 警告：網頁生出來了，但底層指令還是抓不到檔案！<br/><br/>
+              如果看到這段字，請確認檔名是否真的是 .md 結尾。
             </div>
           ) : (
             <Content />

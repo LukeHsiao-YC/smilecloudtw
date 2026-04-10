@@ -23,4 +23,5 @@ const guideline = defineCollection({
     }),
 });
 
+// 維持最單純的設定即可，我們接下來在樣板裡會直接繞過它
 export const collections = { blog, guideline };
