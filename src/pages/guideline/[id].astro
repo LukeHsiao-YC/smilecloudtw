@@ -1,22 +1,24 @@
 ---
-// 1. 必須同時呼叫 getCollection 和 render 這兩個新版工具
 import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 
 export async function getStaticPaths() {
-  // 加上 as any 讓編輯器不要因為還沒更新字典而碎碎念
   const guidelines = await getCollection('guideline' as any) as any[];
-  return guidelines.map((entry: any) => ({
-    // 2. 最新版抓取檔名叫做 id，並且強制轉小寫，徹底解決 GitHub 的 404 大小寫問題
-    params: { id: entry.id.toLowerCase() },
-    props: { entry },
-  }));
+  
+  return guidelines.map((entry: any) => {
+    // 暴力破解：確保檔名變成小寫，並且強制把結尾的 .md 或 .mdx 切掉
+    const safeId = entry.id.toLowerCase().replace(/\.mdx?$/, '');
+    
+    return {
+      params: { id: safeId },
+      props: { entry },
+    };
+  });
 }
 
 const { entry } = Astro.props as any;
-// 3. 最新版將 Markdown 轉換為網頁的標準語法
 const { Content } = await render(entry);
 ---
 
@@ -44,7 +46,6 @@ const { Content } = await render(entry);
           </h1>
         </div>
 
-        {/* 這裡就是套用排版魔法的地方 */}
         <div class="prose prose-slate prose-sky max-w-none prose-headings:font-bold prose-a:text-sky-600">
           <Content />
         </div>
