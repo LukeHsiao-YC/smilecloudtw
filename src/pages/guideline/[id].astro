@@ -1,5 +1,6 @@
 ---
-import { getCollection } from 'astro:content';
+// 這裡多叫了 render 這個工具進來
+import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
@@ -15,7 +16,8 @@ export async function getStaticPaths() {
 
 // 2. 準備渲染內容
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+// 這裡換成新版的轉換寫法
+const { Content } = await render(entry);
 ---
 
 <Layout title={`${entry.data.title || '臨床指引'} | Smilecloud 微笑雲朵`}>
