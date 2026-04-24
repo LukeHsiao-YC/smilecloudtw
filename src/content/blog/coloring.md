@@ -1,6 +1,6 @@
 ---
 layout: ../../layouts/BlogPost.astro
-title: "微笑雲朵島著色本？"
+title: "微笑雲朵島著色本"
 date: 2026-04-24
 category: 兒童肥胖
 author: "蕭宇超醫師"
