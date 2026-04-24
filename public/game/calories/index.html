@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+ <!-- 回到健康大廳按鈕 -->
+<a href="https://lukehsiao-yc.github.io/for_healthy_children/" 
+   style="position: fixed; 
+          top: 20px; 
+          left: 20px; 
+          background-color: #f43f5e; 
+          color: white; 
+          padding: 10px 16px; 
+          border-radius: 50px; 
+          text-decoration: none; 
+          font-weight: bold; 
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+          z-index: 9999; 
+          display: flex; 
+          align-items: center; 
+          font-family: 'Noto Sans TC', sans-serif;
+          transition: transform 0.2s;">
+   <span style="margin-right: 6px; font-size: 18px;">🏠</span> 回到大廳
+</a>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO 與 社群分享設定 (發佈必備) -->
+    <title>真實份量飽足感挑戰 - 您吃對了嗎？</title>
+    <meta name="description" content="一個互動式的小遊戲，帶您體驗「熱量密度」對飽足感的影響。試試看，吃飽要花多少熱量？">
+    <meta property="og:title" content="真實份量飽足感挑戰">
+    <meta property="og:description" content="目標是吃到飽足 (600g)，但熱量不能爆表！快來挑戰你的飲食選擇。">
+    <meta property="og:type" content="website">
+    
+    <!-- 網站圖示 (Favicon) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+       
+        body { font-family: 'Noto Sans TC', sans-serif; }
+
+        .stomach-container {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .food-item:active { transform: scale(0.95); }
+
+        .fill-liquid {
+            transition: height 0.5s ease-out, background-color 0.5s ease;
+        }
+
+        /* 模擬食物掉落動畫 */
+        @keyframes dropIn {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+            60% { transform: translateY(10px) rotate(10deg); opacity: 1; }
+            100% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        }
+        .food-drop { 
+            animation: dropIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
+            transform-origin: center bottom;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-gray-800 flex flex-col">
+
+    <div class="flex-1 w-full max-w-6xl mx-auto p-2 md:p-4">
+        <!-- Header -->
+        <header class="text-center mb-4">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">🍽️ 真實份量飽足感挑戰</h1>
+            <p class="text-gray-600 text-sm mt-1">
+                目標：吃到 <span class="font-bold text-teal-600">飽足 (600g)</span>。
+                <br class="md:hidden">選擇平常吃的「一份」食物，看看熱量會發生什麼事？
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Panel: The Stomach & Stats (Occupies 4 cols) -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-200 flex flex-col items-center sticky top-4">
+                    <h3 class="text-lg font-semibold mb-2 text-gray-700">胃部狀態 (體積可視化)</h3>
+                    
+                    <!-- Stomach Visualization -->
+                    <div class="relative w-56 h-72 border-4 border-gray-300 rounded-b-[4rem] rounded-t-lg bg-gray-100 overflow-hidden shadow-inner stomach-container mb-4">
+                        <div class="absolute inset-0 z-0 opacity-20" style="background-image: linear-gradient(#ccc 1px, transparent 1px); background-size: 100% 20%;"></div>
+                        
+                        <!-- The Fill Level -->
+                        <div id="stomachFill" class="absolute bottom-0 left-0 w-full bg-teal-400 opacity-80 fill-liquid flex items-end justify-center z-10" style="height: 0%;">
+                            <span id="fillPercentage" class="text-white font-bold text-xl pb-2 drop-shadow-md">0%</span>
+                        </div>
+
+                        <!-- Emojis Container -->
+                        <div id="foodVisuals" class="absolute bottom-0 w-full h-full pointer-events-none z-20 flex flex-col-reverse flex-wrap content-center justify-center p-2 gap-1 overflow-hidden"></div>
+                    </div>
+
+                    <!-- Dashboard -->
+                    <div class="w-full space-y-4">
+                        <!-- Weight Bar (Visible) -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>飽足進度 (重量)</span>
+                                <span id="weightText" class="font-mono font-bold">0g / 600g</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div id="weightBar" class="bg-teal-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Calorie Bar (Hidden initially) -->
+                        <div id="calorieSection" class="relative">
+                            <div class="flex justify-between text-sm mb-1 opacity-50 filter blur-[2px]">
+                                <span>累積熱量</span>
+                                <span class="font-mono font-bold">??? kcal</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden opacity-50">
+                                <div class="bg-red-400 h-3 rounded-full w-0"></div>
+                            </div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="bg-gray-800 text-white text-xs px-2 py-1 rounded shadow">挑戰結束後揭曉</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reset Button -->
+                    <button onclick="resetGame()" class="mt-6 w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition text-sm font-semibold">
+                        重置挑戰
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Food Menu (Occupies 8 cols) -->
+            <div class="lg:col-span-8 bg-white rounded-2xl shadow-md border border-gray-200 flex flex-col overflow-hidden max-h-[85vh]">
+                <!-- Tabs -->
+                <div class="flex overflow-x-auto border-b border-gray-200 hide-scrollbar p-2 gap-2 bg-gray-50 flex-shrink-0" id="categoryTabs">
+                    <button onclick="filterFood('all')" class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-teal-600 text-white shadow-sm whitespace-nowrap">全部</button>
+                    <button onclick="filterFood('veg_fruit')" class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 hover:bg-gray-100 whitespace-nowrap">蔬果類</button>
+                    <button onclick="filterFood('starch')" class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 hover:bg-gray-100 whitespace-nowrap">澱粉主食</button>
+                    <button onclick="filterFood('protein')" class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 hover:bg-gray-100 whitespace-nowrap">蛋白質</button>
+                    <button onclick="filterFood('snack')" class="tab-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 hover:bg-gray-100 whitespace-nowrap">零食/飲料</button>
+                </div>
+
+                <!-- Food Grid -->
+                <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
+                    <div class="text-xs text-gray-500 mb-2 bg-blue-50 p-2 rounded border border-blue-100">
+                        💡 提示：點擊加入<b>「一份真實份量」</b>。請依照您平常的食量點選。
+                    </div>
+                    <div id="foodGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 pb-20">
+                        <!-- Items injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal Overlay -->
+    <div id="resultModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-end md:items-center justify-center p-0 md:p-4 backdrop-blur-sm overflow-y-auto">
+        <div class="bg-white rounded-t-2xl md:rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">✕</button>
+            
+            <!-- Result Header -->
+            <div class="text-center mb-6">
+                <div id="resultIcon" class="inline-block p-3 rounded-full bg-teal-100 text-4xl mb-2">🎉</div>
+                <h2 class="text-2xl font-bold text-gray-800">飽足感達成！</h2>
+                <div class="flex items-center justify-center gap-4 mt-2">
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500">總重量</div>
+                        <div id="finalWeight" class="text-lg font-bold text-gray-700">0g</div>
+                    </div>
+                    <div class="h-8 w-px bg-gray-300"></div>
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500">總熱量</div>
+                        <div id="finalScore" class="text-3xl font-black text-teal-600">0</div>
+                    </div>
+                </div>
+                <div id="scoreEvaluation" class="text-sm font-bold px-3 py-1 rounded-full bg-gray-100 mt-2 inline-block">計算中</div>
+            </div>
+
+            <!-- Analysis List -->
+            <div class="flex-1 overflow-y-auto border-t border-b border-gray-100 py-4 mb-4">
+                <h3 class="text-sm font-bold text-gray-700 mb-3">您的菜單分析 (熱量密度揭密)</h3>
+                <div class="grid grid-cols-4 text-xs text-gray-400 border-b pb-2 mb-2 px-2">
+                    <div class="col-span-2">食物名稱</div>
+                    <div class="text-right">份量/熱量</div>
+                    <div class="text-right">密度(cal/g)</div>
+                </div>
+                <div id="receiptList" class="space-y-3">
+                    <!-- Receipt items injected by JS -->
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3 mt-auto">
+                <button onclick="resetGame()" class="flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-lg transition">再次挑戰</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Data Source (Real Serving Sizes) ---
+        // Density = serving_cal / serving_g
+        const foods = [
+            // --- 蔬果類 ---
+            { id: 'lettuce', name: '生菜沙拉', serving_desc: '1盤', serving_g: 150, serving_cal: 25, emoji: '🥗', category: 'veg_fruit' },
+            { id: 'broccoli', name: '燙花椰菜', serving_desc: '1份', serving_g: 100, serving_cal: 34, emoji: '🥦', category: 'veg_fruit' },
+            { id: 'veg_stir_fry', name: '炒青菜', serving_desc: '1盤', serving_g: 150, serving_cal: 120, emoji: '🥬', category: 'veg_fruit' }, // 油脂增加熱量
+            { id: 'veg_tempura', name: '炸蔬菜天婦羅', serving_desc: '1份', serving_g: 120, serving_cal: 280, emoji: '🍤', category: 'veg_fruit' }, // 炸麵衣吸油
+            { id: 'apple', name: '蘋果', serving_desc: '1顆', serving_g: 150, serving_cal: 78, emoji: '🍎', category: 'veg_fruit' },
+            { id: 'banana', name: '香蕉', serving_desc: '1根', serving_g: 120, serving_cal: 105, emoji: '🍌', category: 'veg_fruit' },
+            { id: 'guava', name: '芭樂', serving_desc: '1顆', serving_g: 300, serving_cal: 114, emoji: '🍐', category: 'veg_fruit' },
+
+            // --- 澱粉主食 ---
+            { id: 'oatmeal', name: '大燕麥片', serving_desc: '1碗', serving_g: 250, serving_cal: 150, emoji: '🥣', category: 'starch' },
+            { id: 'sweet_potato', name: '地瓜', serving_desc: '1條', serving_g: 150, serving_cal: 180, emoji: '🍠', category: 'starch' },
+            { id: 'potato', name: '馬鈴薯', serving_desc: '1顆', serving_g: 150, serving_cal: 120, emoji: '🥔', category: 'starch' },
+            { id: 'rice', name: '白飯', serving_desc: '1碗', serving_g: 200, serving_cal: 280, emoji: '🍚', category: 'starch' },
+            { id: 'thick_soup_rice', name: '肉羹飯', serving_desc: '1碗', serving_g: 400, serving_cal: 450, emoji: '🍲', category: 'starch' }, // 水分多但勾芡
+            { id: 'oil_rice', name: '油飯', serving_desc: '1碗', serving_g: 200, serving_cal: 400, emoji: '🍚', category: 'starch' },
+            { id: 'fried_rice', name: '炒飯', serving_desc: '1盤', serving_g: 300, serving_cal: 600, emoji: '🍛', category: 'starch' },
+            { id: 'fried_noodle', name: '炒麵', serving_desc: '1盤', serving_g: 300, serving_cal: 550, emoji: '🍝', category: 'starch' },
+            { id: 'olive_pasta', name: '清炒義大麵', serving_desc: '1盤', serving_g: 300, serving_cal: 480, emoji: '🍝', category: 'starch' },
+            { id: 'pesto_pasta', name: '青醬義大麵', serving_desc: '1盤', serving_g: 350, serving_cal: 650, emoji: '🍝', category: 'starch' },
+            { id: 'cream_pasta', name: '奶油義大麵', serving_desc: '1盤', serving_g: 350, serving_cal: 750, emoji: '🍝', category: 'starch' },
+            { id: 'sesame_noodle', name: '麻醬麵', serving_desc: '1碗', serving_g: 250, serving_cal: 500, emoji: '🍜', category: 'starch' },
+            { id: 'dry_noodle', name: '乾麵', serving_desc: '1碗', serving_g: 200, serving_cal: 350, emoji: '🍜', category: 'starch' },
+            { id: 'burger', name: '漢堡', serving_desc: '1個', serving_g: 180, serving_cal: 450, emoji: '🍔', category: 'starch' },
+            { id: 'clay_roll', name: '燒餅', serving_desc: '1個', serving_g: 80, serving_cal: 300, emoji: '🥯', category: 'starch' }, // 酥皮油多
+            { id: 'milk_bread', name: '奶酥麵包', serving_desc: '1個', serving_g: 100, serving_cal: 380, emoji: '🥐', category: 'starch' },
+            { id: 'fries_m', name: '中薯', serving_desc: '1包', serving_g: 100, serving_cal: 310, emoji: '🍟', category: 'starch' },
+
+            // --- 蛋白質 ---
+            { id: 'egg', name: '水煮蛋', serving_desc: '1顆', serving_g: 50, serving_cal: 70, emoji: '🥚', category: 'protein' },
+            { id: 'milk', name: '牛奶', serving_desc: '1杯', serving_g: 240, serving_cal: 150, emoji: '🥛', category: 'protein' },
+            { id: 'steam_fish', name: '清蒸魚', serving_desc: '1片', serving_g: 150, serving_cal: 180, emoji: '🐟', category: 'protein' },
+            { id: 'squid', name: '燙花枝', serving_desc: '1盤', serving_g: 120, serving_cal: 100, emoji: '🦑', category: 'protein' },
+            { id: 'tuna_salad', name: '鮪魚沙拉', serving_desc: '1份', serving_g: 120, serving_cal: 260, emoji: '🥗', category: 'protein' },
+            { id: 'chicken_breast', name: '雞胸肉', serving_desc: '1片', serving_g: 150, serving_cal: 248, emoji: '🍗', category: 'protein' },
+            { id: 'braised_pork', name: '滷排骨', serving_desc: '1塊', serving_g: 150, serving_cal: 320, emoji: '🍖', category: 'protein' },
+            { id: 'fried_pork', name: '炸豬排', serving_desc: '1塊', serving_g: 150, serving_cal: 450, emoji: '🍖', category: 'protein' },
+            { id: 'steak', name: '牛排', serving_desc: '1塊', serving_g: 200, serving_cal: 500, emoji: '🥩', category: 'protein' },
+            { id: 'pork_belly', name: '五花肉', serving_desc: '1份', serving_g: 100, serving_cal: 400, emoji: '🥓', category: 'protein' },
+            { id: 'sausage', name: '香腸', serving_desc: '1根', serving_g: 50, serving_cal: 200, emoji: '🌭', category: 'protein' },
+            { id: 'ham', name: '火腿', serving_desc: '1片', serving_g: 30, serving_cal: 50, emoji: '🥩', category: 'protein' },
+            { id: 'bacon_slice', name: '培根', serving_desc: '1片', serving_g: 30, serving_cal: 160, emoji: '🥓', category: 'protein' },
+            { id: 'chicken_skin', name: '炸雞皮', serving_desc: '1串', serving_g: 50, serving_cal: 250, emoji: '🍢', category: 'protein' },
+
+            // --- 零食/飲料 ---
+            { id: 'coke_zero', name: '零卡可樂', serving_desc: '1罐', serving_g: 330, serving_cal: 0, emoji: '🥤', category: 'snack' },
+            { id: 'juice', name: '100%純果汁', serving_desc: '1杯', serving_g: 250, serving_cal: 120, emoji: '🧃', category: 'snack' },
+            { id: 'yogurt', name: '優格', serving_desc: '1杯', serving_g: 150, serving_cal: 140, emoji: '🥣', category: 'snack' },
+            { id: 'dried_squid', name: '魷魚絲', serving_desc: '1把', serving_g: 30, serving_cal: 85, emoji: '🦑', category: 'snack' },
+            { id: 'half_sugar_tea', name: '半糖珍奶', serving_desc: '1杯', serving_g: 700, serving_cal: 500, emoji: '🧋', category: 'snack' },
+            { id: 'bubble_tea', name: '全糖珍奶', serving_desc: '1杯', serving_g: 700, serving_cal: 700, emoji: '🥤', category: 'snack' },
+            { id: 'raisins', name: '葡萄乾', serving_desc: '1把', serving_g: 30, serving_cal: 90, emoji: '🍇', category: 'snack' },
+            { id: 'nuts', name: '堅果', serving_desc: '1把', serving_g: 30, serving_cal: 180, emoji: '🥜', category: 'snack' },
+            { id: 'chips', name: '洋芋片', serving_desc: '1包', serving_g: 60, serving_cal: 320, emoji: '🍪', category: 'snack' },
+            { id: 'cake', name: '切片蛋糕', serving_desc: '1片', serving_g: 80, serving_cal: 280, emoji: '🍰', category: 'snack' },
+            { id: 'chocolate', name: '巧克力', serving_desc: '1條', serving_g: 45, serving_cal: 240, emoji: '🍫', category: 'snack' },
+            { id: 'cheese', name: '起司', serving_desc: '1片', serving_g: 20, serving_cal: 65, emoji: '🧀', category: 'snack' },
+            { id: 'thousand_island', name: '千島醬', serving_desc: '1匙', serving_g: 15, serving_cal: 80, emoji: '🥣', category: 'snack' },
+            { id: 'peanut_butter', name: '花生醬', serving_desc: '1匙', serving_g: 15, serving_cal: 95, emoji: '🥜', category: 'snack' },
+            { id: 'oil', name: '淋油/醬汁', serving_desc: '1湯匙', serving_g: 15, serving_cal: 130, emoji: '🧈', category: 'snack' }
+        ];
+
+        // --- 2. Game State ---
+        const SATIETY_GOAL = 600; 
+        let currentCal = 0;
+        let currentWeight = 0;
+        let isGameOver = false;
+        let eatenHistory = []; 
+
+        // --- 3. Initialization ---
+        function init() {
+            renderFoodGrid('all');
+        }
+
+        function filterFood(cat) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-teal-600', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-600');
+            });
+            event.target.classList.remove('bg-white', 'text-gray-600');
+            event.target.classList.add('bg-teal-600', 'text-white');
+            renderFoodGrid(cat);
+        }
+
+        function renderFoodGrid(category) {
+            const grid = document.getElementById('foodGrid');
+            grid.innerHTML = '';
+            const filtered = category === 'all' ? foods : foods.filter(f => f.category === category);
+
+            filtered.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'food-item bg-white p-2 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-teal-300 flex flex-col items-center justify-center gap-1 h-32 transition relative overflow-hidden';
+                btn.onclick = () => eatFood(item);
+                btn.innerHTML = `
+                    <div class="text-3xl mb-1">${item.emoji}</div>
+                    <div class="text-sm font-bold text-gray-800 text-center leading-tight px-1 break-words w-full">${item.name}</div>
+                    <div class="text-[10px] text-teal-600 font-medium bg-teal-50 px-2 py-0.5 rounded-full mt-1">${item.serving_desc}</div>
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        // --- 4. Game Logic ---
+        function eatFood(item) {
+            if (isGameOver) return;
+
+            currentCal += item.serving_cal;
+            currentWeight += item.serving_g;
+            
+            // Add to history
+            const existingItem = eatenHistory.find(h => h.id === item.id);
+            if (existingItem) {
+                existingItem.count++;
+                existingItem.totalWeight += item.serving_g;
+                existingItem.totalCal += item.serving_cal;
+            } else {
+                eatenHistory.push({
+                    ...item,
+                    count: 1,
+                    totalWeight: item.serving_g,
+                    totalCal: item.serving_cal
+                });
+            }
+
+            // Visuals
+            addVisuals(item);
+            updateDashboard();
+
+            if (currentWeight >= SATIETY_GOAL) {
+                setTimeout(endGame, 600); 
+            }
+        }
+
+        function addVisuals(item) {
+            const container = document.getElementById('foodVisuals');
+            
+            // Visual scale based on Weight (Volume)
+            const baseScale = 0.5;
+            const weightFactor = item.serving_g / 80; 
+            let scale = baseScale + (weightFactor * 0.4);
+            if (scale > 2.8) scale = 2.8;
+            if (scale < 0.4) scale = 0.4;
+
+            const el = document.createElement('span');
+            el.textContent = item.emoji;
+            el.className = 'absolute text-xl food-drop select-none';
+            el.style.left = Math.random() * 80 + 10 + '%';
+            el.style.fontSize = '2rem';
+            el.style.transform = `scale(${scale})`;
+            el.style.zIndex = Math.floor(Math.random() * 10);
+            
+            container.appendChild(el);
+        }
+
+        function updateDashboard() {
+            const weightPct = Math.min((currentWeight / SATIETY_GOAL) * 100, 100);
+            document.getElementById('weightText').innerText = `${currentWeight}g / ${SATIETY_GOAL}g`;
+            document.getElementById('weightBar').style.width = `${weightPct}%`;
+            document.getElementById('stomachFill').style.height = `${weightPct}%`;
+            document.getElementById('fillPercentage').innerText = `${Math.round(weightPct)}%`;
+        }
+
+        function endGame() {
+            isGameOver = true;
+            const modal = document.getElementById('resultModal');
+            const scoreEl = document.getElementById('finalScore');
+            const weightEl = document.getElementById('finalWeight');
+            const evalEl = document.getElementById('scoreEvaluation');
+            const receiptEl = document.getElementById('receiptList');
+            const iconEl = document.getElementById('resultIcon');
+
+            modal.classList.remove('hidden');
+            scoreEl.innerHTML = `${currentCal} <span class="text-sm text-gray-500">kcal</span>`;
+            weightEl.innerText = `${currentWeight}g`;
+
+            // Evaluation for a meal (Standard)
+            // <= 700 Excellent
+            // 701 - 1000 Normal
+            // > 1000 High
+            if (currentCal <= 700) {
+                iconEl.innerText = "🏆";
+                evalEl.innerText = "輕盈飽足 (Excellent)";
+                evalEl.className = "text-sm font-bold px-4 py-1 rounded-full bg-green-100 text-green-700 mt-2 inline-block";
+                scoreEl.className = "text-3xl font-black text-green-600";
+            } else if (currentCal <= 1000) {
+                iconEl.innerText = "👌";
+                evalEl.innerText = "正常一餐 (Normal)";
+                evalEl.className = "text-sm font-bold px-4 py-1 rounded-full bg-yellow-100 text-yellow-700 mt-2 inline-block";
+                scoreEl.className = "text-3xl font-black text-yellow-600";
+            } else {
+                iconEl.innerText = "⚠️";
+                evalEl.innerText = "熱量超標 (High)";
+                evalEl.className = "text-sm font-bold px-4 py-1 rounded-full bg-red-100 text-red-700 mt-2 inline-block";
+                scoreEl.className = "text-3xl font-black text-red-600";
+            }
+
+            // Generate Detailed Receipt
+            receiptEl.innerHTML = '';
+            
+            // Sort by Density descending to show the "bad" ones first
+            const sortedHistory = [...eatenHistory].sort((a,b) => (b.serving_cal/b.serving_g) - (a.serving_cal/a.serving_g));
+
+            sortedHistory.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between";
+                
+                // Calculate Density
+                const density = (item.serving_cal / item.serving_g).toFixed(1);
+                
+                // Density Color Grading
+                let densityColor = "text-gray-400";
+                let densityLabel = "低";
+                let densityBg = "";
+                
+                // Special handling for Zero Calorie
+                if (item.serving_cal === 0) {
+                     densityColor = "text-green-600"; 
+                     densityLabel = "無熱量";
+                } else if(density > 4.0) { 
+                    densityColor = "text-red-500 font-bold"; densityLabel = "極高"; densityBg = "bg-red-50";
+                } else if(density > 2.0) { 
+                    densityColor = "text-orange-500"; densityLabel = "高"; 
+                } else if(density > 1.0) { 
+                    densityColor = "text-yellow-600"; densityLabel = "中"; 
+                } else { 
+                    densityColor = "text-green-600"; densityLabel = "低"; 
+                }
+
+                if (densityBg) row.classList.add(densityBg);
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-3 col-span-2 flex-1">
+                        <div class="text-2xl">${item.emoji}</div>
+                        <div>
+                            <div class="font-bold text-gray-800 text-sm">${item.name}</div>
+                            <div class="text-xs text-gray-500">x${item.count} ${item.serving_desc}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right w-24">
+                        <div class="text-sm font-bold text-gray-700">${item.totalWeight}g</div>
+                        <div class="text-xs text-gray-500">${item.totalCal} kcal</div>
+                    </div>
+
+                    <div class="text-right w-20 pl-2 border-l border-gray-200 ml-2">
+                        <div class="text-sm ${densityColor}">${density}</div>
+                        <div class="text-[10px] text-gray-400">密度(${densityLabel})</div>
+                    </div>
+                `;
+                receiptEl.appendChild(row);
+            });
+
+            // Reveal Calorie Bar on Main Dashboard
+            const calSection = document.getElementById('calorieSection');
+            calSection.innerHTML = `
+                <div class="flex justify-between text-sm mb-1">
+                    <span>最終熱量</span>
+                    <span class="font-mono font-bold ${currentCal > 1000 ? 'text-red-600' : 'text-green-600'}">${currentCal} kcal</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div class="${currentCal > 1000 ? 'bg-red-500' : 'bg-green-500'} h-3 rounded-full" style="width: 100%"></div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.add('hidden');
+        }
+
+        function resetGame() {
+            currentCal = 0;
+            currentWeight = 0;
+            isGameOver = false;
+            eatenHistory = [];
+            
+            document.getElementById('foodVisuals').innerHTML = '';
+            document.getElementById('stomachFill').style.height = '0%';
+            document.getElementById('fillPercentage').innerText = '0%';
+            document.getElementById('weightBar').style.width = '0%';
+            document.getElementById('weightText').innerText = '0g / 600g';
+            
+            document.getElementById('calorieSection').innerHTML = `
+                <div class="flex justify-between text-sm mb-1 opacity-50 filter blur-[2px]">
+                    <span>累積熱量</span>
+                    <span class="font-mono font-bold">??? kcal</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden opacity-50">
+                    <div class="bg-red-400 h-3 rounded-full w-0"></div>
+                </div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="bg-gray-800 text-white text-xs px-2 py-1 rounded shadow">挑戰結束後揭曉</span>
+                </div>
+            `;
+            closeModal();
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
+
