@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>含糖飲料疊疊樂</title>
+  
+  <!-- 引入 Tailwind CSS 進行排版 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 引入 React 與 ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- 引入 Babel 來讓瀏覽器讀懂 JSX 語法 -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- 引入 Google 字體 -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+  </style>
+</head>
+<body class="bg-orange-50">
+  
+  <!-- React 渲染的目標點 -->
+  <div id="root"></div>
+
+  <!-- 主要邏輯程式碼 -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- 實證醫學資料與遊戲設定 ---
+    // 根據 WHO 建議，兒童每日游離糖攝取量應低於總熱量 5%，約為 25g (即 5 顆方糖)。
+    // 每顆方糖約為 5 克糖。
+    const CUBE_WEIGHT = 5; 
+
+    const drinksData = [
+      {
+        id: 1,
+        name: '國民乳酸飲料 (100ml)',
+        emoji: '🧃',
+        sugarGrams: 15,
+        description: '看起來健康小巧，但為了蓋過酸味，加了驚人的糖分！',
+        hint: '💡 提示：雖然很小瓶，但含糖密度超高！答案大約在 2~5 顆方糖之間。',
+        color: 'bg-red-100'
+      },
+      {
+        id: 2,
+        name: '包裝運動飲料 (600ml)',
+        emoji: '💧',
+        sugarGrams: 35,
+        description: '生病或運動流汗才需要喝，平時當水喝會攝取過多糖分。',
+        hint: '💡 提示：喝起來只有微甜，但因為很大瓶 (600ml)，總糖量在 5~10 顆方糖之間！',
+        color: 'bg-blue-100'
+      },
+      {
+        id: 3,
+        name: '全糖珍珠奶茶 (700ml)',
+        emoji: '🧋',
+        sugarGrams: 60,
+        description: '除了滿滿的糖漿，珍珠在熬煮時也吸滿了糖水！',
+        hint: '💡 提示：這可是超級大魔王！除了茶裡的糖，珍珠也泡滿了糖水，絕對超過 10 顆方糖！',
+        color: 'bg-amber-100'
+      },
+      {
+        id: 4,
+        name: '巧克力牛奶 (400ml)',
+        emoji: '🍫',
+        sugarGrams: 40,
+        description: '看似補充鈣質，但也喝下了大量的調味糖漿！',
+        hint: '💡 提示：大約在 7~9 顆方糖之間。',
+        color: 'bg-orange-200'
+      },
+      {
+        id: 5,
+        name: '麥香紅茶鋁箔包 (300ml)',
+        emoji: '🧃',
+        sugarGrams: 28,
+        description: '熟悉的麥香最對味，但小小一包糖分也不少。',
+        hint: '💡 提示：大約在 5~7 顆方糖之間。',
+        color: 'bg-red-200'
+      },
+      {
+        id: 6,
+        name: '經典可樂 (330ml 鐵罐)',
+        emoji: '🥤',
+        sugarGrams: 35,
+        description: '喝下去充滿氣泡很爽快，但其實是一整杯糖水。',
+        hint: '💡 提示：大約在 6~8 顆方糖之間。',
+        color: 'bg-gray-200'
+      },
+      {
+        id: 7,
+        name: '零卡可樂 (330ml 鐵罐)',
+        emoji: '🖤',
+        sugarGrams: 0,
+        description: '使用代糖產生甜味。雖然沒有熱量，但長期喝仍可能影響腸道菌叢。',
+        hint: '💡 提示：這題是陷阱題！仔細看它的名字！',
+        color: 'bg-gray-300'
+      },
+      {
+        id: 8,
+        name: '知名果菜汁 (330ml)',
+        emoji: '🥕',
+        sugarGrams: 26,
+        description: '包裝上滿滿的蔬菜，但為了順口其實加了很多糖！',
+        hint: '💡 提示：大約在 4~6 顆方糖之間。',
+        color: 'bg-green-100'
+      },
+      {
+        id: 9,
+        name: '100% 蘋果汁 (400ml)',
+        emoji: '🍎',
+        sugarGrams: 40,
+        description: '就算是天然果汁，濾掉纖維後剩下的幾乎都是果糖，升糖指數很高！',
+        hint: '💡 提示：別被「天然」騙了，大約在 7~9 顆方糖之間。',
+        color: 'bg-red-100'
+      },
+      {
+        id: 10,
+        name: '蘋果西打 (600ml 寶特瓶)',
+        emoji: '🍏',
+        sugarGrams: 58,
+        description: '辦桌必備的神級飲料，但一大瓶喝下去糖分直接爆表！',
+        hint: '💡 提示：跟全糖珍奶有得拼！絕對超過 10 顆方糖！',
+        color: 'bg-yellow-200'
+      },
+      {
+        id: 11,
+        name: '手搖飲含糖紅茶 (700ml 大杯)',
+        emoji: '🥤',
+        sugarGrams: 50,
+        description: '即使不加料，大杯全糖的含糖量依然非常驚人。',
+        hint: '💡 提示：大約在 9~11 顆方糖之間。',
+        color: 'bg-orange-100'
+      },
+      {
+        id: 12,
+        name: '瓶裝奶茶 (500ml)',
+        emoji: '🧋',
+        sugarGrams: 35,
+        description: '香濃滑順的口感，靠的是大量的糖與奶精。',
+        hint: '💡 提示：大約在 6~8 顆方糖之間。',
+        color: 'bg-orange-50'
+      },
+      {
+        id: 13,
+        name: '市售罐裝拿鐵咖啡 (290ml)',
+        emoji: '☕',
+        sugarGrams: 20,
+        description: '為了掩蓋咖啡的苦味並增加濃郁口感，加了比想像中更多的糖分！',
+        hint: '💡 提示：大約在 3~5 顆方糖之間。',
+        color: 'bg-stone-200'
+      },
+      {
+        id: 14,
+        name: '無糖綠茶 (500ml)',
+        emoji: '🍵',
+        sugarGrams: 0,
+        description: '完全沒有加糖，是解渴的好選擇！',
+        hint: '💡 提示：仔細看名字，它是「無糖」的喔！',
+        color: 'bg-green-50'
+      },
+      {
+        id: 15,
+        name: '無糖風味氣泡水 (500ml)',
+        emoji: '🫧',
+        sugarGrams: 0,
+        description: '利用香料增加風味，但裡面真的沒有加糖。',
+        hint: '💡 提示：雖然喝起來香香的，但其實沒有糖分！',
+        color: 'bg-cyan-100'
+      },
+      {
+        id: 16,
+        name: '含糖豆漿 (400ml)',
+        emoji: '🥛',
+        sugarGrams: 20,
+        description: '雖然富含植物蛋白，但「微糖」或「一般」豆漿通常加了不少糖來蓋過豆腥味。',
+        hint: '💡 提示：大約在 3~5 顆方糖之間。',
+        color: 'bg-yellow-50'
+      }
+    ];
+
+    const LobbyButton = () => (
+      <a href="https://lukehsiao-yc.github.io/for_healthy_children/" 
+         style={{
+           position: 'fixed', 
+           top: '20px', 
+           left: '20px', 
+           backgroundColor: '#f43f5e', 
+           color: 'white', 
+           padding: '10px 16px', 
+           borderRadius: '50px', 
+           textDecoration: 'none', 
+           fontWeight: 'bold', 
+           boxShadow: '0 4px 6px rgba(0,0,0,0.1)', 
+           zIndex: 9999, 
+           display: 'flex', 
+           alignItems: 'center', 
+           fontFamily: "'Noto Sans TC', sans-serif",
+           transition: 'transform 0.2s'
+         }}>
+         <span style={{ marginRight: '6px', fontSize: '18px' }}>🏠</span> 回到大廳
+      </a>
+    );
+
+    function SugarGame() {
+      const [gameState, setGameState] = useState('start'); 
+      const [currentDrinkIndex, setCurrentDrinkIndex] = useState(0);
+      const [guessCubes, setGuessCubes] = useState(0);
+      const [showAnswer, setShowAnswer] = useState(false);
+      const [showHint, setShowHint] = useState(false);
+      const [score, setScore] = useState(0);
+
+      const [practiceSugar, setPracticeSugar] = useState('');
+      const [practiceCubes, setPracticeCubes] = useState('');
+      const [practiceResult, setPracticeResult] = useState(null);
+
+      const currentDrink = drinksData[currentDrinkIndex];
+      const actualCubes = Math.round((currentDrink?.sugarGrams || 0) / CUBE_WEIGHT);
+
+      const handleGuess = () => {
+        setShowAnswer(true);
+        if (Math.abs(guessCubes - actualCubes) <= 1) {
+          setScore(s => s + 1);
+        }
+      };
+
+      const nextRound = () => {
+        if (currentDrinkIndex < drinksData.length - 1) {
+          setCurrentDrinkIndex(i => i + 1);
+          setGuessCubes(0);
+          setShowAnswer(false);
+          setShowHint(false);
+        } else {
+          setGameState('edu-teach'); 
+        }
+      };
+
+      const restartGame = () => {
+        setGameState('start');
+        setCurrentDrinkIndex(0);
+        setGuessCubes(0);
+        setShowAnswer(false);
+        setShowHint(false);
+        setScore(0);
+        setPracticeSugar('');
+        setPracticeCubes('');
+        setPracticeResult(null);
+      };
+
+      const checkPractice = () => {
+        if (Number(practiceSugar) === 30 && Number(practiceCubes) === 6) {
+          setPracticeResult('correct');
+        } else {
+          setPracticeResult('wrong');
+        }
+      };
+
+      const SugarCube = ({ animate = false, delay = 0 }) => (
+        <div 
+          className={`w-8 h-8 bg-white border-2 border-gray-200 rounded shadow-md m-0.5 flex items-center justify-center transition-all ${animate ? 'animate-bounce' : ''}`}
+          style={{ animationDelay: `${delay}ms` }}
+        >
+          <div className="w-6 h-6 border border-gray-100 rounded-sm opacity-50"></div>
+        </div>
+      );
+
+      if (gameState === 'start') {
+        return (
+          <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center p-4 font-sans">
+            <LobbyButton />
+            <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center space-y-6 transform transition hover:scale-105">
+              <div className="text-6xl animate-bounce">🍬</div>
+              <h1 className="text-3xl font-extrabold text-gray-800">含糖飲料疊疊樂</h1>
+              <p className="text-gray-600 font-medium">
+                你知道常喝的飲料裡藏了多少顆方糖嗎？<br/>
+                (提示：一顆方糖大約是 5 公克糖)
+              </p>
+              <button 
+                onClick={() => setGameState('playing')}
+                className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+              >
+                <span>▶️</span> 開始挑戰
+              </button>
+              <p className="mt-4 text-sm text-orange-600 font-bold border-t border-orange-100 pt-4">蕭宇超醫師製作 一起邁向健康生活</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (gameState === 'edu-teach') {
+        return (
+          <div className="min-h-screen bg-blue-50 flex flex-col items-center p-4 font-sans overflow-y-auto pb-20">
+            <LobbyButton />
+            <div className="max-w-md w-full space-y-6 mt-8">
+              <div className="bg-white rounded-3xl shadow-lg p-6 text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">挑戰完成！</h2>
+                <p className="text-lg text-gray-600">你的分數：{score} / {drinksData.length}</p>
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-xl">📖</span> 絕招：怎麼看營養標示？
+                </h3>
+                
+                <div className="border-4 border-black p-4 bg-white font-mono text-sm mb-6">
+                  <h4 className="text-lg font-bold border-b-2 border-black pb-1 mb-2">營養標示</h4>
+                  <div className="flex justify-between border-b border-gray-400 pb-1 mb-1">
+                    <span>每一份量</span><span>250 毫升</span>
+                  </div>
+                  <div className="flex justify-between border-b-4 border-black pb-1 mb-2 bg-yellow-100 font-bold">
+                    <span>本包裝含</span><span>2 份</span>
+                  </div>
+                  <div className="flex justify-between mb-1">
+                    <span>熱量</span><span>100 大卡</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-red-600 bg-red-50 border-l-4 border-red-500 pl-2">
+                    <span>糖</span><span>20.0 公克</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="inline-block bg-black text-white rounded-full w-6 h-6 text-center text-sm mr-2">1</span>
+                    找 <strong>「每份」</strong> 的糖量 (20克)
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="inline-block bg-black text-white rounded-full w-6 h-6 text-center text-sm mr-2">2</span>
+                    找 本包裝含 <strong>「幾份」</strong> (2份)
+                  </div>
+                  <div className="p-3 bg-green-100 rounded-xl border border-green-300 font-bold text-green-800">
+                    <span className="inline-block bg-green-600 text-white rounded-full w-6 h-6 text-center text-sm mr-2">3</span>
+                    相乘！ 20克 × 2份 = 總共 40 克糖
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-xl border border-orange-300 font-bold text-orange-800 flex items-center">
+                    <span className="inline-block bg-orange-600 text-white rounded-full w-6 h-6 text-center text-sm mr-2 shrink-0">4</span>
+                    換算方糖：40 ÷ 5 = <span className="text-2xl ml-2">8顆 🍬</span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setGameState('edu-practice')}
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+              >
+                換你算算看！ <span>➡️</span>
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      if (gameState === 'edu-practice') {
+        return (
+          <div className="min-h-screen bg-indigo-50 flex flex-col items-center p-4 font-sans overflow-y-auto pb-20">
+            <LobbyButton />
+            <div className="max-w-md w-full space-y-6 mt-8">
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-indigo-800 mb-4 flex items-center gap-2">
+                  ✏️ 實戰演練
+                </h3>
+                <p className="text-gray-600 mb-4">這是一瓶市售的調味果汁，請根據營養標示算出正確的糖量與方糖數！</p>
+                
+                <div className="border-4 border-black p-4 bg-white font-mono text-sm mb-6">
+                  <h4 className="text-lg font-bold border-b-2 border-black pb-1 mb-2">營養標示</h4>
+                  <div className="flex justify-between border-b border-gray-400 pb-1 mb-1">
+                    <span>每一份量</span><span>200 毫升</span>
+                  </div>
+                  <div className="flex justify-between border-b-4 border-black pb-1 mb-2 bg-yellow-100 font-bold">
+                    <span>本包裝含</span><span>2 份</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-red-600 bg-red-50 border-l-4 border-red-500 pl-2">
+                    <span>糖</span><span>15.0 公克</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">1. 請問這瓶飲料總共含幾公克糖？</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={practiceSugar} 
+                        onChange={e => setPracticeSugar(e.target.value)}
+                        className="flex-1 border-2 border-gray-300 rounded-lg p-2 text-lg focus:border-indigo-500 focus:outline-none" 
+                        placeholder="輸入公克數"
+                      />
+                      <span className="font-bold text-gray-600">公克</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">2. 換算下來大約是幾顆方糖？ (1顆=5g)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={practiceCubes} 
+                        onChange={e => setPracticeCubes(e.target.value)}
+                        className="flex-1 border-2 border-gray-300 rounded-lg p-2 text-lg focus:border-indigo-500 focus:outline-none" 
+                        placeholder="輸入方糖數"
+                      />
+                      <span className="font-bold text-gray-600">顆 🍬</span>
+                    </div>
+                  </div>
+
+                  {practiceResult === 'wrong' && (
+                    <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-bold flex items-center gap-2 animate-pulse">
+                      <span>❌</span> 哎呀！算錯了，再仔細看一次公式：15克 × 2份 = ?
+                    </div>
+                  )}
+                  
+                  {practiceResult === 'correct' ? (
+                    <div className="space-y-4 animate-fade-in">
+                      <div className="p-3 bg-green-100 text-green-700 rounded-lg text-sm font-bold flex items-center gap-2">
+                        <span>✅</span> 太棒了！完全正確！(30克糖 = 6顆方糖)
+                      </div>
+                      <button 
+                        onClick={() => setGameState('edu-summary')}
+                        className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+                      >
+                        看總表與健康解析 <span>➡️</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={checkPractice}
+                      disabled={!practiceSugar || !practiceCubes}
+                      className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 active:scale-95 transition"
+                    >
+                      對答案
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (gameState === 'edu-summary') {
+        return (
+          <div className="min-h-screen bg-orange-50 flex flex-col items-center p-4 font-sans overflow-y-auto pb-20">
+            <LobbyButton />
+            <div className="max-w-md w-full space-y-6 mt-8">
+              
+              <div className="bg-white rounded-3xl shadow-lg p-6 text-center border-t-8 border-orange-500">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">📊 飲料含糖總表</h2>
+                <p className="text-sm text-gray-600 mb-4">來回顧一下剛才所有飲料的真面目吧！</p>
+                
+                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-xl mb-4 text-left">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 sticky top-0">
+                      <tr>
+                        <th className="p-2 font-semibold text-gray-700">飲料名稱</th>
+                        <th className="p-2 font-semibold text-gray-700 text-center">糖(g)</th>
+                        <th className="p-2 font-semibold text-gray-700 text-center">方糖</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {drinksData.map(drink => (
+                        <tr key={drink.id} className="hover:bg-orange-50">
+                          <td className="p-2 flex items-center gap-2">
+                            <span className="text-xl">{drink.emoji}</span>
+                            <span className="truncate w-28" title={drink.name}>{drink.name.split(' ')[0]}</span>
+                          </td>
+                          <td className="p-2 text-center text-red-500 font-bold">{drink.sugarGrams}</td>
+                          <td className="p-2 text-center font-bold text-gray-700">{Math.round(drink.sugarGrams / 5)} 顆</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-lg p-6 border-t-8 border-red-500">
+                <h3 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
+                  <span className="text-xl shrink-0 mt-1">⚠️</span> 實證醫學：糖的健康危機
+                </h3>
+                
+                <div className="mb-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                  <p className="text-sm text-red-800 font-bold mb-1">一日攝取上限：</p>
+                  <p className="text-sm text-red-700">
+                    世界衛生組織 (WHO) 建議，兒童每日「游離糖」攝取量不宜超過 <strong>25公克（約5顆方糖）</strong>！
+                  </p>
+                </div>
+
+                <p className="text-sm font-bold text-gray-700 mb-2">攝取過多含糖飲料的壞處：</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-red-500">🦷</span> <strong>嚴重蛀牙：</strong> 糖分是口中細菌的最愛，容易侵蝕牙齒。
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-orange-500">⚖️</span> <strong>兒童肥胖：</strong> 多餘的糖分會轉化為脂肪囤積。
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-yellow-500">🧠</span> <strong>注意力不集中：</strong> 血糖快速飆升又急速下降，導致上課容易疲倦。
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-blue-500">🩸</span> <strong>疾病風險：</strong> 增加肝臟負擔，提早引發第二型糖尿病。
+                  </li>
+                </ul>
+              </div>
+
+              <button 
+                onClick={restartGame}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+              >
+                <span>🔄</span> 再玩一次
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className={`min-h-screen ${currentDrink.color} flex flex-col items-center p-4 font-sans transition-colors duration-500`}>
+          <LobbyButton />
+          <div className="max-w-md w-full flex-1 flex flex-col mt-4 mb-20">
+            
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-sm font-bold text-gray-600 bg-white/50 px-3 py-1 rounded-full">
+                關卡 {currentDrinkIndex + 1} / {drinksData.length}
+              </div>
+              <div className="text-sm font-bold text-gray-600 bg-white/50 px-3 py-1 rounded-full">
+                得分: {score}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-xl p-6 text-center relative z-10">
+              <div className="text-8xl mb-4 drop-shadow-md">{currentDrink.emoji}</div>
+              <h2 className="text-2xl font-extrabold text-gray-800">{currentDrink.name}</h2>
+              
+              {!showAnswer && (
+                <div className="mt-4 min-h-[40px] flex justify-center">
+                  {!showHint ? (
+                    <button 
+                      onClick={() => setShowHint(true)}
+                      className="text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-full hover:bg-blue-100 transition"
+                    >
+                      💡 需要提示嗎？
+                    </button>
+                  ) : (
+                    <div className="text-sm text-blue-800 bg-blue-50 p-3 rounded-xl animate-fade-in border border-blue-200">
+                      {currentDrink.hint}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {showAnswer && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-xl text-sm text-gray-600 border border-gray-200 animate-fade-in">
+                  <span className="inline mr-1">ℹ️</span>
+                  {currentDrink.description}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex-1 bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-white flex flex-col">
+              <h3 className="text-lg font-bold text-center text-gray-700 mb-4">
+                {showAnswer ? '震撼的真相！' : '你猜裡面有幾顆方糖？'}
+              </h3>
+
+              <div className="flex-1 flex flex-col justify-end min-h-[150px] mb-4 relative">
+              {!showAnswer ? (
+                <div className="flex flex-wrap-reverse justify-center content-start gap-1 p-2 bg-gray-100/50 rounded-xl min-h-[120px]">
+                  {guessCubes === 0 && <span className="text-gray-500 self-center font-bold">0 顆方糖 (無糖)</span>}
+                  {Array.from({ length: guessCubes }).map((_, i) => (
+                    <SugarCube key={`guess-${i}`} />
+                  ))}
+                </div>
+              ) : (
+                  <div className="flex justify-around items-end h-full w-full">
+                    <div className="flex flex-col items-center w-1/2 border-r border-gray-200">
+                      <div className="text-sm text-gray-500 mb-2">你的猜測</div>
+                      <div className="flex flex-wrap-reverse justify-center content-start gap-1 p-1 max-w-[120px]">
+                        {Array.from({ length: guessCubes }).map((_, i) => (
+                          <SugarCube key={`guess-ans-${i}`} />
+                        ))}
+                      </div>
+                      <div className="font-bold mt-2 text-gray-700">{guessCubes} 顆</div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center w-1/2">
+                      <div className="text-sm text-red-500 font-bold mb-2 animate-pulse">實際含糖量</div>
+                      <div className="flex flex-wrap-reverse justify-center content-start gap-1 p-1 max-w-[120px]">
+                        {Array.from({ length: actualCubes }).map((_, i) => (
+                          <SugarCube key={`actual-${i}`} animate={true} delay={i * 100} />
+                        ))}
+                      </div>
+                      <div className="font-bold mt-2 text-red-600 text-xl">{actualCubes} 顆</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {!showAnswer ? (
+                <div className="space-y-4">
+                  <div className="flex justify-center items-center gap-4">
+                    <button 
+                      onClick={() => setGuessCubes(Math.max(0, guessCubes - 1))}
+                      className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 text-xl font-bold hover:bg-gray-300 active:scale-95 transition"
+                    >-</button>
+                    <div className="text-3xl font-black text-gray-800 w-16 text-center">{guessCubes}</div>
+                <button 
+                  onClick={() => setGuessCubes(guessCubes + 1)}
+                  className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 border-2 border-orange-200 text-xl font-bold hover:bg-orange-200 active:scale-95 transition"
+                >+</button>
+              </div>
+              <button 
+                onClick={handleGuess}
+                className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-gray-800 active:scale-95 transition"
+              >
+                鎖定答案！
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4 text-center">
+                  <div className="flex justify-center items-center gap-2 text-xl font-bold">
+                    {Math.abs(guessCubes - actualCubes) <= 1 ? (
+                      <span className="text-green-600 flex items-center gap-1"><span>✅</span> 猜得神準！</span>
+                    ) : (
+                      <span className="text-red-500 flex items-center gap-1"><span>❌</span> 差太多啦！</span>
+                    )}
+                  </div>
+                  <button 
+                    onClick={nextRound}
+                    className="w-full py-4 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600 active:scale-95 transition flex justify-center items-center gap-2"
+                  >
+                    {currentDrinkIndex < drinksData.length - 1 ? '挑戰下一杯' : '看實證醫學解析'} <span>➡️</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<SugarGame />);
+  </script>
+</body>
+</html>
