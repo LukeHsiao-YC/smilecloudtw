@@ -5,17 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>動物運動森友會卡牌</title>
   
-  <!-- 引入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- 引入 FontAwesome 圖示庫 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- 引入 React 與 ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
-  <!-- 引入 Babel 以在瀏覽器編譯 JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
@@ -38,35 +34,38 @@
 </head>
 <body class="bg-[#FFFDF9] font-sans text-gray-800">
 
-  <!-- React 應用程式掛載點 -->
   <div id="root"></div>
 
-  <!-- React 核心程式碼 -->
   <script type="text/babel">
-    const { useState, useEffect } = React;
+    const { useState, useEffect, useRef } = React;
 
-    // --- 資料庫同步 ---
+    // --- 資料庫同步 (包含 Lv.1 與 Lv.2) ---
     const cardData = [
-      // 🔴 紅隊：有氧運動
+      // 🔴 紅隊：有氧運動 Lv.1
       { id: 'R-01', team: 'red', category: '有氧運動', titleZh: '海星點點腳', titleEn: 'Step jacks', animal: '兔子', imageFile: 'R_1.png', emoji: '🐰', instruction: '身體站直，雙腳併攏，挺胸收肚子，接下來向右側跨出一大步後右腳著地，左腳隨即跟上併攏，雙臂自然擺動或隨節奏舉起，接著換左側重複，過程膝蓋微彎保持核心收緊。', safety: '保持呼吸，手臂舉過頭頂，背要打直。' },
       { id: 'R-02', team: 'red', category: '有氧運動', titleZh: '巨人踏步走', titleEn: 'High knee walk', animal: '小狗', imageFile: 'R_2.png', emoji: '🐶', instruction: '起始站立，收緊核心，向前邁步並將一側膝蓋儘量抬高至腰部，同時手臂交替擺動，保持上半身直立、不駝背，持續交替雙腿行進。', safety: '身體不要東倒西歪，保持平衡。' },
       { id: 'R-03', team: 'red', category: '有氧運動', titleZh: '閃電拳擊手', titleEn: 'Shadow Boxing', animal: '松鼠', imageFile: 'R_3.png', emoji: '🐿️', instruction: '向前方揮出閃電拳頭，左右輪流快快出擊！', safety: '出拳不要太用力，手肘要留一點空間。' },
       { id: 'R-04', team: 'red', category: '有氧運動', titleZh: '腳跟踢屁股', titleEn: 'Standing Butt Kicks', animal: '狐狸', imageFile: 'R_4.png', emoji: '🦊', instruction: '右腳跟向後踢向臀部，放下後，立即換左腳，交替進行。可配合手臂擺動來加快節奏。嘗試小跑步姿態做踢臀，增加有氧強度。', safety: '動作輕柔，不要踢痛自己，保持平衡。' },
       { id: 'R-05', team: 'red', category: '有氧運動', titleZh: '站立捲腹', titleEn: 'Standing Crunch', animal: '水獺', imageFile: 'R_5.png', emoji: '🦦', instruction: '雙腳打開與肩同寬站立，膝蓋微彎保持彈性。雙手輕輕放在耳旁或後腦，手肘向外打開，右膝向右側抬起，上半身同時向右側彎，右手肘去靠近右膝，左右交替。', safety: '身體輕輕扭轉，動作不要太快。' },
-      { id: 'R-06', team: 'red', category: '有氧運動', titleZh: '企鵝側抬腿', titleEn: 'Standing Side Leg Raise', animal: '企鵝', imageFile: 'R_6.png', emoji: '🐧', instruction: '挺胸收小腹、雙腳站穩，開始時另一隻腳向側邊穩定抬起，保持上半身不晃動，並控制緩慢放下。左右交替。', safety: '支撐的那隻腳要踩穩。身體保值正直，不要跟著腳一起歪。' },
+      { id: 'R-06', team: 'red', category: '有氧運動', titleZh: '企晨側抬腿', titleEn: 'Standing Side Leg Raise', animal: '企鵝', imageFile: 'R_6.png', emoji: '🐧', instruction: '挺胸收小腹、雙腳站穩，開始時另一隻腳向側邊穩定抬起，保持上半身不晃動，並控制緩慢放下。左右交替。', safety: '支撐的那隻腳要踩穩。身體保值正直，不要跟著腳一起歪。' },
       { id: 'R-07', team: 'red', category: '有氧運動', titleZh: '袋鼠高抬腿', titleEn: 'High knees', animal: '袋鼠', imageFile: 'R_7.png', emoji: '🦘', instruction: '站直且雙腳與臀同寬，快速提起右膝至胸部或髖部高度再迅速放下右腳，雙腳快速交替，可配合手臂擺動。', safety: '背要打直，輕輕落地。' },
       { id: 'R-08', team: 'red', category: '有氧運動', titleZh: '獵豹原地跑', titleEn: 'Jog in place', animal: '獵豹', imageFile: 'R_8.png', emoji: '🐆', instruction: '維持核心收緊，在原地踏步或慢跑，膝蓋微彎以緩衝衝擊，搭配雙手自然擺動。', safety: '身體要打直，原地跑步。' },
       { id: 'R-09', team: 'red', category: '有氧運動', titleZh: '小熊爬', titleEn: 'Bear crawl', animal: '小熊', imageFile: 'R_9.png', emoji: '🐻', instruction: '四足跪姿、膝蓋離地3-5公分、對側手腳交替向前/後移動，需保持背部平直、臀部不晃動、視線看斜前方。', safety: '手掌要張開撐穩，肚子收緊。' },
       { id: 'R-10', team: 'red', category: '有氧運動', titleZh: '大象踏步走', titleEn: 'Elephant March', animal: '大象', imageFile: 'R_10.png', emoji: '🐘', instruction: '1. 起始姿勢：雙腳與臀同寬，身體前彎，雙手置於前方地板上，使身體呈倒「V」字型。 2. 動作執行：收緊腹部，單腳膝蓋伸直，另一腳彎曲，輪流交替模擬步伐。', safety: '動作要有力但不要震壞地板。' },
+      
+      // 🔴 紅隊：有氧運動 Lv.2 (暫時註解關閉)
+      // { id: 'R2-01', team: 'red', category: '有氧運動', titleZh: '企鵝開合跳', titleEn: 'Jumping Jacks', animal: '企鵝', imageFile: 'R2_1.png', emoji: '🐧', instruction: '雙腳跳開時雙手在頭上拍手，雙腳收回時手拍大腿，保持輕快節奏。', safety: '腳尖輕輕落地，膝蓋不要鎖死。' },
+      // { id: 'R2-02', team: 'red', category: '有氧運動', titleZh: '獵豹側邊跳', titleEn: 'Skater Hops', animal: '獵豹', imageFile: 'R2_2.png', emoji: '🐆', instruction: '向右側跳並用左腳尖向後點地，雙手像溜冰一樣擺動，換邊重複。', safety: '保持平衡，落地時膝蓋要微彎緩衝。' },
+      // { id: 'R2-03', team: 'red', category: '有氧運動', titleZh: '猩猩登山者', titleEn: 'Mountain Climbers', animal: '大猩猩', imageFile: 'R2_3.png', emoji: '🦍', instruction: '雙手撐地呈伏地挺身姿勢，雙腳交替快速向胸部跑動。', safety: '屁股不要抬得太高，背部保持平直。' },
 
-      // 🔵 藍隊：肌力訓練
-      { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩深蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
+      // 🔵 藍隊：肌力訓練 Lv.1
+      { id: 'B-01', team: 'blue', category: '肌力訓練', titleZh: '大猩猩蹲蹲', titleEn: 'squats', animal: '大猩猩', imageFile: 'B_1.png', emoji: '🦍', instruction: '雙腳打開與肩膀同寬，屁股往後座，就像要坐椅子一樣，背盡量打直。', safety: '膝蓋不要超過腳尖，重心放在腳跟，慢慢下蹲在站起來。' },
       { id: 'B-02', team: 'blue', category: '肌力訓練', titleZh: '長頸鹿弓步蹲', titleEn: 'lunges', animal: '長頸鹿', imageFile: 'B_2.png', emoji: '🦒', instruction: '挺胸站立，邁出一腳並雙膝下蹲至約 90 度，前膝不超過腳尖，後膝靠近地面，重心置於前腳，核心收緊保持垂直上下。', safety: '前腳膝蓋不要超過腳尖，後腳膝蓋不要撞到地板。保持平衡慢慢做。' },
       { id: 'B-03', team: 'blue', category: '肌力訓練', titleZh: '紅鶴踮腳尖', titleEn: 'calf raise', animal: '紅鶴', imageFile: 'B_3.png', emoji: '🦩', instruction: '雙腳與肩同寬站立，腳尖朝前，緩慢踮起腳跟，用前腳掌支撐，盡量抬高，停頓 1-2 秒，感受小腿肌肉繃緊，緩慢降下腳跟，回到起始位置。', safety: '身體站直，可以扶牆壁或椅子保持平衡。' },
       { id: 'B-04', team: 'blue', category: '肌力訓練', titleZh: '壁虎伏牆挺身', titleEn: 'wall push', animal: '壁虎', imageFile: 'B_4.png', emoji: '🦎', instruction: '站立於牆前約一步距離，雙手撐牆與肩同寬，身體保持直線前傾45度，彎肘讓胸口靠近牆面，呼氣發力推回至起始位置。', safety: '推的時候身體保持一直線，肚子收緊，背不要凹下去或拱起。' },
       { id: 'B-05', team: 'blue', category: '肌力訓練', titleZh: '貓頭鷹轉圈', titleEn: 'arm circle', animal: '貓頭鷹', imageFile: 'B_5.png', emoji: '🦉', instruction: '腳與肩同寬站立，挺胸，手臂向兩側平舉成一直線，先正向畫小圈五次，再逆向畫小圈重複。', safety: '雙肩放輕鬆，不要聳肩，畫圈時手臂保持伸直。' },
       { id: 'B-06', team: 'blue', category: '肌力訓練', titleZh: '螃蟹搭拱橋', titleEn: 'Bridge', animal: '螃蟹', imageFile: 'B_6.png', emoji: '🦀', instruction: '仰躺屈膝，腳掌踩地，以臀部發力抬起骨盆，使肩膀至膝蓋呈一直線，最高點夾緊臀部停五秒，緩慢下放，避免下背代償拱起。', safety: '肚子要收緊，不要拱背。' },
-      { id: 'B-07', team: 'blue', category: '肌力訓練', titleZh: '鱷魚支撐', titleEn: 'plank', animal: '鱷魚', imageFile: 'B_7.png', emoji: '🐊', instruction: '手肘在肩膀正下方，前臂與地面平行，從頭、肩膀、臀部到腳跟呈一直線，腹部與臀部收緊。', safety: '背要呈現一直線，不可以凹下去或凸起來，眼睛看地板，不要憋氣。' },
+      { id: 'B-07', team: 'blue', category: '肌力訓練', titleZh: '鱷魚1支撐', titleEn: 'plank', animal: '鱷魚', imageFile: 'B_7.png', emoji: '🐊', instruction: '手肘在肩膀正下方，前臂與地面平行，從頭、肩膀、臀部到腳跟呈一直線，腹部與臀部收緊。', safety: '背要呈現一直線，不可以凹下去或凸起來，眼睛看地板，不要憋氣。' },
       { id: 'B-08', team: 'blue', category: '肌力訓練', titleZh: '甲蟲翻肚皮', titleEn: 'Dead bug', animal: '甲蟲', imageFile: 'B_8.png', emoji: '🪲', instruction: '平躺，起始位置雙手舉高與身體垂直，雙腳屈膝舉起呈90度。吐氣時，左腳往下方延伸腳跟不碰地，同時右手向後伸直，回到起始位置，再換邊。', safety: '動作越慢越好，背貼緊地板。' },
       { id: 'B-09', team: 'blue', category: '肌力訓練', titleZh: '無尾熊靠牆坐', titleEn: 'wall sit', animal: '無尾熊', imageFile: 'B_9.png', emoji: '🐨', instruction: '雙腳與肩同寬並前站1-2步，下蹲至大腿與地面平行讓膝蓋呈90度。', safety: '背跟頭要貼緊牆壁，膝蓋不要超過腳尖。' },
       { id: 'B-10', team: 'blue', category: '肌力訓練', titleZh: '獵犬找獵物', titleEn: 'Bird-dog pose', animal: '獵犬', imageFile: 'B_10.png', emoji: '🐕', instruction: '四足跪姿，背部保持平坦，肚子收緊。緩慢同時將「右手」與「左腳」向前後延伸呈一直線，停留 3-5 秒，換邊進行。', safety: '骨盆與肩膀保持水平，避免身體左右搖晃或下背塌陷。' },
@@ -110,7 +109,15 @@
       return { minutesToday, daysThisWeek, history };
     };
 
-    // 💡 新增 compact 屬性：為 true 時會隱藏「怎麼做」文字，節省垂直空間
+    // --- 音效檔案位置 (移除了節拍器的mp3路徑) ---
+    const AUDIO_FILES = {
+      bgmWorkout: 'audio/sport.mp3',   
+      bgmRest: 'audio/relax.mp3',      
+      sfxDrawCard: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3', 
+      sfxSuccess: 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3',   
+      sfxClick: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'      
+    };
+
     const CombinedCard = ({ card, drawAnim = false, compact = false }) => {
       const [imgError, setImgError] = useState(false);
       const [imgAttempt, setImgAttempt] = useState(0); 
@@ -128,12 +135,14 @@
       const borderClass = isRed ? 'border-red-700' : isBlue ? 'border-blue-600' : 'border-green-600';
       const textClass = isRed ? 'text-red-800' : isBlue ? 'text-blue-800' : 'text-green-800';
 
-      const currentSrc = imgAttempt === 0 ? `./image/${card.imageFile}` : `./${card.imageFile}`;
+      const currentSrc = imgAttempt === 0 ? `image/${card.imageFile}` : `${card.imageFile}`;
+
+      const levelText = card.id.includes('R2-') || card.id.includes('B2-') ? '進階 Lv.2' : '初階 Lv.1';
 
       return (
         <div className={`w-full max-w-sm mx-auto bg-white rounded-3xl shadow-xl border-4 ${borderClass} overflow-hidden flex flex-col ${drawAnim ? 'animate-card-draw' : ''}`}>
           <div className={`${colorClass} text-white px-4 py-3 flex justify-between items-center`}>
-            <span className="font-black tracking-widest text-base sm:text-lg">{card.category}・初階 Lv.1</span>
+            <span className="font-black tracking-widest text-base sm:text-lg">{card.category}・{levelText}</span>
             <i className="fa-solid fa-star text-yellow-300"></i>
           </div>
 
@@ -161,7 +170,6 @@
             <h2 className={`text-3xl sm:text-4xl font-black mb-1 tracking-tighter ${textClass} text-center`}>
               {card.titleZh}
             </h2>
-            {/* 精簡模式下隱藏英文副標題 */}
             {!compact && (
               <h3 className="text-sm sm:text-lg font-bold text-gray-400 italic">
                 {card.titleEn}
@@ -170,8 +178,6 @@
           </div>
 
           <div className={`p-5 flex-1 bg-amber-50/20 flex flex-col justify-end ${compact ? 'pt-0' : ''}`}>
-            
-            {/* 💡 運動中精簡模式：隱藏冗長的教學文字 */}
             {!compact && (
               <div className="mb-6">
                 <div className={`flex items-center gap-2 mb-2 ${textClass}`}>
@@ -199,11 +205,17 @@
     };
 
     function App() {
-      // 💡 系統開關設定：設為 true 可開啟快轉功能，設為 false 即可關閉隱藏
       const SHOW_TEST_BUTTON = false;
 
       const [activeTab, setActiveTab] = useState('challenge');
       const [filter, setFilter] = useState('all');
+
+      // --- 狀態控制：音頻模式 (音樂 or 節拍器) ---
+      const [audioMode, setAudioMode] = useState('music');
+      const audioModeRef = useRef(audioMode);
+      useEffect(() => {
+        audioModeRef.current = audioMode;
+      }, [audioMode]);
 
       const [disabledCardIds, setDisabledCardIds] = useState([]); 
       const [challengeMode, setChallengeMode] = useState(10); 
@@ -219,12 +231,178 @@
       const [drawAnim, setDrawAnim] = useState(false);
       const [briefingIndex, setBriefingIndex] = useState(0); 
       
-      // 💡 新增：用來控制彈出視窗（Modal）的狀態，存放目前要顯示詳細資訊的卡牌
       const [selectedModalCard, setSelectedModalCard] = useState(null);
-
       const [encouragement, setEncouragement] = useState(null);
       const [restPrompt, setRestPrompt] = useState("");
       const [stats, setStats] = useState({ minutesToday: 0, daysThisWeek: 0 });
+
+      // 漸弱效果的定時器記錄
+      const fadeIntervalRef = useRef(null);
+
+      // --- 喚醒鎖定 (WakeLock) API 控制，防止螢幕變暗 ---
+      const wakeLockRef = useRef(null);
+
+      const requestWakeLock = async () => {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLockRef.current = await navigator.wakeLock.request('screen');
+            console.log('螢幕喚醒已開啟');
+          }
+        } catch (err) {
+          console.log('無法開啟螢幕喚醒:', err);
+        }
+      };
+
+      const releaseWakeLock = async () => {
+        if (wakeLockRef.current !== null) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+        }
+      };
+
+      useEffect(() => {
+        if (isRunning) {
+          requestWakeLock();
+        } else {
+          releaseWakeLock();
+        }
+        return () => releaseWakeLock(); 
+      }, [isRunning]);
+
+      useEffect(() => {
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible' && isRunning) {
+            requestWakeLock();
+          }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }, [isRunning]);
+
+      // --- 音樂與音效控制 (Audio Refs) ---
+      const [isMuted, setIsMuted] = useState(false);
+      const bgmAudioRef = useRef(null);
+      const bgmRestAudioRef = useRef(null); 
+      const sfxAudioRef = useRef(null);
+      
+      // 💡 內建 Web Audio API 節拍器 Ref
+      const audioCtxRef = useRef(null);
+      const metronomeIntervalRef = useRef(null);
+      const metronomeVolRef = useRef(1); // 追蹤節拍器的漸弱音量
+
+      useEffect(() => {
+        bgmAudioRef.current = new Audio(AUDIO_FILES.bgmWorkout);
+        bgmAudioRef.current.loop = true; 
+        
+        bgmRestAudioRef.current = new Audio(AUDIO_FILES.bgmRest);
+        bgmRestAudioRef.current.loop = true; 
+
+        sfxAudioRef.current = new Audio();
+        
+        return () => {
+          if (bgmAudioRef.current) { bgmAudioRef.current.pause(); bgmAudioRef.current.src = ""; }
+          if (bgmRestAudioRef.current) { bgmRestAudioRef.current.pause(); bgmRestAudioRef.current.src = ""; }
+          if (metronomeIntervalRef.current) clearInterval(metronomeIntervalRef.current);
+        };
+      }, []);
+
+      useEffect(() => {
+        if (bgmAudioRef.current) bgmAudioRef.current.muted = isMuted;
+        if (bgmRestAudioRef.current) bgmRestAudioRef.current.muted = isMuted;
+        if (sfxAudioRef.current) sfxAudioRef.current.muted = isMuted;
+      }, [isMuted]);
+
+      // 初始化 Audio Context (在點擊時觸發解鎖)
+      const initAudioCtx = () => {
+        if (!audioCtxRef.current) {
+          audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+      };
+
+      const playSFX = (url) => {
+        if (sfxAudioRef.current && !isMuted) {
+          sfxAudioRef.current.src = url;
+          sfxAudioRef.current.play().catch(e => console.log("Audio play prevented:", e));
+        }
+      };
+
+      // 💡 純程式碼生成的短促「滴」聲 (Beep)
+      const playBeep = () => {
+        if (isMuted || metronomeVolRef.current <= 0) return;
+        if (!audioCtxRef.current) return;
+        
+        const osc = audioCtxRef.current.createOscillator();
+        const gainNode = audioCtxRef.current.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtxRef.current.currentTime); // 頻率 800Hz，清脆的嗶聲
+        
+        // 基礎音量乘上漸弱比例，維持 0.05 秒的短音
+        gainNode.gain.setValueAtTime(metronomeVolRef.current * 0.5, audioCtxRef.current.currentTime); 
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current.currentTime + 0.05);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtxRef.current.destination);
+        
+        osc.start();
+        osc.stop(audioCtxRef.current.currentTime + 0.05);
+      };
+
+      // 💡 控制 Web Audio 節拍器的運作
+      useEffect(() => {
+        if (isRunning && phase === 'workout' && audioMode === 'metronome' && !isMuted) {
+          metronomeVolRef.current = 1; // 恢復音量
+          playBeep(); // 立刻播第一聲
+          metronomeIntervalRef.current = setInterval(() => {
+            playBeep();
+          }, 461); // 130 BPM = 每 461 毫秒一拍
+        } else {
+          clearInterval(metronomeIntervalRef.current);
+        }
+        return () => clearInterval(metronomeIntervalRef.current);
+      }, [isRunning, phase, audioMode, isMuted]);
+
+      // 監聽 phase 與 audioMode 改變來控制背景音樂
+      useEffect(() => {
+        if (!bgmAudioRef.current || !bgmRestAudioRef.current) return;
+
+        // 階段切換時，清除所有漸弱效果，確保音量恢復為最大
+        clearInterval(fadeIntervalRef.current);
+        if (bgmAudioRef.current) bgmAudioRef.current.volume = 1;
+        if (bgmRestAudioRef.current) bgmRestAudioRef.current.volume = 1;
+        metronomeVolRef.current = 1;
+
+        if (isRunning && !isMuted) {
+          if (phase === 'workout') {
+            bgmRestAudioRef.current.pause();
+            
+            if (audioMode === 'music') {
+              bgmAudioRef.current.play().catch(e => console.log("BGM play prevented:", e));
+            } else {
+              bgmAudioRef.current.pause(); // 節拍器由另一個 useEffect 處理
+            }
+          } else if (phase === 'rest' || phase === 'halftime') {
+            bgmAudioRef.current.pause();
+            bgmRestAudioRef.current.play().catch(e => console.log("Rest BGM play prevented:", e));
+          } else {
+            bgmAudioRef.current.pause();
+            bgmRestAudioRef.current.pause();
+          }
+        } else {
+          bgmAudioRef.current.pause();
+          bgmRestAudioRef.current.pause();
+        }
+      }, [phase, isRunning, isMuted, audioMode]);
+
+      // 完賽音效獨立監聽
+      useEffect(() => {
+        if (phase === 'complete') {
+            playSFX(AUDIO_FILES.sfxSuccess);
+        }
+      }, [phase]);
 
       useEffect(() => {
         const currentStats = getStats();
@@ -241,12 +419,15 @@
       };
 
       const toggleCardDisable = (cardId) => {
+        playSFX(AUDIO_FILES.sfxClick);
         setDisabledCardIds(prev => 
           prev.includes(cardId) ? prev.filter(id => id !== cardId) : [...prev, cardId]
         );
       };
 
       const startChallenge = (mode) => {
+        initAudioCtx(); // 解鎖
+        playSFX(AUDIO_FILES.sfxClick);
         const availableReds = cardData.filter(c => c.team === 'red' && !disabledCardIds.includes(c.id));
         const availableBlues = cardData.filter(c => c.team === 'blue' && !disabledCardIds.includes(c.id));
         
@@ -272,6 +453,19 @@
       };
 
       const startTimerProcess = () => {
+        initAudioCtx(); // 解鎖
+        playSFX(AUDIO_FILES.sfxClick);
+        
+        // 💡 手機端強制解鎖所有 mp3 音效
+        if (bgmAudioRef.current && !isMuted) {
+            bgmAudioRef.current.volume = 0;
+            bgmAudioRef.current.play().then(() => { bgmAudioRef.current.pause(); bgmAudioRef.current.volume = 1; }).catch(e => console.log(e));
+        }
+        if (bgmRestAudioRef.current && !isMuted) {
+            bgmRestAudioRef.current.volume = 0;
+            bgmRestAudioRef.current.play().then(() => { bgmRestAudioRef.current.pause(); bgmRestAudioRef.current.volume = 1; }).catch(e => console.log(e));
+        }
+
         setPhase('workout');
         setCurrentRound(1);
         setCurrentIndex(0);
@@ -282,6 +476,7 @@
       };
 
       const triggerDraw = () => {
+        playSFX(AUDIO_FILES.sfxDrawCard);
         setDrawAnim(false);
         setTimeout(() => setDrawAnim(true), 50);
       };
@@ -292,6 +487,45 @@
           timer = setInterval(() => {
             setTimeLeft(p => {
               const newTime = p - 1;
+              
+              // 💡 終極漸弱邏輯 (包含 Web Audio 節拍器同步漸弱)
+              if (newTime === 3 && !isMuted) {
+                let targetAudio = null;
+                if (phase === 'workout' && audioModeRef.current === 'music') {
+                   targetAudio = bgmAudioRef.current;
+                } else if (phase === 'rest' || phase === 'halftime') {
+                   targetAudio = bgmRestAudioRef.current;
+                }
+                
+                clearInterval(fadeIntervalRef.current);
+                
+                let vol = 1.0;
+                if (targetAudio) vol = targetAudio.volume;
+                else if (phase === 'workout' && audioModeRef.current === 'metronome') vol = metronomeVolRef.current;
+                
+                let ticks = 0;
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+                fadeIntervalRef.current = setInterval(() => {
+                    ticks++;
+                    
+                    if (!isIOS) {
+                        // 電腦/Android：指數型銳減，每0.1秒音量打75折，1秒內降至極小聲
+                        vol *= 0.75; 
+                        if (vol <= 0.05) vol = 0;
+                        if (targetAudio) targetAudio.volume = vol;
+                        metronomeVolRef.current = vol; // 同步減低節拍器音量
+                    }
+
+                    // 不論何種裝置，在倒數大約最後 0.5 秒時，強制暫停音軌與節拍器
+                    if (ticks >= 25 || vol === 0) {
+                        if (targetAudio) targetAudio.pause();
+                        metronomeVolRef.current = 0; // 讓電子節拍器停止發聲
+                        clearInterval(fadeIntervalRef.current);
+                    }
+                }, 100);
+              }
+
               if (phase === 'workout' && (newTime === 20 || newTime === 10)) {
                 setEncouragement(encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)]);
                 setTimeout(() => setEncouragement(null), 3000);
@@ -331,12 +565,11 @@
           }
         }
         return () => clearInterval(timer);
-      }, [isRunning, timeLeft, phase, currentRound, currentIndex, challengeMode]);
+      }, [isRunning, timeLeft, phase, currentRound, currentIndex, challengeMode, isMuted]);
 
       return (
-        <div className="pb-20">
+        <div className="pb-20 relative min-h-screen flex flex-col">
           
-          {/* 🧪 測試快轉按鈕 (加上 SHOW_TEST_BUTTON 開關判斷) */}
           {SHOW_TEST_BUTTON && activeTab === 'challenge' && isRunning && phase !== 'briefing' && (
             <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
               <button 
@@ -348,77 +581,113 @@
             </div>
           )}
 
-          <header className="bg-white border-b-4 border-amber-100 sticky top-0 z-30 shadow-sm">
+          <header className="bg-white border-b-4 border-amber-100 sticky top-0 z-30 shadow-sm flex-shrink-0">
             <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+              
               <div className="flex items-center gap-3">
                 <div className="bg-amber-400 p-2 rounded-xl shadow-sm">
                   <i className="fa-solid fa-wand-magic-sparkles text-white text-xl"></i>
                 </div>
                 <h1 className="text-2xl font-black text-amber-900 tracking-tighter">動物運動森友會</h1>
               </div>
-              <div className="flex bg-gray-100 p-1.5 rounded-2xl">
-                <button onClick={() => { setActiveTab('challenge'); setIsRunning(false); setPhase('ready'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'challenge' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-400'}`}>挑戰模式</button>
-                <button onClick={() => setActiveTab('gallery')} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'gallery' ? 'bg-white text-amber-800 shadow-md' : 'text-gray-400'}`}>卡牌圖鑑</button>
+
+              {/* 控制區塊容器：在手機上會自動排到標題下方 */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                
+                {/* 🎵 音效切換與靜音群組 */}
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setAudioMode(m => m === 'music' ? 'metronome' : 'music'); }} 
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border-2 ${audioMode === 'metronome' ? 'bg-indigo-100 text-indigo-600 border-indigo-200' : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100'}`}
+                    title={audioMode === 'music' ? "切換為節拍器" : "切換為音樂"}
+                  >
+                    <i className={`fa-solid ${audioMode === 'music' ? 'fa-music' : 'fa-stopwatch'}`}></i>
+                  </button>
+
+                  <button 
+                    onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setIsMuted(!isMuted); }} 
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors shadow-sm border-2 ${isMuted ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-amber-100 text-amber-600 border-amber-200 hover:bg-amber-200'}`}
+                    title={isMuted ? "取消靜音" : "靜音"}
+                  >
+                    <i className={`fa-solid ${isMuted ? 'fa-volume-xmark' : 'fa-volume-high'}`}></i>
+                  </button>
+                </div>
+
+                <div className="flex bg-gray-100 p-1.5 rounded-2xl w-full sm:w-auto justify-center">
+                  <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setActiveTab('challenge'); setIsRunning(false); setPhase('ready'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'challenge' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-400'}`}>挑戰模式</button>
+                  <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setActiveTab('gallery'); }} className={`px-6 py-2 rounded-xl font-black transition-all ${activeTab === 'gallery' ? 'bg-white text-amber-800 shadow-md' : 'text-gray-400'}`}>卡牌圖鑑</button>
+                </div>
               </div>
+
             </div>
           </header>
 
-          <main className="max-w-6xl mx-auto px-4 py-8">
+          <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
             
-            {/* --- 挑戰模式 --- */}
             {activeTab === 'challenge' && (
-              <div className="max-w-xl mx-auto animate-fade-in">
+              <div className="max-w-xl mx-auto animate-fade-in flex flex-col justify-between h-full">
                 <div className="bg-white rounded-[2rem] shadow-2xl p-6 sm:p-12 border-8 border-amber-50 relative overflow-hidden">
                   
-                  {/* --- 階段 1：準備畫面 --- */}
                   {phase === 'ready' ? (
-                    <div className="text-center py-4">
-                      <div className="text-8xl mb-6 animate-bounce">🏕️</div>
-                      <h2 className="text-4xl font-black text-amber-900 mb-4 tracking-tight">選擇今天的任務！</h2>
-                      
-                      <div className="flex justify-center gap-4 mb-8">
-                        <div className="bg-amber-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-amber-100 flex-1 justify-center">
-                           <i className="fa-solid fa-chart-line text-amber-500 text-2xl"></i>
-                           <div className="text-left">
-                             <div className="text-[10px] font-bold text-gray-400">今日運動時長</div>
-                             <div className="text-base font-black text-amber-900">{stats.minutesToday} 分鐘</div>
-                           </div>
+                    <div className="text-center py-4 flex flex-col h-full">
+                      <div>
+                        <div className="text-8xl mb-6 animate-bounce">🏕️</div>
+                        <h2 className="text-4xl font-black text-amber-900 mb-4 tracking-tight">選擇今天的任務！</h2>
+                        
+                        <div className="flex justify-center gap-4 mb-6">
+                          <div className="bg-amber-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-amber-100 flex-1 justify-center">
+                             <i className="fa-solid fa-chart-line text-amber-500 text-2xl"></i>
+                             <div className="text-left">
+                               <div className="text-[10px] font-bold text-gray-400">今日運動時長</div>
+                               <div className="text-base font-black text-amber-900">{stats.minutesToday} 分鐘</div>
+                             </div>
+                          </div>
+                          <div className="bg-blue-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-blue-100 flex-1 justify-center">
+                             <i className="fa-regular fa-calendar text-blue-500 text-2xl"></i>
+                             <div className="text-left">
+                               <div className="text-[10px] font-bold text-gray-400">本週運動天數</div>
+                               <div className="text-base font-black text-blue-900">{stats.daysThisWeek} 天</div>
+                             </div>
+                          </div>
                         </div>
-                        <div className="bg-blue-50 px-4 py-3 rounded-2xl flex items-center gap-3 border border-blue-100 flex-1 justify-center">
-                           <i className="fa-regular fa-calendar text-blue-500 text-2xl"></i>
-                           <div className="text-left">
-                             <div className="text-[10px] font-bold text-gray-400">本週運動天數</div>
-                             <div className="text-base font-black text-blue-900">{stats.daysThisWeek} 天</div>
-                           </div>
+
+                        <p className="text-gray-500 font-bold mb-2 text-sm bg-gray-50 p-4 rounded-xl">
+                          紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
+                          (30秒運動 + 20秒休息)
+                        </p>
+
+                        <p className="text-amber-700 font-bold mb-6 text-sm bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-center justify-center gap-2">
+                          <i className="fa-solid fa-music"></i> 點擊上方按鈕可切換「音樂」與「節拍器」！
+                        </p>
+
+                        <button 
+                          onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setPhase('pool_selection'); }}
+                          className="mb-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 transition-colors w-full flex justify-center items-center gap-2"
+                        >
+                          <i className="fa-solid fa-gear"></i> 自訂牌組設定 (已排除 {disabledCardIds.length} 個動作)
+                        </button>
+                        
+                        <div className="flex flex-col gap-4">
+                          <button onClick={() => startChallenge(5)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
+                            <span>5 分鐘挑戰 (做一輪)</span>
+                            <i className="fa-solid fa-chevron-right opacity-70"></i>
+                          </button>
+                          <button onClick={() => startChallenge(10)} className="bg-green-500 hover:bg-green-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
+                            <span>10 分鐘挑戰 (做兩輪)</span>
+                            <i className="fa-solid fa-chevron-right opacity-70"></i>
+                          </button>
                         </div>
                       </div>
 
-                      <button 
-                        onClick={() => setPhase('pool_selection')}
-                        className="mb-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-6 rounded-xl border-2 border-gray-200 transition-colors w-full flex justify-center items-center gap-2"
-                      >
-                        <i className="fa-solid fa-gear"></i> 自訂牌組設定 (已排除 {disabledCardIds.length} 個動作)
-                      </button>
-
-                      <p className="text-gray-500 font-bold mb-6 text-sm bg-gray-50 p-4 rounded-xl">
-                        紅卡 (有氧) ↔ 藍卡 (肌力) 間歇訓練<br/>
-                        (30秒運動 + 20秒休息)
-                      </p>
-                      
-                      <div className="flex flex-col gap-4">
-                        <button onClick={() => startChallenge(5)} className="bg-indigo-500 hover:bg-indigo-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
-                          <span>5 分鐘挑戰 (做一輪)</span>
-                          <i className="fa-solid fa-chevron-right opacity-70"></i>
-                        </button>
-                        <button onClick={() => startChallenge(10)} className="bg-green-500 hover:bg-green-600 text-white text-xl font-black px-6 py-4 rounded-2xl shadow-lg transform transition hover:scale-105 active:scale-95 w-full flex justify-between items-center">
-                          <span>10 分鐘挑戰 (做兩輪)</span>
-                          <i className="fa-solid fa-chevron-right opacity-70"></i>
-                        </button>
+                      <div className="mt-8 pt-4 border-t-2 border-amber-50">
+                        <p className="text-gray-400 font-bold text-sm">
+                          蕭宇超製作 <a href="https://www.smilecloud.tw" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-600 underline ml-1">www.smilecloud.tw</a>
+                        </p>
                       </div>
+
                     </div>
 
                   ) : phase === 'pool_selection' ? (
-                    /* --- 階段 1.5：自訂牌組畫面 --- */
                     <div className="text-center py-4 animate-fade-in">
                        <h2 className="text-3xl font-black text-amber-900 mb-2">自訂運動牌組</h2>
                        <p className="text-gray-500 font-bold mb-6 text-sm">點擊按鈕來取消勾選不想出現的動作。<br/>(紅、藍隊最少需保留 3 個喔！)</p>
@@ -461,13 +730,12 @@
                          </div>
                        </div>
 
-                       <button onClick={() => setPhase('ready')} className="bg-amber-900 text-white text-lg font-black px-6 py-4 rounded-2xl shadow-lg w-full">
+                       <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('ready'); }} className="bg-amber-900 text-white text-lg font-black px-6 py-4 rounded-2xl shadow-lg w-full hover:bg-black">
                           💾 儲存並返回
                        </button>
                     </div>
 
                   ) : phase === 'briefing' ? (
-                    /* --- 階段 2：行前說明畫面 --- */
                     <div className="text-center py-2 animate-fade-in flex flex-col h-[700px]">
                       <h2 className="text-3xl font-black text-amber-900 mb-2">本日菜單預習</h2>
                       <p className="text-gray-500 font-bold mb-4 text-sm">點擊動物頭像，看看稍後要做的 6 個動作吧！</p>
@@ -476,7 +744,7 @@
                         {deck.map((card, idx) => (
                            <button 
                              key={idx}
-                             onClick={() => setBriefingIndex(idx)}
+                             onClick={() => { playSFX(AUDIO_FILES.sfxClick); setBriefingIndex(idx); }}
                              className={`relative p-2 rounded-2xl text-4xl transition-all border-4 flex-shrink-0 ${briefingIndex === idx ? (card.team === 'red' ? 'bg-red-100 border-red-500 scale-110' : 'bg-blue-100 border-blue-500 scale-110') : 'bg-gray-50 border-transparent opacity-50 hover:opacity-100'}`}
                            >
                              {card.emoji}
@@ -499,10 +767,9 @@
                     </div>
 
                   ) : phase === 'complete' ? (
-                    /* --- 階段：完賽總結 --- */
                     <div className="text-center py-4 animate-fade-in">
                       <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner">
-                        <i className="fa-solid fa-trophy text-yellow-500 text-4xl"></i>
+                        <i className="fa-solid fa-trophy text-yellow-500 text-4xl animate-bounce"></i>
                       </div>
                       <h2 className="text-3xl font-black text-amber-900 mb-1">本次訓練總結</h2>
                       <p className="text-gray-500 font-bold mb-6 text-sm">你完成了 {challengeMode} 分鐘的挑戰，流了好多汗，超棒的！</p>
@@ -522,7 +789,6 @@
                         </div>
                       </div>
 
-                      {/* 💡 修改：綠隊緩和推薦變成「可點擊的按鈕」 */}
                       <div className="bg-green-50 rounded-2xl p-4 mb-8 border-2 border-green-200 shadow-sm relative overflow-hidden">
                         <div className="absolute -right-4 -top-4 opacity-10">
                           <i className="fa-solid fa-heart text-green-500 text-8xl"></i>
@@ -545,13 +811,12 @@
                         <p className="text-[10px] text-green-600 font-bold mt-3">點擊上方動作看怎麼做，慢慢呼吸停留 20~40 秒喔！</p>
                       </div>
 
-                      <button onClick={() => setPhase('ready')} className="bg-amber-900 text-white font-black px-12 py-4 rounded-2xl shadow hover:bg-black w-full">
+                      <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); setPhase('ready'); }} className="bg-amber-900 text-white font-black px-12 py-4 rounded-2xl shadow hover:bg-black w-full">
                         回主畫面
                       </button>
                     </div>
 
                   ) : (
-                    /* --- 階段 3：運動中 / 休息 / 中場休息 --- */
                     <div className="flex flex-col items-center">
                       <div className="w-full flex justify-between items-center mb-6 bg-gray-50 p-3 sm:p-4 rounded-2xl">
                         <div className="flex items-center gap-2 sm:gap-3">
@@ -563,10 +828,10 @@
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={() => setIsRunning(!isRunning)} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setIsRunning(!isRunning); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
                             {isRunning ? <i className="fa-solid fa-pause text-gray-600"></i> : <i className="fa-solid fa-play text-gray-600"></i>}
                           </button>
-                          <button onClick={() => { setIsRunning(false); setPhase('ready'); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
+                          <button onClick={() => { playSFX(AUDIO_FILES.sfxClick); initAudioCtx(); setIsRunning(false); setPhase('ready'); }} className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center justify-center">
                             <i className="fa-solid fa-rotate-left text-gray-600"></i>
                           </button>
                         </div>
@@ -584,7 +849,6 @@
                       </div>
 
                       <div className="w-full flex items-center justify-center relative">
-                        {/* 💡 運動中：開啟 compact 模式隱藏文字 */}
                         {phase === 'workout' && (
                           <CombinedCard card={deck[currentIndex]} drawAnim={drawAnim} compact={true} />
                         )}
@@ -651,7 +915,7 @@
                   {['all', 'red', 'blue', 'green'].map(t => (
                     <button 
                       key={t} 
-                      onClick={() => setFilter(t)}
+                      onClick={() => { playSFX(AUDIO_FILES.sfxClick); setFilter(t); }}
                       className={`px-6 py-2.5 rounded-2xl font-black border-4 transition-all scale-100 active:scale-95 ${
                         filter === t ? 'bg-amber-900 text-white border-amber-900' : 'bg-white text-gray-500 border-gray-100 hover:border-amber-200'
                       }`}
@@ -661,7 +925,6 @@
                   ))}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                  {/* 圖鑑模式下，compact 設為 false，顯示全部教學文字 */}
                   {cardData.filter(c => filter === 'all' || c.team === filter).map(card => (
                     <CombinedCard key={card.id} card={card} compact={false} />
                   ))}
@@ -671,7 +934,6 @@
 
           </main>
 
-          {/* 💡 新增：彈出視窗 (Modal) 用於顯示卡牌詳細資訊 */}
           {selectedModalCard && (
             <div 
               className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" 
@@ -681,15 +943,12 @@
                 className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl" 
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* 關閉按鈕 */}
                 <button 
                   onClick={() => setSelectedModalCard(null)}
                   className="absolute top-2 right-2 z-50 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-800 shadow-md hover:bg-white transition-colors border-2 border-gray-200"
                 >
                   <i className="fa-solid fa-xmark text-xl"></i>
                 </button>
-                
-                {/* 完整卡牌內容 */}
                 <CombinedCard card={selectedModalCard} compact={false} />
               </div>
             </div>
