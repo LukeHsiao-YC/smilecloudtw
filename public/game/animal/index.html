@@ -109,7 +109,7 @@
       return { minutesToday, daysThisWeek, history };
     };
 
-    // --- 音效檔案位置 (移除了節拍器的mp3路徑) ---
+    // --- 音效檔案位置 ---
     const AUDIO_FILES = {
       bgmWorkout: 'audio/sport.mp3',   
       bgmRest: 'audio/relax.mp3',      
@@ -236,6 +236,9 @@
       const [restPrompt, setRestPrompt] = useState("");
       const [stats, setStats] = useState({ minutesToday: 0, daysThisWeek: 0 });
 
+      // 用來追蹤「上一個階段」，確保切換階段時才強制重置音樂時間
+      const lastPhaseRef = useRef(phase);
+
       // 漸弱效果的定時器記錄
       const fadeIntervalRef = useRef(null);
 
@@ -246,7 +249,6 @@
         try {
           if ('wakeLock' in navigator) {
             wakeLockRef.current = await navigator.wakeLock.request('screen');
-            console.log('螢幕喚醒已開啟');
           }
         } catch (err) {
           console.log('無法開啟螢幕喚醒:', err);
@@ -285,7 +287,7 @@
       const bgmRestAudioRef = useRef(null); 
       const sfxAudioRef = useRef(null);
       
-      // 💡 內建 Web Audio API 節拍器 Ref
+      // 內建 Web Audio API 節拍器 Ref
       const audioCtxRef = useRef(null);
       const metronomeIntervalRef = useRef(null);
       const metronomeVolRef = useRef(1); // 追蹤節拍器的漸弱音量
@@ -312,7 +314,7 @@
         if (sfxAudioRef.current) sfxAudioRef.current.muted = isMuted;
       }, [isMuted]);
 
-      // 初始化 Audio Context (在點擊時觸發解鎖)
+      // 💡 初始化 Audio Context (在按鈕點擊時觸發解鎖)
       const initAudioCtx = () => {
         if (!audioCtxRef.current) {
           audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
@@ -338,7 +340,8 @@
         const gainNode = audioCtxRef.current.createGain();
         
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, audioCtxRef.current.currentTime); // 頻率 800Hz，清脆的嗶聲
+        // 改為 600Hz 讓聲音沉穩一些，聽起來不會太刺耳
+        osc.frequency.setValueAtTime(600, audioCtxRef.current.currentTime); 
         
         // 基礎音量乘上漸弱比例，維持 0.05 秒的短音
         gainNode.gain.setValueAtTime(metronomeVolRef.current * 0.5, audioCtxRef.current.currentTime); 
@@ -351,14 +354,14 @@
         osc.stop(audioCtxRef.current.currentTime + 0.05);
       };
 
-      // 💡 控制 Web Audio 節拍器的運作
+      // 控制 Web Audio 節拍器的運作
       useEffect(() => {
         if (isRunning && phase === 'workout' && audioMode === 'metronome' && !isMuted) {
           metronomeVolRef.current = 1; // 恢復音量
           playBeep(); // 立刻播第一聲
           metronomeIntervalRef.current = setInterval(() => {
             playBeep();
-          }, 461); // 130 BPM = 每 461 毫秒一拍
+          }, 1000); // 💡 【關鍵修改 3：精準 1000 毫秒 = 一秒一下】
         } else {
           clearInterval(metronomeIntervalRef.current);
         }
@@ -369,20 +372,26 @@
       useEffect(() => {
         if (!bgmAudioRef.current || !bgmRestAudioRef.current) return;
 
-        // 階段切換時，清除所有漸弱效果，確保音量恢復為最大
+        // 清除所有漸弱效果，確保音量恢復為最大
         clearInterval(fadeIntervalRef.current);
         if (bgmAudioRef.current) bgmAudioRef.current.volume = 1;
         if (bgmRestAudioRef.current) bgmRestAudioRef.current.volume = 1;
         metronomeVolRef.current = 1;
 
+        // 💡 【關鍵修改 1：每次階段切換時，強制將音樂時間歸零】
+        if (lastPhaseRef.current !== phase) {
+            if (bgmAudioRef.current) bgmAudioRef.current.currentTime = 0;
+            if (bgmRestAudioRef.current) bgmRestAudioRef.current.currentTime = 0;
+            lastPhaseRef.current = phase;
+        }
+
         if (isRunning && !isMuted) {
           if (phase === 'workout') {
             bgmRestAudioRef.current.pause();
-            
             if (audioMode === 'music') {
               bgmAudioRef.current.play().catch(e => console.log("BGM play prevented:", e));
             } else {
-              bgmAudioRef.current.pause(); // 節拍器由另一個 useEffect 處理
+              bgmAudioRef.current.pause(); 
             }
           } else if (phase === 'rest' || phase === 'halftime') {
             bgmAudioRef.current.pause();
@@ -426,8 +435,9 @@
       };
 
       const startChallenge = (mode) => {
-        initAudioCtx(); // 解鎖
+        initAudioCtx(); // 點擊時解鎖
         playSFX(AUDIO_FILES.sfxClick);
+        
         const availableReds = cardData.filter(c => c.team === 'red' && !disabledCardIds.includes(c.id));
         const availableBlues = cardData.filter(c => c.team === 'blue' && !disabledCardIds.includes(c.id));
         
@@ -456,14 +466,28 @@
         initAudioCtx(); // 解鎖
         playSFX(AUDIO_FILES.sfxClick);
         
-        // 💡 手機端強制解鎖所有 mp3 音效
-        if (bgmAudioRef.current && !isMuted) {
-            bgmAudioRef.current.volume = 0;
-            bgmAudioRef.current.play().then(() => { bgmAudioRef.current.pause(); bgmAudioRef.current.volume = 1; }).catch(e => console.log(e));
-        }
-        if (bgmRestAudioRef.current && !isMuted) {
-            bgmRestAudioRef.current.volume = 0;
-            bgmRestAudioRef.current.play().then(() => { bgmRestAudioRef.current.pause(); bgmRestAudioRef.current.volume = 1; }).catch(e => console.log(e));
+        // 💡 【關鍵修改 2：在使用者點擊按鈕的瞬間同步解鎖音效，解決初始靜音問題】
+        if (!isMuted) {
+            // 將所有音軌強制時間歸零，準備等下的播放
+            if (bgmAudioRef.current) {
+                bgmAudioRef.current.currentTime = 0;
+                if (audioModeRef.current === 'music') {
+                    bgmAudioRef.current.volume = 1;
+                    bgmAudioRef.current.play().catch(e => console.log('BGM unlock error:', e));
+                }
+            }
+            // 對於目前不需要播放的休息音樂，先靜音播放一下取得白名單，再馬上暫停
+            if (bgmRestAudioRef.current) {
+                bgmRestAudioRef.current.currentTime = 0;
+                bgmRestAudioRef.current.volume = 0;
+                const playPromise = bgmRestAudioRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        bgmRestAudioRef.current.pause();
+                        bgmRestAudioRef.current.volume = 1; // 恢復音量供稍後使用
+                    }).catch(e => console.log('Rest unlock error:', e));
+                }
+            }
         }
 
         setPhase('workout');
@@ -488,7 +512,7 @@
             setTimeLeft(p => {
               const newTime = p - 1;
               
-              // 💡 終極漸弱邏輯 (包含 Web Audio 節拍器同步漸弱)
+              // 終極漸弱邏輯 (最後3秒啟動)
               if (newTime === 3 && !isMuted) {
                 let targetAudio = null;
                 if (phase === 'workout' && audioModeRef.current === 'music') {
