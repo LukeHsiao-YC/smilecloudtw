@@ -115,11 +115,10 @@
       return isGroup() || isRun();
     };
 
-    // 精準計算破冰分數 (含百搭牌實際代表數值)
     const getSetValue = (tiles) => {
       if (!isValidSet(tiles)) return 0;
       const regulars = tiles.filter(t => !t.isJoker);
-      if (regulars.length === 0) return 30; // 若全為百搭牌，姑且當作過關
+      if (regulars.length === 0) return 30; // 若全為百搭牌，當作過關
       
       const isGroup = regulars.every(t => t.value === regulars[0].value);
       if (isGroup) {
@@ -245,7 +244,8 @@
       const [backupBoard, setBackupBoard] = useState([]);
       const [message, setMessage] = useState('');
       
-      const [timeLeft, setTimeLeft] = useState(60); // 60秒計時器
+      const [timeLeft, setTimeLeft] = useState(60); 
+      const [showRulesModal, setShowRulesModal] = useState(false); // 遊戲規則視窗狀態
 
       const db = useMemo(() => getDatabase(fbApp), [fbApp]);
       const auth = useMemo(() => getAuth(fbApp), [fbApp]);
@@ -275,14 +275,13 @@
           if (me) { setLocalHand(me.hand || []); setBackupHand(me.hand || []); }
           setLocalBoard(roomData.board || []); setBackupBoard(roomData.board || []);
           setStaging([]);
-          setTimeLeft(60); // 回合切換時重設時間
+          setTimeLeft(60); 
         }
       }, [roomData?.turn, gameState === 'playing', roomData?.status]);
 
-      // 計時器邏輯
       useEffect(() => {
         if (gameState !== 'playing' || roomData?.status !== 'playing') return;
-        if (roomData.players[roomData.turn]?.isBot) return; // 電腦不顯示倒數
+        if (roomData.players[roomData.turn]?.isBot) return; 
         
         const timer = setInterval(() => {
           setTimeLeft(prev => {
@@ -296,14 +295,12 @@
         return () => clearInterval(timer);
       }, [roomData?.turn, gameState, roomData?.status]);
 
-      // 觸發超時
       useEffect(() => {
         if (timeLeft === 0 && roomData?.players[roomData.turn]?.id === user.uid) {
            handleTimeout();
         }
       }, [timeLeft]);
 
-      // 結算僵局
       const checkStalemate = async (players, board, deck) => {
         let minScore = Infinity;
         let winnerId = null;
@@ -358,7 +355,6 @@
          setStaging([]);
       };
 
-      // 電腦 AI 邏輯
       useEffect(() => {
         if (gameState === 'playing' && roomData?.status === 'playing' && roomData.players[roomData.turn]?.isBot && roomData.hostId === user.uid) {
           const botTimer = setTimeout(async () => {
@@ -606,6 +602,84 @@
 
       return (
         <div className="h-[100dvh] max-w-lg mx-auto bg-stone-200 relative overflow-hidden flex flex-col shadow-2xl">
+          
+          {/* 遊戲說明彈出視窗 */}
+          {showRulesModal && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-[200] p-4">
+              <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+                <div className="p-6 border-b-2 border-stone-100 flex justify-between items-center shrink-0">
+                  <h2 className="text-2xl font-black text-stone-800">輕鬆學拉密</h2>
+                  <button onClick={() => setShowRulesModal(false)} className="text-stone-400 font-bold text-2xl hover:text-stone-600 transition-colors">×</button>
+                </div>
+                <div className="p-6 overflow-y-auto flex-1 text-stone-600 text-sm space-y-6 leading-relaxed text-left">
+                  <p>拉密有點像數字版的麻將，規則其實非常簡單，只要記住「3」這個神奇數字就好。誰最先把手上的牌全部出完，誰就是大贏家！</p>
+                  
+                  <div>
+                    <h3 className="font-bold text-stone-800 text-base mb-2">1. 只要記住兩種牌型</h3>
+                    <p className="mb-2">不管你怎麼出牌，每次放在桌上的牌，<strong className="text-red-500">最少都要有 3 張湊在一起</strong>才可以喔！</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>
+                        <strong>雙胞胎組合 (同號碼，不同色)</strong><br/>
+                        數字一模一樣，但是顏色必須全部不一樣。<br/>
+                        <span className="bg-stone-100 px-1 rounded">可以出：紅7、黑7、藍7 (這樣是 3 張，過關！)</span><br/>
+                        <span className="bg-stone-100 px-1 rounded">不可以出：紅7、紅7、藍7 (有兩個紅色，這樣犯規喔！)</span>
+                      </li>
+                      <li>
+                        <strong>爬樓梯組合 (同顏色，連號碼)</strong><br/>
+                        顏色全部一樣，而且數字要像是爬樓梯一樣照順序連在一起。<br/>
+                        <span className="bg-stone-100 px-1 rounded">可以出：黃3、黃4、黃5 (這樣是 3 張，過關！)</span><br/>
+                        <span className="bg-stone-100 px-1 rounded">可以出：藍9、藍10、藍11、藍12 (這樣是 4 張，也過關！)</span>
+                      </li>
+                    </ul>
+                    <p className="mt-2 text-stone-500 bg-stone-50 p-2 rounded-lg text-xs">
+                      <strong>小提醒：數字不能繞圈圈</strong><br/>
+                      數字 1 是最小的，13 是最大的。順序只能從 1 一路往上排到 13，不能把 1 接在 13 的後面喔 (不可以出 12、13、1)。
+                    </p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-stone-800 text-base mb-2">2. 遊戲開始的第一步 (破冰)</h3>
+                    <p>遊戲剛開始，每個人要第一次把牌打到桌上時，有一個小小的測驗：你第一次打出去的牌，上面的數字加起來必須<strong>剛好或大於 30 分</strong>。例如：你出了一組 紅10、黑10、藍10，加起來是 30，恭喜你過關了！</p>
+                    <p className="mt-2">如果你手上的牌湊不到 30 分，別擔心，這回合只能先「確認結束」抽一張牌，等下次有機會再出。只要過了一次 30 分的門檻，以後出牌就再也不用管分數了，想怎麼出就怎麼出！</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-stone-800 text-base mb-2">3. 拉密最好玩的地方：拆牌與接龍</h3>
+                    <p>只要你成功「破冰」了，接下來就是發揮創意的時候！你可以隨便拿桌上的牌來接龍。</p>
+                    <p className="mt-2">例如桌上已經有別人出的「紅4、紅5、紅6」。如果你手剛好有一張「紅7」，你就可以直接把它接在後面，變成「紅4、紅5、紅6、紅7」。</p>
+                    <p className="mt-2">你甚至可以把桌上的牌拆開來，跟自己手上的牌重新組合。只要記得一個大原則：不管你怎麼搬來搬去，最後留在桌上的每一組牌，都還是要維持「至少 3 張」，而且要符合規則喔！</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-stone-800 text-base mb-2">4. 出牌時間與拆牌小規定</h3>
+                    <p>為了讓遊戲更順暢，大家每次出牌都有 60 秒的時間可以思考。</p>
+                    <ul className="list-disc pl-5 space-y-2 mt-2">
+                      <li><strong>想太久沒出牌怎麼辦？</strong> 如果時間到了你都沒有出牌，系統會自動幫你抽一張牌，然後換下一個人。</li>
+                      <li><strong>拆牌拼不回去會怎樣？</strong> 把桌上的牌拆開來重新組合非常好玩，但如果在 60 秒結束時，你把桌上的牌弄得亂七八糟拼不回去，系統會幫你把牌全部恢復原狀。作為小小的懲罰，系統會自動罰你多抽 3 張牌喔！所以動手拆牌前可以先在腦海裡想清楚。</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-stone-800 text-base mb-2">5. 神奇的百搭牌 (笑臉牌)</h3>
+                    <p>如果你看到有一張牌畫著笑臉，那可是超級好用的「萬能牌」！缺什麼數字、缺什麼顏色，它都可以變身代替。</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-stone-800 text-base mb-2">6. 怎麼分出勝負？</h3>
+                    <p>第一種贏法很簡單：誰最先把手上的牌全部出完，誰就是第一名！</p>
+                    <p className="mt-2">第二種情況比較少見：如果大家把共用的牌堆都抽光了，而且每個人也都沒辦法再出牌，這時候遊戲也會結束。系統會把每個人手上的牌數字加起來，數字總和「最小」的人就是贏家！</p>
+                    <p className="mt-2 text-stone-500 bg-stone-50 p-2 rounded-lg text-xs">
+                      這時候要特別注意，如果你手上還留著沒用掉的笑臉牌，一張會被當成 30 分來計算，分數會變很高喔，所以千萬別把它扣在手裡太久。
+                    </p>
+                  </div>
+                </div>
+                <div className="p-4 border-t-2 border-stone-100 shrink-0">
+                  <button onClick={() => setShowRulesModal(false)} className="w-full py-4 bg-blue-600 text-white font-black rounded-xl active:scale-95 shadow-md">我準備好啦！</button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {gameState === 'menu' && (
             <div className="flex-1 flex flex-col items-center justify-center p-6 bg-stone-100 overflow-y-auto">
               <div className="bg-white p-8 rounded-3xl w-full card-shadow text-center">
@@ -635,11 +709,19 @@
                 <button disabled={isProcessing} onClick={handleCreateRoom} className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg active:scale-95 mb-6 disabled:bg-stone-300">
                   {isProcessing ? '處理中...' : '建立新房間 (房主)'}
                 </button>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-4">
                   <input type="text" value={joinCode} onChange={e=>setJoinCode(e.target.value)} placeholder="代碼" className="flex-1 px-4 py-2 border-2 rounded-xl text-center uppercase font-mono font-bold" maxLength={4} />
                   <button onClick={handleJoinRoom} className="px-6 py-2 bg-emerald-500 text-white font-black rounded-xl shadow active:scale-95">加入</button>
                 </div>
+
+                <div className="mt-6 border-t-2 border-stone-100 pt-4">
+                  <button onClick={() => setShowRulesModal(true)} className="text-sm font-bold text-blue-600 underline hover:text-blue-800 transition-colors">
+                    不知道怎麼玩？點我看超簡單規則
+                  </button>
+                </div>
+
               </div>
+              
               <div className="mt-8 text-stone-400 text-xs font-bold tracking-widest">
                 蕭宇超製作
               </div>
