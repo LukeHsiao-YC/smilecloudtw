@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>行動拉密 多人連線版</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- 載入 Realtime Database 模組 -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getDatabase, ref, set, get, update, onValue, remove } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js';
+
+    window.FirebaseModules = {
+      initializeApp, getApps, getApp, getAuth, signInAnonymously, onAuthStateChanged,
+      getDatabase, ref, set, get, update, onValue, remove
+    };
+    window.dispatchEvent(new Event('firebaseModulesReady'));
+  </script>
+
+  <style>
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes pulse-ring {
+      0% { transform: scale(.8); opacity: 0.5; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+    .hint-pulse::before {
+      content: ''; display: block; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      border: 4px solid #4ade80; border-radius: inherit; animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    .card-shadow { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+  </style>
+</head>
+<body class="bg-stone-200 overflow-hidden">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // ==========================================
+    // 你的專屬 Firebase 設定
+    // ==========================================
+    const MY_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyB-JKAKg3SRs60w6n4z6QA94V33RCBfvfM",
+      authDomain: "rummikub-a2452.firebaseapp.com",
+      databaseURL: "https://rummikub-a2452-default-rtdb.firebaseio.com",
+      projectId: "rummikub-a2452",
+      storageBucket: "rummikub-a2452.firebasestorage.app",
+      messagingSenderId: "944905371953",
+      appId: "1:944905371953:web:4318dd2c1274641bffb010",
+      measurementId: "G-0M2EJ9FTQ3"
+    };
+
+    // --- 遊戲邏輯函式 ---
+    const COLORS = ['text-red-600', 'text-blue-600', 'text-gray-900', 'text-yellow-600'];
+    const BORDER_COLORS = ['border-red-600', 'border-blue-600', 'border-gray-900', 'border-yellow-600'];
+
+    const generateDeck = () => {
+      let newDeck = [];
+      let idCounter = 1;
+      for (let set = 0; set < 2; set++) {
+        for (let cIdx = 0; cIdx < 4; cIdx++) {
+          for (let value = 1; value <= 13; value++) {
+            newDeck.push({ id: idCounter++, colorIdx: cIdx, value, isJoker: false });
+          }
+        }
+      }
+      newDeck.push({ id: idCounter++, value: '☻', colorIdx: -1, isJoker: true });
+      newDeck.push({ id: idCounter++, value: '☻', colorIdx: -1, isJoker: true });
+      for (let i = newDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+      }
+      return newDeck;
+    };
+
+    const isValidSet = (tiles) => {
+      if (!tiles || tiles.length < 3) return false;
+      const regulars = tiles.filter(t => !t.isJoker);
+      if (regulars.length === 0) return true;
+      if (regulars.length === 1) return true;
+      
+      const isGroup = () => {
+        if (tiles.length > 4) return false;
+        const val = regulars[0].value;
+        const colors = new Set();
+        for (let t of regulars) {
+          if (t.value !== val || colors.has(t.colorIdx)) return false;
+          colors.add(t.colorIdx);
+        }
+        return true;
+      };
+
+      const isRun = () => {
+        const color = regulars[0].colorIdx;
+        if (regulars.some(t => t.colorIdx !== color)) return false;
+        for (let start = 1; start <= 14 - tiles.length; start++) {
+          let possible = true, tempJokers = tiles.filter(t => t.isJoker).length;
+          for (let i = 0; i < tiles.length; i++) {
+            let target = start + i;
+            if (!tiles.some(t => !t.isJoker && t.value === target)) {
+              if (tempJokers > 0) tempJokers--; else { possible = false; break; }
+            }
+          }
+          if (possible) return true;
+        }
+        return false;
+      };
+      return isGroup() || isRun();
+    };
+
+    const getSetValue = (tiles) => {
+      if (!isValidSet(tiles)) return 0;
+      const regulars = tiles.filter(t => !t.isJoker);
+      if (regulars.length === 0) return tiles.length * 10;
+      if (regulars.every(t => t.value === regulars[0].value)) return regulars[0].value * tiles.length;
+      let minVal = regulars.reduce((min, t) => Math.min(min, t.value), 14);
+      return (minVal + minVal + tiles.length - 1) * tiles.length / 2;
+    };
+
+    const sortTiles = (tiles) => {
+      if (!tiles) return [];
+      const regulars = tiles.filter(t => !t.isJoker);
+      const jokers = tiles.filter(t => t.isJoker);
+      if (regulars.length <= 1) return [...regulars, ...jokers];
+      if (regulars.length >= 2 && regulars[0].value === regulars[1].value) 
+        return [...regulars.sort((a,b) => a.colorIdx - b.colorIdx), ...jokers];
+      return [...regulars.sort((a,b) => a.value - b.value), ...jokers];
+    };
+
+    const findValidSetsFromHand = (handTiles) => {
+      let foundSets = [];
+      let regulars = [...handTiles.filter(t => !t.isJoker)];
+      const valMap = {};
+      regulars.forEach(t => { if(!valMap[t.value]) valMap[t.value]=[]; valMap[t.value].push(t); });
+      for (let v in valMap) {
+        let colors = new Set(), group = [];
+        valMap[v].forEach(t => { if(!colors.has(t.colorIdx)) { colors.add(t.colorIdx); group.push(t); } });
+        if (group.length >= 3) { foundSets.push(group); group.forEach(gt => { let i = regulars.findIndex(r => r.id === gt.id); if(i>-1) regulars.splice(i,1); }); }
+      }
+      const colMap = {};
+      regulars.forEach(t => { if(!colMap[t.colorIdx]) colMap[t.colorIdx]=[]; colMap[t.colorIdx].push(t); });
+      for (let c in colMap) {
+        let col = colMap[c].sort((a,b) => a.value - b.value), run = [];
+        for (let i=0; i<col.length; i++) {
+          if (run.length === 0 || col[i].value === run[run.length-1].value + 1) run.push(col[i]);
+          else { if (run.length >= 3) foundSets.push([...run]); run = [col[i]]; }
+        }
+        if (run.length >= 3) foundSets.push(run);
+      }
+      return foundSets;
+    };
+
+    // --- UI 元件 ---
+    const Tile = ({ tile, onClick, isStaged, invalid }) => {
+      const colorClass = tile.isJoker ? 'text-purple-600' : COLORS[tile.colorIdx];
+      const borderClass = tile.isJoker ? 'border-purple-600' : BORDER_COLORS[tile.colorIdx];
+      return (
+        <div 
+          onClick={onClick} 
+          className={`relative flex items-center justify-center shrink-0 w-9 h-12 sm:w-11 sm:h-16 bg-white rounded shadow border-2 cursor-pointer font-bold transform transition-transform active:scale-95 ${borderClass} ${isStaged ? 'opacity-40 scale-90' : ''} ${invalid ? 'bg-red-50 border-red-500' : ''}`}
+        >
+          <span className={`text-xl sm:text-2xl ${colorClass}`}>{tile.value}</span>
+        </div>
+      );
+    };
+
+    function App({ fbApp }) {
+      const { getAuth, signInAnonymously, onAuthStateChanged, getDatabase, ref, set, get, update, onValue } = window.FirebaseModules;
+      
+      const [user, setUser] = useState(null);
+      const [playerName, setPlayerName] = useState('');
+      const [roomId, setRoomId] = useState('');
+      const [roomData, setRoomData] = useState(null);
+      const [gameState, setGameState] = useState('auth');
+      const [isProcessing, setIsProcessing] = useState(false);
+      const [difficulty, setDifficulty] = useState('hard'); // 預設困難
+      const [menuError, setMenuError] = useState('');
+      const [joinCode, setJoinCode] = useState('');
+
+      const [localHand, setLocalHand] = useState([]);
+      const [localBoard, setLocalBoard] = useState([]);
+      const [staging, setStaging] = useState([]);
+      const [backupHand, setBackupHand] = useState([]);
+      const [backupBoard, setBackupBoard] = useState([]);
+      const [message, setMessage] = useState('');
+
+      const db = useMemo(() => getDatabase(fbApp), [fbApp]);
+      const auth = useMemo(() => getAuth(fbApp), [fbApp]);
+
+      useEffect(() => {
+        return onAuthStateChanged(auth, (u) => {
+          if (u) { setUser(u); setGameState('menu'); }
+          else { signInAnonymously(auth).catch(e => setMenuError("連線失敗：" + e.message)); }
+        });
+      }, [auth]);
+
+      useEffect(() => {
+        if (!roomId) return;
+        return onValue(ref(db, 'rooms/' + roomId), (snap) => {
+          if (snap.exists()) {
+            const data = snap.val();
+            setRoomData(data);
+            if (data.status === 'playing' && gameState !== 'playing') setGameState('playing');
+          } else { setGameState('menu'); setRoomId(''); }
+        });
+      }, [roomId, db]);
+
+      useEffect(() => {
+        if (gameState === 'playing' && roomData) {
+          const me = (roomData.players || []).find(p => p.id === user.uid);
+          if (me) { setLocalHand(me.hand || []); setBackupHand(me.hand || []); }
+          setLocalBoard(roomData.board || []); setBackupBoard(roomData.board || []);
+          setStaging([]);
+        }
+      }, [roomData?.turn, gameState === 'playing']);
+
+      // 電腦 AI 邏輯
+      useEffect(() => {
+        if (gameState === 'playing' && roomData?.status === 'playing' && roomData.players[roomData.turn]?.isBot && roomData.hostId === user.uid) {
+          const botTimer = setTimeout(async () => {
+            const bot = roomData.players[roomData.turn];
+            let newBoard = roomData.board ? JSON.parse(JSON.stringify(roomData.board)) : [];
+            let newHand = [...(bot.hand || [])];
+            let playedSomething = false;
+
+            const foundSets = findValidSetsFromHand(newHand);
+            if (foundSets.length > 0) {
+              const score = foundSets.reduce((s, set) => s + getSetValue(set), 0);
+              if (bot.hasIceBroken || score >= 30) {
+                foundSets.forEach(s => {
+                  newBoard.push(sortTiles(s));
+                  s.forEach(t => { const idx = newHand.findIndex(h => h.id === t.id); if(idx > -1) newHand.splice(idx, 1); });
+                });
+                playedSomething = true;
+              }
+            }
+
+            // 困難模式：嘗試把手牌接到桌面的組合
+            if ((bot.hasIceBroken || playedSomething)) {
+              let changed = true;
+              while (changed) {
+                changed = false;
+                for (let i = newHand.length - 1; i >= 0; i--) {
+                  const tile = newHand[i];
+                  for (let bIdx = 0; bIdx < newBoard.length; bIdx++) {
+                    const testSet = [...newBoard[bIdx], tile];
+                    if (isValidSet(testSet)) {
+                      newBoard[bIdx] = sortTiles(testSet);
+                      newHand.splice(i, 1);
+                      changed = true; playedSomething = true;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+
+            if (!playedSomething && roomData.deck && roomData.deck.length > 0) {
+              newHand.push(roomData.deck[roomData.deck.length - 1]);
+            }
+
+            const updatedPlayers = roomData.players.map((p, i) => 
+              i === roomData.turn ? { ...p, hand: newHand, hasIceBroken: bot.hasIceBroken || playedSomething } : p
+            );
+
+            await update(ref(db, 'rooms/' + roomId), {
+              players: updatedPlayers,
+              board: newBoard,
+              deck: !playedSomething && roomData.deck ? roomData.deck.slice(0, -1) : (roomData.deck || []),
+              turn: (roomData.turn + 1) % roomData.players.length
+            });
+          }, 2500);
+          return () => clearTimeout(botTimer);
+        }
+      }, [roomData?.turn, gameState, user?.uid]);
+
+      // --- 功能處理 ---
+      const handleCreateRoom = async () => {
+        if (!playerName.trim() || isProcessing) return;
+        setIsProcessing(true); setMenuError('');
+        const code = Math.random().toString(36).substring(2, 6).toUpperCase();
+        try {
+          await set(ref(db, 'rooms/' + code), {
+            hostId: user.uid, status: 'waiting', difficulty: 'hard',
+            players: [{ id: user.uid, name: playerName, hand: [], hasIceBroken: false, isBot: false }],
+            board: [], deck: [], turn: 0, createdAt: new Date().toISOString()
+          });
+          setRoomId(code); setGameState('lobby');
+        } catch (e) { setMenuError(e.message); }
+        finally { setIsProcessing(false); }
+      };
+
+      const handleJoinRoom = async () => {
+        const code = joinCode.trim().toUpperCase();
+        if (!code || !playerName.trim() || isProcessing) return;
+        setIsProcessing(true);
+        try {
+          const snap = await get(ref(db, 'rooms/' + code));
+          if (!snap.exists()) throw new Error("房號不存在");
+          const data = snap.val();
+          const players = data.players || [];
+          if (players.length >= 4) throw new Error("房間已滿");
+          await update(ref(db, 'rooms/' + code), { players: [...players, { id: user.uid, name: playerName, hand: [], hasIceBroken: false, isBot: false }] });
+          setRoomId(code); setGameState('lobby');
+        } catch (e) { setMenuError(e.message); }
+        finally { setIsProcessing(false); }
+      };
+
+      const handleAddBot = async () => {
+        if (!roomData || (roomData.players || []).length >= 4) return;
+        const players = roomData.players || [];
+        const newPlayers = [...players, {
+          id: 'bot_' + Date.now(),
+          name: `電腦 ${players.filter(p=>p.isBot).length + 1}`,
+          hand: [], hasIceBroken: false, isBot: true
+        }];
+        await update(ref(db, 'rooms/' + roomId), { players: newPlayers });
+      };
+
+      const handleStartGame = async () => {
+        const deck = generateDeck();
+        const players = roomData.players.map(p => ({ ...p, hand: deck.splice(0, 14), hasIceBroken: false }));
+        await update(ref(db, 'rooms/' + roomId), { status: 'playing', players, deck, board: [], turn: 0 });
+      };
+
+      const handleHandClick = (t) => {
+        if (roomData.players[roomData.turn]?.id !== user.uid) return;
+        setLocalHand(localHand.filter(x => x.id !== t.id));
+        setStaging([...staging, { ...t, source: 'hand' }]);
+      };
+
+      const handleBoardClick = (idx, t) => {
+        if (roomData.players[roomData.turn]?.id !== user.uid) return;
+        const me = roomData.players.find(p => p.id === user.uid);
+        if (!me?.hasIceBroken) { setMessage("需先破冰才能拆解桌面"); return; }
+        const newBoard = [...localBoard];
+        newBoard[idx] = newBoard[idx].filter(x => x.id !== t.id);
+        if (newBoard[idx].length === 0) newBoard.splice(idx, 1);
+        setLocalBoard(newBoard);
+        setStaging([...staging, { ...t, source: 'board', boardIdx: idx }]);
+      };
+
+      const handleFormNewSet = () => {
+        if (staging.length < 3) { setMessage("至少需3張牌"); return; }
+        const cleanSet = staging.map(s => { const {source, boardIdx, ...rest} = s; return rest; });
+        setLocalBoard([...localBoard, sortTiles(cleanSet)]);
+        setStaging([]);
+      };
+
+      const handleAddToSet = (idx) => {
+        const cleanStaging = staging.map(s => { const {source, boardIdx, ...rest} = s; return rest; });
+        const newBoard = [...localBoard];
+        newBoard[idx] = sortTiles([...newBoard[idx], ...cleanStaging]);
+        setLocalBoard(newBoard);
+        setStaging([]);
+      };
+
+      const handleEndTurn = async () => {
+        if (staging.length > 0) { setMessage("暫存區還有牌"); return; }
+        if (localBoard.some(s => !isValidSet(s))) { setMessage("桌上有無效組合"); return; }
+        
+        const meIdx = roomData.players.findIndex(p => p.id === user.uid);
+        const me = roomData.players[meIdx];
+        let finalHand = [...localHand], finalIce = me.hasIceBroken;
+        const deckCopy = roomData.deck ? [...roomData.deck] : [];
+        const isModified = JSON.stringify(localBoard) !== JSON.stringify(backupBoard) || localHand.length !== backupHand.length;
+
+        if (!finalIce) {
+          const score = localBoard.reduce((s, set) => s + getSetValue(set), 0) - (backupBoard || []).reduce((s, b) => s + getSetValue(b), 0);
+          if (score >= 30) finalIce = true;
+          else if (isModified) { setMessage("破冰需滿30分"); return; }
+        }
+
+        if (!isModified && deckCopy.length > 0) finalHand.push(deckCopy.pop());
+
+        const newPlayers = roomData.players.map((p, i) => i === meIdx ? { ...p, hand: finalHand, hasIceBroken: finalIce } : p);
+        
+        await update(ref(db, 'rooms/' + roomId), {
+          players: newPlayers,
+          board: localBoard,
+          deck: deckCopy,
+          turn: (roomData.turn + 1) % roomData.players.length
+        });
+        setMessage('');
+      };
+
+      if (gameState === 'auth') return <div className="h-screen flex items-center justify-center font-bold text-stone-400">正在準備環境...</div>;
+
+      return (
+        <div className="h-[100dvh] max-w-lg mx-auto bg-stone-200 relative overflow-hidden flex flex-col shadow-2xl">
+          {gameState === 'menu' && (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-stone-100 overflow-y-auto">
+              <div className="bg-white p-8 rounded-3xl w-full card-shadow text-center">
+                <h1 className="text-4xl font-black text-stone-800 mb-6">行動拉密</h1>
+                {menuError && <div className="mb-4 text-red-500 text-xs font-bold bg-red-50 p-3 rounded-lg border border-red-200">{menuError}</div>}
+                <input type="text" value={playerName} onChange={e=>setPlayerName(e.target.value)} placeholder="你的暱稱" className="w-full px-4 py-3 border-2 rounded-xl mb-8 outline-none focus:border-blue-500 font-bold" />
+                
+                <button disabled={isProcessing} onClick={handleCreateRoom} className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl shadow-lg active:scale-95 mb-6 disabled:bg-stone-300">
+                  {isProcessing ? '處理中...' : '建立新房間 (房主)'}
+                </button>
+                <div className="flex gap-2">
+                  <input type="text" value={joinCode} onChange={e=>setJoinCode(e.target.value)} placeholder="代碼" className="flex-1 px-4 py-2 border-2 rounded-xl text-center uppercase font-mono font-bold" maxLength={4} />
+                  <button onClick={handleJoinRoom} className="px-6 py-2 bg-emerald-500 text-white font-black rounded-xl shadow active:scale-95">加入</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {gameState === 'lobby' && (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 bg-stone-100">
+              <div className="bg-white p-8 rounded-3xl w-full card-shadow text-center">
+                <button onClick={()=>setRoomId('')} className="text-stone-300 text-xs font-bold mb-4 block underline">← 離開</button>
+                <div className="text-5xl font-black text-blue-600 tracking-widest mb-8 font-mono">{roomId}</div>
+                <div className="text-left mb-8 space-y-2">
+                  {(roomData?.players || []).map(p => (
+                    <div key={p.id} className="py-3 px-4 bg-stone-50 rounded-2xl font-bold text-stone-700 flex justify-between">
+                      <span>{p.isBot ? '🤖' : '👤'} {p.name} {p.id === roomData.hostId ? '👑' : ''}</span>
+                    </div>
+                  ))}
+                  {roomData?.hostId === user.uid && (roomData.players || []).length < 4 && <button onClick={handleAddBot} className="w-full py-2 border-2 border-dashed rounded-xl text-stone-300 font-bold text-xs">+ 加入電腦</button>}
+                </div>
+                {roomData?.hostId === user.uid ? (
+                  <button onClick={handleStartGame} className="w-full py-4 bg-emerald-500 text-white font-black rounded-2xl shadow-lg">開始遊戲</button>
+                ) : <p className="text-stone-400 animate-pulse font-bold">等待房主開始...</p>}
+              </div>
+            </div>
+          )}
+
+          {gameState === 'playing' && roomData && (
+             <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="bg-stone-800 text-white p-2 flex justify-between items-center shrink-0">
+                   <div className="flex gap-2 overflow-x-auto hide-scrollbar flex-1">
+                      {roomData.players.map((p, i) => (
+                        <div key={p.id} className={`px-2 py-1 rounded-lg text-[10px] whitespace-nowrap font-bold ${roomData.turn === i ? 'bg-yellow-500 text-black ring-1 ring-white' : 'bg-stone-700'}`}>
+                           {p.name}: {p.hand?.length || 0}
+                        </div>
+                      ))}
+                   </div>
+                   <div className="text-[10px] font-bold text-stone-500 ml-2">牌堆: {roomData.deck?.length || 0}</div>
+                </div>
+                
+                <div className="flex-1 p-4 overflow-y-auto">
+                   {message && <div className="text-center mb-4"><span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm">{message}</span></div>}
+                   <div className="flex flex-wrap gap-4 justify-center pb-20">
+                      {localBoard.map((set, idx) => (
+                        <div key={idx} className="flex gap-1 p-2 bg-white/50 rounded-xl border-2 border-stone-300 relative">
+                           {set.map(t => <Tile key={t.id} tile={t} onClick={() => handleBoardClick(idx, t)} />)}
+                           {roomData.players[roomData.turn]?.id === user.uid && staging.length > 0 && (
+                             <button onClick={()=>handleAddToSet(idx)} className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[10px] px-2 py-1 rounded-lg shadow-lg z-10 whitespace-nowrap">+ 塞入</button>
+                           )}
+                        </div>
+                      ))}
+                   </div>
+                </div>
+
+                {roomData.players[roomData.turn]?.id === user.uid && (
+                   <div className="bg-blue-50 border-t-2 border-blue-100 p-3 min-h-[90px] relative flex flex-col items-center shrink-0">
+                      <div className="text-[8px] font-black text-blue-300 absolute top-1 left-2 uppercase tracking-widest">暫存區</div>
+                      <div className="flex gap-1 overflow-x-auto hide-scrollbar max-w-full mb-2">
+                        {staging.map(t => <Tile key={t.id} tile={t} onClick={() => {
+                          if(t.source === 'hand') setLocalHand(sortTiles([...localHand, t]));
+                          else {
+                            const newBoard = [...localBoard];
+                            newBoard[t.boardIdx] = sortTiles([...(newBoard[t.boardIdx] || []), t]);
+                            setLocalBoard(newBoard);
+                          }
+                          setStaging(staging.filter(x => x.id !== t.id));
+                        }} />)}
+                      </div>
+                      {staging.length >= 3 && <button onClick={handleFormNewSet} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-md">建立新牌組</button>}
+                   </div>
+                )}
+
+                <div className="bg-white border-t-2 border-stone-200 p-4 shrink-0">
+                   <div className="flex justify-between items-center mb-3">
+                      <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">
+                        {roomData.players.find(p=>p.id===user.uid)?.hasIceBroken ? '已破冰 ✅' : '未破冰 (需30分)'}
+                      </span>
+                      {roomData.players[roomData.turn]?.id === user.uid && (
+                        <div className="flex gap-2">
+                           <button onClick={()=>{setLocalHand(backupHand); setLocalBoard(backupBoard); setStaging([]); setMessage('已重設');}} className="px-3 py-1 bg-stone-100 text-stone-500 rounded-lg text-xs font-bold">重設</button>
+                           <button onClick={handleEndTurn} className="px-6 py-1 bg-emerald-500 text-white font-black rounded-xl text-sm shadow-md active:scale-95">確認結束</button>
+                        </div>
+                      )}
+                   </div>
+                   <div className="flex flex-wrap gap-1 justify-center max-h-36 overflow-y-auto">
+                      {localHand.map(t => <Tile key={t.id} tile={t} onClick={() => handleHandClick(t)} />)}
+                   </div>
+                </div>
+             </div>
+          )}
+        </div>
+      );
+    }
+
+    function Main() {
+      const [ready, setReady] = useState(false);
+      const [app, setApp] = useState(null);
+      useEffect(() => {
+        const init = () => {
+          if (!window.FirebaseModules) return;
+          const { initializeApp, getApps, getApp } = window.FirebaseModules;
+          try {
+            const currentApp = getApps().length > 0 ? getApp() : initializeApp(MY_FIREBASE_CONFIG);
+            setApp(currentApp); setReady(true);
+          } catch(e) { console.error(e); }
+        };
+        if (window.FirebaseModules) init();
+        else window.addEventListener('firebaseModulesReady', init);
+      }, []);
+      return ready ? <App fbApp={app} /> : null;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Main />);
+  </script>
+</body>
+</html>
