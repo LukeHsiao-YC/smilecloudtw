@@ -127,11 +127,41 @@
     const sortTiles = (tiles) => {
       if (!tiles) return [];
       const regulars = tiles.filter(t => !t.isJoker);
-      const jokers = tiles.filter(t => t.isJoker);
+      const jokers = [...tiles.filter(t => t.isJoker)];
       if (regulars.length <= 1) return [...regulars, ...jokers];
-      if (regulars.length >= 2 && regulars[0].value === regulars[1].value) 
+      
+      if (regulars.length >= 2 && regulars[0].value === regulars[1].value) {
         return [...regulars.sort((a,b) => a.colorIdx - b.colorIdx), ...jokers];
-      return [...regulars.sort((a,b) => a.value - b.value), ...jokers];
+      }
+
+      regulars.sort((a,b) => a.value - b.value);
+      
+      let sorted = [];
+      let expectedVal = regulars[0].value;
+      let regIdx = 0;
+      
+      if (jokers.length === 0) return regulars;
+
+      while (regIdx < regulars.length) {
+        if (regulars[regIdx].value === expectedVal) {
+          sorted.push(regulars[regIdx]);
+          expectedVal++;
+          regIdx++;
+        } else if (regulars[regIdx].value < expectedVal) {
+          sorted.push(regulars[regIdx]);
+          regIdx++;
+        } else {
+          if (jokers.length > 0) {
+            sorted.push(jokers.pop());
+            expectedVal++;
+          } else {
+            sorted.push(regulars[regIdx]);
+            expectedVal = regulars[regIdx].value + 1;
+            regIdx++;
+          }
+        }
+      }
+      return [...sorted, ...jokers];
     };
 
     const findValidSetsFromHand = (handTiles) => {
@@ -457,6 +487,11 @@
                   <button onClick={handleJoinRoom} className="px-6 py-2 bg-emerald-500 text-white font-black rounded-xl shadow active:scale-95">加入</button>
                 </div>
               </div>
+              
+              {/* 這裡加上你的署名 */}
+              <div className="mt-8 text-stone-400 text-xs font-bold tracking-widest">
+                蕭宇超製作
+              </div>
             </div>
           )}
 
@@ -496,14 +531,17 @@
                 <div className="flex-1 p-4 overflow-y-auto">
                    {message && <div className="text-center mb-4"><span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-[10px] font-bold shadow-sm">{message}</span></div>}
                    <div className="flex flex-wrap gap-4 justify-center pb-20">
-                      {localBoard.map((set, idx) => (
-                        <div key={idx} className="flex gap-1 p-2 bg-white/50 rounded-xl border-2 border-stone-300 relative">
-                           {set.map(t => <Tile key={t.id} tile={t} onClick={() => handleBoardClick(idx, t)} />)}
-                           {roomData.players[roomData.turn]?.id === user.uid && staging.length > 0 && (
-                             <button onClick={()=>handleAddToSet(idx)} className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[10px] px-2 py-1 rounded-lg shadow-lg z-10 whitespace-nowrap">+ 塞入</button>
-                           )}
-                        </div>
-                      ))}
+                      {localBoard.map((set, idx) => {
+                        const isValid = isValidSet(set);
+                        return (
+                          <div key={idx} className={`flex gap-1 p-2 rounded-xl border-2 relative transition-colors ${isValid ? 'bg-white/50 border-stone-300' : 'bg-red-100 border-red-400 shadow-sm'}`}>
+                             {set.map(t => <Tile key={t.id} tile={t} onClick={() => handleBoardClick(idx, t)} />)}
+                             {roomData.players[roomData.turn]?.id === user.uid && staging.length > 0 && (
+                               <button onClick={()=>handleAddToSet(idx)} className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-[10px] px-2 py-1 rounded-lg shadow-lg z-10 whitespace-nowrap">+ 塞入</button>
+                             )}
+                          </div>
+                        );
+                      })}
                    </div>
                 </div>
 
