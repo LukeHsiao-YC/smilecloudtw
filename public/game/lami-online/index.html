@@ -253,6 +253,7 @@
             const data = snap.val();
             setRoomData(data);
             if (data.status === 'playing' && gameState !== 'playing') setGameState('playing');
+            if (data.status === 'gameover' && gameState !== 'gameover') setGameState('gameover');
           } else { setGameState('menu'); setRoomId(''); }
         });
       }, [roomId, db]);
@@ -314,6 +315,17 @@
             const updatedPlayers = roomData.players.map((p, i) => 
               i === roomData.turn ? { ...p, hand: newHand, hasIceBroken: bot.hasIceBroken || playedSomething } : p
             );
+
+            // 檢查電腦是否獲勝
+            if (newHand.length === 0) {
+              await update(ref(db, 'rooms/' + roomId), {
+                players: updatedPlayers,
+                board: newBoard,
+                status: 'gameover',
+                winnerId: bot.id
+              });
+              return;
+            }
 
             await update(ref(db, 'rooms/' + roomId), {
               players: updatedPlayers,
@@ -471,6 +483,18 @@
 
         const newPlayers = roomData.players.map((p, i) => i === meIdx ? { ...p, hand: finalHand, hasIceBroken: finalIce } : p);
         
+        // 檢查玩家是否獲勝
+        if (finalHand.length === 0) {
+          await update(ref(db, 'rooms/' + roomId), {
+            players: newPlayers,
+            board: localBoard,
+            status: 'gameover',
+            winnerId: user.uid
+          });
+          setMessage('');
+          return;
+        }
+
         await update(ref(db, 'rooms/' + roomId), {
           players: newPlayers,
           board: localBoard,
@@ -616,6 +640,20 @@
                    <div className="flex flex-wrap gap-1 justify-center max-h-36 overflow-y-auto">
                       {localHand.map(t => <Tile key={t.id} tile={t} onClick={() => handleHandClick(t)} />)}
                    </div>
+                </div>
+             </div>
+          )}
+
+          {gameState === 'gameover' && roomData?.status === 'gameover' && (
+             <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-[100] p-6">
+                <div className="bg-white p-8 rounded-3xl text-center shadow-2xl w-full">
+                   <h2 className="text-2xl font-black text-stone-800 mb-4">遊戲結束！</h2>
+                   <p className="text-stone-500 mb-8 font-bold">
+                     {roomData.winnerId === user.uid 
+                       ? '恭喜你獲得勝利！' 
+                       : `${roomData.players.find(p=>p.id === roomData.winnerId)?.name} 贏得了遊戲！`}
+                   </p>
+                   <button onClick={()=>window.location.reload()} className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl">回大廳</button>
                 </div>
              </div>
           )}
