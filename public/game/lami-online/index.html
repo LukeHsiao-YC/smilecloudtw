@@ -142,6 +142,7 @@
       
       if (jokers.length === 0) return regulars;
 
+      // 依序檢查並把 Joker 塞進數字斷層
       while (regIdx < regulars.length) {
         if (regulars[regIdx].value === expectedVal) {
           sorted.push(regulars[regIdx]);
@@ -161,7 +162,18 @@
           }
         }
       }
-      return [...sorted, ...jokers];
+      
+      // 處理最後剩下的 Joker，如果接下去會超過 13，就把它移到最前面
+      while (jokers.length > 0) {
+        if (expectedVal <= 13) {
+          sorted.push(jokers.pop());
+          expectedVal++;
+        } else {
+          sorted.unshift(jokers.pop());
+        }
+      }
+      
+      return sorted;
     };
 
     const findValidSetsFromHand = (handTiles) => {
