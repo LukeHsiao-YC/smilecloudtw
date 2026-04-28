@@ -389,22 +389,41 @@
         if (roomData.players[roomData.turn]?.id !== user.uid) return;
         const me = roomData.players.find(p => p.id === user.uid);
         if (!me?.hasIceBroken) { setMessage("需先破冰才能拆解桌面"); return; }
+        
         const newBoard = [...localBoard];
-        newBoard[idx] = newBoard[idx].filter(x => x.id !== t.id);
-        if (newBoard[idx].length === 0) newBoard.splice(idx, 1);
+        const targetSet = newBoard[idx];
+        const tileIdx = targetSet.findIndex(x => x.id === t.id);
+        
+        // 將選中的牌拿出來
+        const removedTile = targetSet[tileIdx];
+        
+        // 將原本的牌組一分為二（完美模擬從中間抽走牌的效果）
+        const leftPart = targetSet.slice(0, tileIdx);
+        const rightPart = targetSet.slice(tileIdx + 1);
+        
+        newBoard.splice(idx, 1);
+        let insertIdx = idx;
+        if (leftPart.length > 0) {
+          newBoard.splice(insertIdx, 0, leftPart);
+          insertIdx++;
+        }
+        if (rightPart.length > 0) {
+          newBoard.splice(insertIdx, 0, rightPart);
+        }
+        
         setLocalBoard(newBoard);
-        setStaging([...staging, { ...t, source: 'board', boardIdx: idx }]);
+        setStaging([...staging, { ...removedTile, source: 'board' }]);
       };
 
       const handleFormNewSet = () => {
         if (staging.length < 3) { setMessage("至少需3張牌"); return; }
-        const cleanSet = staging.map(s => { const {source, boardIdx, ...rest} = s; return rest; });
+        const cleanSet = staging.map(s => { const {source, ...rest} = s; return rest; });
         setLocalBoard([...localBoard, sortTiles(cleanSet)]);
         setStaging([]);
       };
 
       const handleAddToSet = (idx) => {
-        const cleanStaging = staging.map(s => { const {source, boardIdx, ...rest} = s; return rest; });
+        const cleanStaging = staging.map(s => { const {source, ...rest} = s; return rest; });
         const newBoard = [...localBoard];
         newBoard[idx] = sortTiles([...newBoard[idx], ...cleanStaging]);
         setLocalBoard(newBoard);
@@ -562,11 +581,11 @@
                       <div className="text-[8px] font-black text-blue-300 absolute top-1 left-2 uppercase tracking-widest">暫存區</div>
                       <div className="flex gap-1 overflow-x-auto hide-scrollbar max-w-full mb-2">
                         {staging.map(t => <Tile key={t.id} tile={t} onClick={() => {
-                          if(t.source === 'hand') setLocalHand(sortTiles([...localHand, t]));
-                          else {
-                            const newBoard = [...localBoard];
-                            newBoard[t.boardIdx] = sortTiles([...(newBoard[t.boardIdx] || []), t]);
-                            setLocalBoard(newBoard);
+                          if(t.source === 'hand') {
+                            setLocalHand(sortTiles([...localHand, t]));
+                          } else {
+                            // 若是從桌面拿下來的牌，點擊後會放回桌面成為獨立的一張牌，方便玩家隨意移動
+                            setLocalBoard([...localBoard, [t]]);
                           }
                           setStaging(staging.filter(x => x.id !== t.id));
                         }} />)}
