@@ -96,16 +96,24 @@
         };
 
         const Intro = ({ setStage }) => (
-            <div className="flex flex-col items-center justify-center min-h-[80vh] text-center fade-in px-4 py-8">
-                {/* 封面大圖 (請在此將 src 替換為您的圖片網址) */}
-                <img src="cover.png" 
-                     alt="驚奇食物秀封面" 
-                     className="mb-8 rounded-3xl shadow-lg w-full max-w-4xl h-auto max-h-[70vh] object-contain border-4 border-[#5a4b43]" />
-                
-                <button onClick={() => setStage(1)} className="sketch-button bg-[#ffb07c] px-12 py-5 text-2xl font-bold text-white transition-transform hover:-translate-y-1">
-                    接受招待，開始上菜！
-                </button>
-            </div>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
+    <div className="max-w-4xl w-full mb-6">
+      <img 
+        src="https://placehold.co/800x500/fef3c7/78350f?text=驚奇食物秀+封面圖片" 
+        alt="封面" 
+        className="w-full h-auto rounded-2xl shadow-md max-h-[70vh] object-cover" 
+      />
+    </div>
+    
+    {/* 這裡加入了製作人標示，使用帶有透明度的深琥珀色，看起來會很柔和 */}
+    <p className="text-amber-800/60 text-base mb-6 font-medium tracking-wider">
+      蕭宇超醫師製作
+    </p>
+    
+    <button onClick={onStart} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition active:scale-95">
+      接受招待，開始上菜
+    </button>
+  </div>
         );
 
         const Stage1 = ({ discovered, addDiscovery, setStage }) => {
