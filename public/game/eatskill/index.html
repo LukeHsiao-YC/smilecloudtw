@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飽足感驚奇食物秀</title>
+    
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 React 和 ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- 引入 Babel 來編譯 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fdf6e3; /* 溫暖的紙張顏色 */
+            color: #4a4a4a;
+            overflow-x: hidden;
+        }
+        /* 繪本手繪風格邊框 */
+        .sketch-border {
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            border: 3px solid #5a4b43;
+            background-color: white;
+        }
+        .sketch-button {
+            border-radius: 15px 225px 15px 255px/255px 15px 225px 15px;
+            border: 2px solid #5a4b43;
+            transition: all 0.2s;
+        }
+        .sketch-button:hover {
+            transform: scale(1.05) rotate(-1deg);
+            box-shadow: 4px 4px 0px rgba(90, 75, 67, 0.2);
+        }
+        /* 提示動畫 */
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 200, 0, 0.8)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 15px rgba(255, 200, 0, 1)); transform: scale(1.05); }
+        }
+        .clickable-item {
+            cursor: pointer;
+            animation: pulse-glow 2s infinite;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .clickable-item:hover {
+            animation: none;
+            transform: scale(1.1);
+        }
+        /* 淡入動畫 */
+        .fade-in { animation: fadeIn 0.8s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* 震動動畫（用於非慣用手） */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .moving-btn:hover { animation: shake 0.5s infinite; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 10個心理學技巧資料庫
+        const TRICKS_DATA = {
+            1: { id: 1, title: "🎨 藍色餐盤封印術", desc: "把桌子換成藍色系！大自然很少藍色食物，大腦看到藍色會冷靜下來，食慾跟著下降。" },
+            2: { id: 2, title: "🥣 大碗換小碗", desc: "德勃夫錯覺！同樣的飯換到小碗裡，看起來滿到像座小山，大腦立刻覺得「這餐好豐盛」。" },
+            3: { id: 3, title: "✂️ 食物碎裂之術", desc: "把大塊肉切碎，視覺面積變大了！而且吃得久、多咀嚼，能讓胃有時間告訴大腦「我飽了」。" },
+            4: { id: 4, title: "♨️ 溫度的飽足魔法", desc: "飯前喝溫熱的湯或水，能讓腸胃「暖機」並減緩排空速度，比喝冰水更容易覺得滿足。" },
+            5: { id: 5, title: "🥛 瘦高杯幻術", desc: "垂直錯覺！一樣多的水倒進瘦高杯，水位看起來特別高，大腦會誤以為你喝了很多。" },
+            6: { id: 6, title: "🦴 戰利品保留法", desc: "把吃完的骨頭留在盤邊。看著「戰利品」堆積，視覺會強烈提醒大腦「你已經吃很多囉」！" },
+            7: { id: 7, title: "🤚 非慣用手減速", desc: "換隻手拿東西吃！因為動作變卡，打斷了自動進食模式，強迫你放慢速度，飽足感才能跟上。" },
+            8: { id: 8, title: "☯️ 保護色與反差", desc: "白飯裝在深色盤子裡！顏色對比強烈，會讓食物的邊界變得清晰，份量在視覺上被放大了！" },
+            9: { id: 9, title: "🌿 薄荷氣味關機", desc: "吃飽來點薄荷漱口水、嚼薄荷口香糖，或是直接去刷個牙！滿嘴清涼味會給大腦一個強烈暗示：「今天的進食時間正式結束啦」。" },
+            10: { id: 10, title: "🙏 專屬收工儀式", desc: "雙手合十在心裡說「吃飽了」。用具體的儀式感幫大腦畫下句號，食慾開關也會跟著關閉。" }
+        };
+
+        const Intro = ({ setStage }) => (
+            <div className="flex flex-col items-center justify-center min-h-[80vh] text-center fade-in px-4 py-8">
+                {/* 封面大圖 (請在此將 src 替換為您的圖片網址) */}
+                <img src="cover.png" 
+                     alt="驚奇食物秀封面" 
+                     className="mb-8 rounded-3xl shadow-lg w-full max-w-4xl h-auto max-h-[70vh] object-contain border-4 border-[#5a4b43]" />
+                
+                <button onClick={() => setStage(1)} className="sketch-button bg-[#ffb07c] px-12 py-5 text-2xl font-bold text-white transition-transform hover:-translate-y-1">
+                    接受招待，開始上菜！
+                </button>
+            </div>
+        );
+
+        const Stage1 = ({ discovered, addDiscovery, setStage }) => {
+            const [bowlStep, setBowlStep] = useState(0); 
+            const [plateState, setPlateState] = useState('red'); 
+            const [isProcessing, setIsProcessing] = useState(false); 
+
+            const isComplete = discovered.includes(1) && discovered.includes(2) && discovered.includes(8);
+
+            const handleBowlClick = () => {
+                if (isProcessing) return;
+                if (bowlStep === 0) {
+                    setIsProcessing(true);
+                    setBowlStep(1);
+                    // 延遲 2.5 秒才跳出對話框
+                    setTimeout(() => { addDiscovery(2); setIsProcessing(false); }, 2500); 
+                } else if (bowlStep === 1) {
+                    setIsProcessing(true);
+                    setBowlStep(2);
+                    setTimeout(() => { addDiscovery(8); setIsProcessing(false); }, 2500);
+                }
+            };
+
+            const handlePlateClick = () => {
+                if (isProcessing || plateState === 'blue') return;
+                setIsProcessing(true);
+                setPlateState('blue');
+                setTimeout(() => { addDiscovery(1); setIsProcessing(false); }, 2500);
+            };
+
+            return (
+                <div className="fade-in flex flex-col items-center">
+                    <h2 className="text-2xl font-bold mb-6">第一關：上菜時的視覺魔法</h2>
+                    <div className="sketch-border p-8 w-full max-w-2xl flex flex-col items-center bg-white relative min-h-[300px]">
+                        <p className="text-gray-500 mb-8 font-bold">點擊桌上的餐具，看看會發生什麼變化？</p>
+
+                        <div className="flex gap-8 md:gap-16 items-end mb-4 w-full justify-center">
+                            {/* 飯碗區 */}
+                            <div className="flex flex-col items-center w-1/2">
+                                <div className={`cursor-pointer transition-all duration-700 flex items-end justify-center h-32 ${bowlStep < 2 && !isProcessing ? 'clickable-item' : ''}`}
+                                        onClick={handleBowlClick}>
+                                        <div className="relative">
+                                        <div className={`transition-all duration-700 absolute left-1/2 -translate-x-1/2 z-0 origin-bottom drop-shadow-md
+                                            ${bowlStep === 0 ? 'text-7xl bottom-2 opacity-90' : 'text-7xl bottom-6 scale-125'}`}>🍚</div>
+                                        <div className={`transition-all duration-700 border-4 rounded-b-full z-10 relative shadow-inner
+                                            ${bowlStep === 0 ? 'w-32 md:w-40 h-12 md:h-16 bg-white border-gray-400' : 
+                                                bowlStep === 1 ? 'w-20 md:w-24 h-10 md:h-12 bg-white border-gray-400' : 
+                                                'w-20 md:w-24 h-10 md:h-12 bg-stone-800 border-stone-900 shadow-xl'}`}></div>
+                                        </div>
+                                </div>
+                                <div className="mt-4 h-12 text-center text-sm font-bold">
+                                    {bowlStep === 0 && !isProcessing && <span className="fade-in text-gray-400 animate-pulse">點擊飯碗看看</span>}
+                                    {bowlStep === 1 && !isProcessing && <span className="fade-in text-blue-500 text-base underline cursor-pointer" onClick={handleBowlClick}>機關還沒結束！再點一次飯碗</span>}
+                                    {bowlStep === 1 && isProcessing && <span className="fade-in text-orange-500">飯看起來滿出來了！</span>}
+                                    {bowlStep === 2 && <span className="fade-in text-orange-500">深色讓邊界更清晰了！</span>}
+                                </div>
+                            </div>
+
+                            {/* 菜盤區 */}
+                            <div className="flex flex-col items-center w-1/2">
+                                <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full flex items-center justify-center transition-all duration-1000 ${plateState === 'red' && !isProcessing ? 'clickable-item' : ''}`}
+                                        style={{ 
+                                            backgroundColor: plateState === 'red' ? '#fca5a5' : '#3b82f6', 
+                                            border: plateState === 'red' ? '2px solid #ccc' : '4px solid #1e3a8a', 
+                                            boxShadow: plateState === 'blue' ? 'inset 0 0 20px rgba(0,0,0,0.2), 0 10px 25px rgba(30,58,138,0.4)' : 'none' 
+                                        }}
+                                        onClick={handlePlateClick}>
+                                    <div className="text-5xl drop-shadow-md transition-transform duration-500 hover:scale-110">🥟</div>
+                                </div>
+                                <div className="mt-4 h-12 text-center text-sm font-bold text-gray-500">
+                                    {plateState === 'blue' && <span className="fade-in text-blue-600">瞬間冷靜下來的顏色！</span>}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {isComplete && (
+                        <button onClick={() => setStage(2)} className="mt-8 sketch-button bg-[#93c5fd] px-8 py-3 text-lg font-bold text-white fade-in">
+                            進入下一關 👉
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        const Stage2 = ({ discovered, addDiscovery, setStage }) => {
+            const [waterLevel, setWaterLevel] = useState(0);
+            const [soupTemp, setSoupTemp] = useState('cold');
+            const [isProcessing, setIsProcessing] = useState(false);
+
+            const isComplete = discovered.includes(4) && discovered.includes(5);
+
+            const pourWater = () => {
+                if (isProcessing || discovered.includes(5)) return;
+                setIsProcessing(true);
+                setWaterLevel(100);
+                setTimeout(() => { addDiscovery(5); setIsProcessing(false); }, 2500); 
+            };
+
+            const heatSoup = () => {
+                if (isProcessing || discovered.includes(4)) return;
+                setIsProcessing(true);
+                setSoupTemp('hot');
+                setTimeout(() => { addDiscovery(4); setIsProcessing(false); }, 2500);
+            };
+
+            return (
+                <div className="fade-in flex flex-col items-center">
+                    <h2 className="text-2xl font-bold mb-6">第二關：倒飲料與喝湯的陷阱</h2>
+                    <div className="sketch-border p-8 w-full max-w-2xl flex flex-col items-center bg-orange-50">
+                        <div className="flex justify-around w-full mt-8">
+                            <div className="flex flex-col items-center">
+                                <div className="flex items-end gap-6 h-40 border-b-4 border-gray-400 pb-2">
+                                    <div className="w-24 h-16 border-2 border-blue-200 rounded-b-lg relative overflow-hidden bg-white">
+                                        <div className="absolute bottom-0 w-full bg-blue-300 transition-all duration-1000" style={{height: `${waterLevel/2}%`}}></div>
+                                    </div>
+                                    <div className="w-10 h-32 border-2 border-blue-200 rounded-b-lg relative overflow-hidden bg-white">
+                                        <div className="absolute bottom-0 w-full bg-blue-300 transition-all duration-1000" style={{height: `${waterLevel}%`}}></div>
+                                    </div>
+                                </div>
+                                {!discovered.includes(5) ? (
+                                    <button onClick={pourWater} className={`mt-6 sketch-button bg-blue-400 text-white px-4 py-2 ${!isProcessing ? 'clickable-item' : ''}`}>
+                                        倒入相同的水 💧
+                                    </button>
+                                ) : (
+                                    <p className="mt-6 font-bold text-blue-600">瘦高杯看起來比較滿！</p>
+                                )}
+                            </div>
+
+                            <div className="flex flex-col items-center justify-end">
+                                <div className={`text-6xl transition-all duration-500 relative ${!discovered.includes(4) && !isProcessing ? 'clickable-item' : ''}`}
+                                        onClick={heatSoup}>
+                                    {soupTemp === 'hot' && <span className="absolute -top-6 left-2 text-2xl fade-in text-red-400">♨️</span>}
+                                    🥣
+                                </div>
+                                <p className="mt-6 text-sm font-bold text-gray-600">
+                                    {soupTemp === 'cold' ? '點擊加熱這碗湯' : '胃部暖機中... 飽足感+1'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {isComplete && (
+                        <button onClick={() => setStage(3)} className="mt-8 sketch-button bg-[#93c5fd] px-8 py-3 text-lg font-bold text-white fade-in">
+                            開動囉 👉
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        const Stage3 = ({ discovered, addDiscovery, setStage }) => {
+            const [meatPieces, setMeatPieces] = useState(1);
+            const [bones, setBones] = useState([]);
+            const [feedStep, setFeedStep] = useState(0); 
+            const [mouthState, setMouthState] = useState('😐');
+            const [isProcessing, setIsProcessing] = useState(false);
+
+            const isComplete = discovered.includes(3) && discovered.includes(6) && discovered.includes(7);
+
+            const eatMeat = () => {
+                if (isProcessing || meatPieces >= 6) return;
+                setMeatPieces(prev => {
+                    const next = prev + 1;
+                    if (next === 6) {
+                        setIsProcessing(true);
+                        setTimeout(() => { addDiscovery(3); setIsProcessing(false); }, 2000);
+                    }
+                    return next;
+                });
+            };
+
+            const getMeatSize = () => {
+                if (meatPieces === 1) return 'text-[120px]';
+                if (meatPieces === 2) return 'text-6xl';
+                if (meatPieces <= 4) return 'text-5xl';
+                return 'text-4xl';
+            };
+
+            const feedDominant = () => {
+                if (isProcessing) return;
+                setIsProcessing(true);
+                setMouthState('😋');
+                setTimeout(() => {
+                    setMouthState('😐');
+                    setFeedStep(1);
+                    setIsProcessing(false); 
+                }, 1000);
+            };
+
+            const feedNonDominant = () => {
+                if (isProcessing) return;
+                setIsProcessing(true);
+                setMouthState('😋');
+                setTimeout(() => {
+                    setMouthState('😌');
+                    setFeedStep(2);
+                    setBones(['🦴', '🦴', '🦴']);
+                    // 骨頭掉下後，等待2.5秒跳出提示，然後解鎖讓玩家點擊骨頭
+                    setTimeout(() => {
+                        addDiscovery(7); 
+                        setIsProcessing(false);
+                    }, 2500); 
+                }, 1200);
+            };
+
+            const clickBones = () => {
+                if (isProcessing || discovered.includes(6)) return;
+                setIsProcessing(true);
+                setTimeout(() => { addDiscovery(6); setIsProcessing(false); }, 2000);
+            };
+
+            return (
+                <div className="fade-in flex flex-col items-center">
+                    <h2 className="text-2xl font-bold mb-6">第三關：開動後的物理防禦</h2>
+                    <div className="sketch-border p-6 md:p-8 w-full max-w-2xl flex flex-col items-center bg-yellow-50 relative min-h-[350px]">
+                        <div className="flex flex-col md:flex-row w-full justify-around mt-4 gap-8 md:gap-0">
+                            <div className="flex flex-col items-center w-full md:w-1/2 border-b-2 md:border-b-0 md:border-r-2 border-dashed border-gray-300 pb-6 md:pb-0 px-4">
+                                <p className="mb-4 font-bold text-center h-8">狂點大肉排，把它切碎！</p>
+                                <div className={`select-none flex flex-wrap justify-center items-center w-48 h-48 gap-1 ${meatPieces < 6 && !isProcessing ? 'clickable-item' : ''}`} onClick={eatMeat}>
+                                    {Array(meatPieces).fill('🥩').map((m, i) => (
+                                        <span key={i} className={`${getMeatSize()} transition-all duration-300 hover:-translate-y-1`}>{m}</span>
+                                    ))}
+                                </div>
+                                <div className="mt-4 h-16 text-center">
+                                    {meatPieces < 6 ? (
+                                        <p className="text-sm text-gray-500">切得越碎，視覺佔據越大</p>
+                                    ) : (
+                                        <p className="text-sm font-bold text-orange-600 fade-in">視覺份量變大！<br/>夾的次數變多，騙大腦吃很久</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col items-center w-full md:w-1/2 relative px-4">
+                                <p className="mb-2 font-bold text-center h-12">
+                                    {feedStep === 0 ? "先用平常拿筷子的手(慣用手)" : feedStep === 1 ? <span className="text-red-600 text-lg">現在！換成「非慣用手」</span> : "進食完畢"}
+                                </p>
+                                
+                                <div className="text-6xl mb-6 transition-all duration-300">{mouthState}</div>
+
+                                {feedStep === 0 && (
+                                    <button onClick={feedDominant} 
+                                        className="sketch-button bg-blue-400 text-white px-6 py-2 clickable-item font-bold">
+                                        餵食炸雞 🍗
+                                    </button>
+                                )}
+
+                                {feedStep === 1 && (
+                                    <button onMouseEnter={(e) => {
+                                            e.target.style.transform = `translate(${Math.random()*40-20}px, ${Math.random()*40-20}px)`;
+                                        }}
+                                        onClick={feedNonDominant} 
+                                        className="sketch-button bg-red-400 text-white px-6 py-2 moving-btn clickable-item font-bold">
+                                        艱難地餵食炸雞 🍗
+                                    </button>
+                                )}
+
+                                {feedStep === 2 && (
+                                    <div className="flex flex-col items-center fade-in mt-4">
+                                        <p className="font-bold text-gray-500 mb-2">點擊留下來的戰利品</p>
+                                        <div className={`flex gap-2 text-4xl flex-wrap justify-center p-3 rounded-xl transition-all ${!discovered.includes(6) && !isProcessing ? 'clickable-item bg-orange-100 border-2 border-orange-300 border-dashed cursor-pointer' : ''}`}
+                                                onClick={clickBones}>
+                                            {bones.map((b, i) => <span key={i}>{b}</span>)}
+                                        </div>
+                                        {discovered.includes(6) && <p className="mt-4 text-sm font-bold text-orange-600 text-center fade-in">非慣用手拖慢了速度！<br/>骨頭戰利品也提醒大腦吃很多了</p>}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    {isComplete && (
+                        <button onClick={() => setStage(4)} className="mt-8 sketch-button bg-[#93c5fd] px-8 py-3 text-lg font-bold text-white fade-in">
+                            準備收尾 👉
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        const Stage4 = ({ discovered, addDiscovery, setStage }) => {
+            const [mindful, setMindful] = useState(false);
+            const [minted, setMinted] = useState(false);
+            const [isProcessing, setIsProcessing] = useState(false);
+
+            const isComplete = discovered.includes(9) && discovered.includes(10);
+
+            const triggerMindful = () => {
+                if (isProcessing || mindful) return;
+                setIsProcessing(true);
+                setMindful(true);
+                setTimeout(() => { addDiscovery(10); setIsProcessing(false); }, 2500); 
+            };
+
+            const triggerMint = () => {
+                if (isProcessing || minted) return;
+                setIsProcessing(true);
+                setMinted(true);
+                setTimeout(() => { addDiscovery(9); setIsProcessing(false); }, 2500); 
+            };
+
+            return (
+                <div className="fade-in flex flex-col items-center">
+                    <h2 className="text-2xl font-bold mb-6">最終關：完美的登出儀式</h2>
+                    <div className={`sketch-border p-8 w-full max-w-2xl flex flex-col items-center transition-colors duration-1000 ${minted ? 'bg-teal-50' : 'bg-stone-50'} relative min-h-[400px] overflow-hidden`}>
+                        
+                        {minted && <div className="absolute inset-0 bg-teal-200/30 flex items-center justify-center text-4xl fade-in pointer-events-none z-0">❄️ 舒爽清涼 ❄️</div>}
+
+                        <div className={`transition-all duration-1000 flex gap-6 text-6xl mt-4 z-10 ${mindful ? 'opacity-40 scale-90' : ''}`}>
+                            🍽️ 🥢 🥤
+                        </div>
+
+                        {!mindful ? (
+                            <div className="mt-16 flex flex-col items-center z-10">
+                                <p className="mb-6 text-gray-600 font-bold">吃完最後一口了，給大腦一個溫柔的結束訊號吧</p>
+                                <button onClick={triggerMindful} className={`sketch-button bg-[#ffb07c] text-stone-900 px-8 py-4 flex items-center gap-3 text-lg font-bold ${!isProcessing ? 'clickable-item' : ''}`}>
+                                    <span className="text-3xl">🙏</span> 點擊雙手合十
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="mt-4 text-center z-10 fade-in w-full flex flex-col items-center">
+                                <div className="bg-white px-6 py-4 rounded-3xl rounded-tl-none border-2 border-stone-300 mb-8 shadow-sm relative w-fit mt-4">
+                                    <p className="text-xl font-bold text-stone-700">「這頓飯吃得好滿足，我吃飽了！」</p>
+                                    <div className="absolute -top-8 -left-6 text-5xl">💭</div>
+                                </div>
+
+                                <h3 className="font-bold text-lg mb-6 text-gray-700">最後一步，你要選擇哪一個來收尾？</h3>
+                                <div className="flex flex-wrap gap-6 md:gap-10 justify-center mt-2">
+                                    <button className="flex flex-col items-center hover:scale-110 transition-transform" onClick={() => alert("大腦會覺得「原來還沒吃完啊！」，再想想？")}>
+                                        <span className="text-5xl mb-3 drop-shadow">🍰</span>
+                                        <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">甜點</span>
+                                    </button>
+                                    {!discovered.includes(9) ? (
+                                        <>
+                                            <button className={`flex flex-col items-center ${!isProcessing ? 'clickable-item' : ''}`} onClick={triggerMint}>
+                                                <span className="text-5xl mb-3 drop-shadow">🧴</span>
+                                                <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">漱口水</span>
+                                            </button>
+                                            <button className={`flex flex-col items-center ${!isProcessing ? 'clickable-item' : ''}`} onClick={triggerMint}>
+                                                <span className="text-5xl mb-3 drop-shadow">🍬</span>
+                                                <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">薄荷口香糖</span>
+                                            </button>
+                                            <button className={`flex flex-col items-center ${!isProcessing ? 'clickable-item' : ''}`} onClick={triggerMint}>
+                                                <span className="text-5xl mb-3 drop-shadow">🪥</span>
+                                                <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">刷牙</span>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <div className="flex flex-col items-center fade-in ml-4">
+                                            <span className="text-5xl mb-3 drop-shadow">🌿</span>
+                                            <span className="text-sm font-bold text-teal-600 bg-teal-100 px-3 py-1 rounded-full shadow-sm">強制關機！</span>
+                                        </div>
+                                    )}
+                                </div>
+                                {discovered.includes(9) && <p className="mt-6 text-sm font-bold text-teal-700 bg-teal-100 px-4 py-2 rounded-full inline-block fade-in">清涼的味道成功關閉了今天的食慾開關！</p>}
+                            </div>
+                        )}
+                    </div>
+                    {isComplete && (
+                        <button onClick={() => setStage(5)} className="mt-8 sketch-button bg-[#fbbf24] px-8 py-3 text-lg font-bold text-white fade-in">
+                            領取證書 🏆
+                        </button>
+                    )}
+                </div>
+            );
+        };
+
+        const Outro = () => (
+            <div className="fade-in flex flex-col items-center justify-center min-h-[80vh] text-center px-4 py-8">
+                {/* 封底大圖 (請在此將 src 替換為您的圖片網址) */}
+                <img src="back.png" 
+                     alt="恭喜完成體驗" 
+                     className="mb-8 rounded-3xl shadow-lg w-full max-w-4xl h-auto max-h-[70vh] object-contain border-4 border-[#5a4b43]" />
+                
+                <button onClick={() => window.location.reload()} className="sketch-button bg-[#ffb07c] px-12 py-5 text-2xl font-bold text-white mt-4 transition-transform hover:-translate-y-1">
+                    再體驗一次
+                </button>
+            </div>
+        );
+
+        function App() {
+            const [stage, setStage] = useState(0); 
+            const [discovered, setDiscovered] = useState([]);
+            const [popup, setPopup] = useState(null);
+
+            const addDiscovery = (id) => {
+                if (!discovered.includes(id)) {
+                    setDiscovered(prev => [...prev, id]);
+                    setPopup(TRICKS_DATA[id]);
+                }
+            };
+
+            const closePopup = () => setPopup(null);
+
+            return (
+                <div className="min-h-screen py-10 px-4 md:px-12 flex flex-col md:flex-row gap-8 max-w-7xl mx-auto">
+                    
+                    {/* 左側：主畫面 */}
+                    <div className="flex-1">
+                        {stage === 0 && <Intro setStage={setStage} />}
+                        {stage === 1 && <Stage1 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
+                        {stage === 2 && <Stage2 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
+                        {stage === 3 && <Stage3 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
+                        {stage === 4 && <Stage4 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
+                        {stage === 5 && <Outro />}
+                    </div>
+
+                    {/* 右側：收集筆記本 (關卡開始後才顯示) */}
+                    {stage > 0 && stage < 5 && (
+                        <div className="w-full md:w-80 sketch-border p-6 bg-[#fffdf7] h-fit sticky top-10 fade-in z-0">
+                            <h3 className="text-xl font-bold mb-4 flex justify-between items-center">
+                                <span>📖 驚奇筆記</span>
+                                <span className="text-sm bg-yellow-200 px-2 py-1 rounded-full">{discovered.length} / 10</span>
+                            </h3>
+                            <div className="space-y-2">
+                                {[1,2,3,4,5,6,7,8,9,10].map(id => (
+                                    <div key={id} className={`p-2 rounded transition-colors ${discovered.includes(id) ? 'bg-yellow-100 font-bold' : 'bg-gray-100 text-gray-400'}`}>
+                                        {discovered.includes(id) ? TRICKS_DATA[id].title : '❓ 尚未發現'}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {}
+                    {/* 彈出視窗提示 (點擊發現時) */}
+                    {popup && (
+                        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 fade-in px-4" onClick={closePopup}>
+                            <div className="sketch-border p-8 bg-white max-w-sm text-center transform scale-110 shadow-2xl" onClick={e => e.stopPropagation()}>
+                                <div className="text-4xl mb-4">💡</div>
+                                <h3 className="text-2xl font-bold mb-4">{popup.title}</h3>
+                                <p className="text-lg text-gray-700 mb-6 leading-relaxed">{popup.desc}</p>
+                                <button onClick={closePopup} className="sketch-button bg-yellow-400 px-8 py-3 font-bold text-lg hover:bg-yellow-300">
+                                    收進筆記本
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
