@@ -97,23 +97,22 @@
 
         const Intro = ({ setStage }) => (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
-    <div className="max-w-4xl w-full mb-6">
-      <img 
-        src="https://placehold.co/800x500/fef3c7/78350f?text=驚奇食物秀+封面圖片" 
-        alt="封面" 
-        className="w-full h-auto rounded-2xl shadow-md max-h-[70vh] object-cover" 
-      />
-    </div>
-    
-    {/* 這裡加入了製作人標示，使用帶有透明度的深琥珀色，看起來會很柔和 */}
-    <p className="text-amber-800/60 text-base mb-6 font-medium tracking-wider">
-      蕭宇超醫師製作
-    </p>
-    
-    <button onClick={onStart} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition active:scale-95">
-      接受招待，開始上菜
-    </button>
-  </div>
+                <div className="max-w-4xl w-full mb-6">
+                    <img 
+                        src="https://placehold.co/800x500/fef3c7/78350f?text=驚奇食物秀+封面圖片" 
+                        alt="封面" 
+                        className="w-full h-auto rounded-2xl shadow-md max-h-[70vh] object-cover" 
+                    />
+                </div>
+                
+                <p className="text-amber-800/60 text-base mb-6 font-medium tracking-wider">
+                    蕭宇超醫師製作
+                </p>
+                
+                <button onClick={() => setStage(1)} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition active:scale-95">
+                    接受招待，開始上菜
+                </button>
+            </div>
         );
 
         const Stage1 = ({ discovered, addDiscovery, setStage }) => {
@@ -128,7 +127,6 @@
                 if (bowlStep === 0) {
                     setIsProcessing(true);
                     setBowlStep(1);
-                    // 延遲 2.5 秒才跳出對話框
                     setTimeout(() => { addDiscovery(2); setIsProcessing(false); }, 2500); 
                 } else if (bowlStep === 1) {
                     setIsProcessing(true);
@@ -310,7 +308,6 @@
                     setMouthState('😌');
                     setFeedStep(2);
                     setBones(['🦴', '🦴', '🦴']);
-                    // 骨頭掉下後，等待2.5秒跳出提示，然後解鎖讓玩家點擊骨頭
                     setTimeout(() => {
                         addDiscovery(7); 
                         setIsProcessing(false);
@@ -480,7 +477,6 @@
 
         const Outro = () => (
             <div className="fade-in flex flex-col items-center justify-center min-h-[80vh] text-center px-4 py-8">
-                {/* 封底大圖 (請在此將 src 替換為您的圖片網址) */}
                 <img src="back.png" 
                      alt="恭喜完成體驗" 
                      className="mb-8 rounded-3xl shadow-lg w-full max-w-4xl h-auto max-h-[70vh] object-contain border-4 border-[#5a4b43]" />
@@ -518,7 +514,7 @@
                         {stage === 5 && <Outro />}
                     </div>
 
-                    {/* 右側：收集筆記本 (關卡開始後才顯示) */}
+                    {/* 右側：收集筆記本 */}
                     {stage > 0 && stage < 5 && (
                         <div className="w-full md:w-80 sketch-border p-6 bg-[#fffdf7] h-fit sticky top-10 fade-in z-0">
                             <h3 className="text-xl font-bold mb-4 flex justify-between items-center">
@@ -535,8 +531,7 @@
                         </div>
                     )}
 
-                    {}
-                    {/* 彈出視窗提示 (點擊發現時) */}
+                    {/* 彈出視窗提示 */}
                     {popup && (
                         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 fade-in px-4" onClick={closePopup}>
                             <div className="sketch-border p-8 bg-white max-w-sm text-center transform scale-110 shadow-2xl" onClick={e => e.stopPropagation()}>
