@@ -5,17 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>含糖飲料疊疊樂</title>
   
-  <!-- 引入 Tailwind CSS 進行排版 -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- 引入 React 與 ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   
-  <!-- 引入 Babel 來讓瀏覽器讀懂 JSX 語法 -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
   
-  <!-- 引入 Google 字體 -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
   
   <style>
@@ -26,14 +22,12 @@
 </head>
 <body class="bg-orange-50">
   
-  <!-- React 渲染的目標點 -->
   <div id="root"></div>
 
-  <!-- 主要邏輯程式碼 -->
   <script type="text/babel">
     const { useState, useEffect } = React;
 
-    // --- 實證醫學資料與遊戲設定 ---
+    // 實證醫學資料與遊戲設定
     // 根據 WHO 建議，兒童每日游離糖攝取量應低於總熱量 5%，約為 25g (即 5 顆方糖)。
     // 每顆方糖約為 5 克糖。
     const CUBE_WEIGHT = 5; 
