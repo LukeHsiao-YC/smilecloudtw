@@ -1,555 +1,641 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>飽足感驚奇食物秀</title>
-    
-    <!-- 引入 Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 引入 React 和 ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
-    <!-- 引入 Babel 來編譯 JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- 引入 Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    
-    <style>
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #fdf6e3; /* 溫暖的紙張顏色 */
-            color: #4a4a4a;
-            overflow-x: hidden;
-        }
-        /* 繪本手繪風格邊框 */
-        .sketch-border {
-            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
-            border: 3px solid #5a4b43;
-            background-color: white;
-        }
-        .sketch-button {
-            border-radius: 15px 225px 15px 255px/255px 15px 225px 15px;
-            border: 2px solid #5a4b43;
-            transition: all 0.2s;
-        }
-        .sketch-button:hover {
-            transform: scale(1.05) rotate(-1deg);
-            box-shadow: 4px 4px 0px rgba(90, 75, 67, 0.2);
-        }
-        /* 提示動畫 */
-        @keyframes pulse-glow {
-            0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 200, 0, 0.8)); transform: scale(1); }
-            50% { filter: drop-shadow(0 0 15px rgba(255, 200, 0, 1)); transform: scale(1.05); }
-        }
-        .clickable-item {
-            cursor: pointer;
-            animation: pulse-glow 2s infinite;
-            display: inline-block;
-            transition: all 0.3s ease;
-        }
-        .clickable-item:hover {
-            animation: none;
-            transform: scale(1.1);
-        }
-        /* 淡入動畫 */
-        .fade-in { animation: fadeIn 0.8s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* 震動動畫（用於非慣用手） */
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        .moving-btn:hover { animation: shake 0.5s infinite; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>含糖飲料疊疊樂</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body { font-family: 'Noto Sans TC', sans-serif; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+  </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="bg-orange-50">
+  
+  <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-        // 10個心理學技巧資料庫
-        const TRICKS_DATA = {
-            1: { id: 1, title: "🎨 藍色餐盤封印術", desc: "把桌子換成藍色系！大自然很少藍色食物，大腦看到藍色會冷靜下來，食慾跟著下降。" },
-            2: { id: 2, title: "🥣 大碗換小碗", desc: "德勃夫錯覺！同樣的飯換到小碗裡，看起來滿到像座小山，大腦立刻覺得「這餐好豐盛」。" },
-            3: { id: 3, title: "✂️ 食物碎裂之術", desc: "把大塊肉切碎，視覺面積變大了！而且吃得久、多咀嚼，能讓胃有時間告訴大腦「我飽了」。" },
-            4: { id: 4, title: "♨️ 溫度的飽足魔法", desc: "飯前喝溫熱的湯或水，能讓腸胃「暖機」並減緩排空速度，比喝冰水更容易覺得滿足。" },
-            5: { id: 5, title: "🥛 瘦高杯幻術", desc: "垂直錯覺！一樣多的水倒進瘦高杯，水位看起來特別高，大腦會誤以為你喝了很多。" },
-            6: { id: 6, title: "🦴 戰利品保留法", desc: "把吃完的骨頭留在盤邊。看著「戰利品」堆積，視覺會強烈提醒大腦「你已經吃很多囉」！" },
-            7: { id: 7, title: "🤚 非慣用手減速", desc: "換隻手拿東西吃！因為動作變卡，打斷了自動進食模式，強迫你放慢速度，飽足感才能跟上。" },
-            8: { id: 8, title: "☯️ 保護色與反差", desc: "白飯裝在深色盤子裡！顏色對比強烈，會讓食物的邊界變得清晰，份量在視覺上被放大了！" },
-            9: { id: 9, title: "🌿 薄荷氣味關機", desc: "吃飽來點薄荷漱口水、嚼薄荷口香糖，或是直接去刷個牙！滿嘴清涼味會給大腦一個強烈暗示：「今天的進食時間正式結束啦」。" },
-            10: { id: 10, title: "🙏 專屬收工儀式", desc: "雙手合十在心裡說「吃飽了」。用具體的儀式感幫大腦畫下句號，食慾開關也會跟著關閉。" }
-        };
+    // 實證醫學資料與遊戲設定
+    // 根據 WHO 建議，兒童每日游離糖攝取量應低於總熱量 5%，約為 25g (即 5 顆方糖)。
+    // 每顆方糖約為 5 克糖。
+    const CUBE_WEIGHT = 5; 
 
-        const Intro = ({ setStage }) => (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-4">
-                <div className="max-w-4xl w-full mb-6">
-                    <img 
-                        src="cover.png" 
-                        alt="封面" 
-                        className="w-full h-auto rounded-2xl shadow-md max-h-[70vh] object-cover" 
-                    />
-                </div>
-                
-                <p className="text-amber-800/60 text-base mb-6 font-medium tracking-wider">
-                    蕭宇超醫師製作
-                </p>
-                
-                <button onClick={() => setStage(1)} className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-4 px-10 rounded-full text-xl shadow-lg transform hover:scale-105 transition active:scale-95">
-                    接受招待，開始上菜
-                </button>
-            </div>
-        );
+    const drinksData = [
+      {
+        id: 1,
+        name: '國民乳酸飲料 (100ml)',
+        emoji: '🧃',
+        sugarGrams: 15,
+        description: '看起來健康小巧，但為了蓋過酸味，加了驚人的糖分！',
+        hint: '💡 提示：雖然很小瓶，但含糖密度超高！答案大約在 2~5 顆方糖之間。',
+        color: 'bg-red-100'
+      },
+      {
+        id: 2,
+        name: '包裝運動飲料 (600ml)',
+        emoji: '💧',
+        sugarGrams: 35,
+        description: '生病或運動流汗才需要喝，平時當水喝會攝取過多糖分。',
+        hint: '💡 提示：喝起來只有微甜，但因為很大瓶 (600ml)，總糖量在 5~10 顆方糖之間！',
+        color: 'bg-blue-100'
+      },
+      {
+        id: 3,
+        name: '全糖珍珠奶茶 (700ml)',
+        emoji: '🧋',
+        sugarGrams: 60,
+        description: '除了滿滿的糖漿，珍珠在熬煮時也吸滿了糖水！',
+        hint: '💡 提示：這可是超級大魔王！除了茶裡的糖，珍珠也泡滿了糖水，絕對超過 10 顆方糖！',
+        color: 'bg-amber-100'
+      },
+      {
+        id: 4,
+        name: '巧克力牛奶 (400ml)',
+        emoji: '🍫',
+        sugarGrams: 40,
+        description: '看似補充鈣質，但也喝下了大量的調味糖漿！',
+        hint: '💡 提示：大約在 7~9 顆方糖之間。',
+        color: 'bg-orange-200'
+      },
+      {
+        id: 5,
+        name: '麥香紅茶鋁箔包 (300ml)',
+        emoji: '🧃',
+        sugarGrams: 28,
+        description: '熟悉的麥香最對味，但小小一包糖分也不少。',
+        hint: '💡 提示：大約在 5~7 顆方糖之間。',
+        color: 'bg-red-200'
+      },
+      {
+        id: 6,
+        name: '經典可樂 (330ml 鐵罐)',
+        emoji: '🥤',
+        sugarGrams: 35,
+        description: '喝下去充滿氣泡很爽快，但其實是一整杯糖水。',
+        hint: '💡 提示：大約在 6~8 顆方糖之間。',
+        color: 'bg-gray-200'
+      },
+      {
+        id: 7,
+        name: '零卡可樂 (330ml 鐵罐)',
+        emoji: '🖤',
+        sugarGrams: 0,
+        description: '使用代糖產生甜味。雖然沒有熱量，但長期喝仍可能影響腸道菌叢。',
+        hint: '💡 提示：這題是陷阱題！仔細看它的名字！',
+        color: 'bg-gray-300'
+      },
+      {
+        id: 8,
+        name: '知名果菜汁 (330ml)',
+        emoji: '🥕',
+        sugarGrams: 26,
+        description: '包裝上滿滿的蔬菜，但為了順口其實加了很多糖！',
+        hint: '💡 提示：大約在 4~6 顆方糖之間。',
+        color: 'bg-green-100'
+      },
+      {
+        id: 9,
+        name: '100% 蘋果汁 (400ml)',
+        emoji: '🍎',
+        sugarGrams: 40,
+        description: '就算是天然果汁，濾掉纖維後剩下的幾乎都是果糖，升糖指數很高！',
+        hint: '💡 提示：別被「天然」騙了，大約在 7~9 顆方糖之間。',
+        color: 'bg-red-100'
+      },
+      {
+        id: 10,
+        name: '蘋果西打 (600ml 寶特瓶)',
+        emoji: '🍏',
+        sugarGrams: 58,
+        description: '辦桌必備的神級飲料，但一大瓶喝下去糖分直接爆表！',
+        hint: '💡 提示：跟全糖珍奶有得拼！絕對超過 10 顆方糖！',
+        color: 'bg-yellow-200'
+      },
+      {
+        id: 11,
+        name: '手搖飲含糖紅茶 (700ml 大杯)',
+        emoji: '🥤',
+        sugarGrams: 50,
+        description: '即使不加料，大杯全糖的含糖量依然非常驚人。',
+        hint: '💡 提示：大約在 9~11 顆方糖之間。',
+        color: 'bg-orange-100'
+      },
+      {
+        id: 12,
+        name: '瓶裝奶茶 (500ml)',
+        emoji: '🧋',
+        sugarGrams: 35,
+        description: '香濃滑順的口感，靠的是大量的糖與奶精。',
+        hint: '💡 提示：大約在 6~8 顆方糖之間。',
+        color: 'bg-orange-50'
+      },
+      {
+        id: 13,
+        name: '市售罐裝拿鐵咖啡 (290ml)',
+        emoji: '☕',
+        sugarGrams: 20,
+        description: '為了掩蓋咖啡的苦味並增加濃郁口感，加了比想像中更多的糖分！',
+        hint: '💡 提示：大約在 3~5 顆方糖之間。',
+        color: 'bg-stone-200'
+      },
+      {
+        id: 14,
+        name: '無糖綠茶 (500ml)',
+        emoji: '🍵',
+        sugarGrams: 0,
+        description: '完全沒有加糖，是解渴的好選擇！',
+        hint: '💡 提示：仔細看名字，它是「無糖」的喔！',
+        color: 'bg-green-50'
+      },
+      {
+        id: 15,
+        name: '無糖風味氣泡水 (500ml)',
+        emoji: '🫧',
+        sugarGrams: 0,
+        description: '利用香料增加風味，但裡面真的沒有加糖。',
+        hint: '💡 提示：雖然喝起來香香的，但其實沒有糖分！',
+        color: 'bg-cyan-100'
+      },
+      {
+        id: 16,
+        name: '含糖豆漿 (400ml)',
+        emoji: '🥛',
+        sugarGrams: 20,
+        description: '雖然富含植物蛋白，但「微糖」或「一般」豆漿通常加了不少糖來蓋過豆腥味。',
+        hint: '💡 提示：大約在 3~5 顆方糖之間。',
+        color: 'bg-yellow-50'
+      }
+    ];
 
-        const Stage1 = ({ discovered, addDiscovery, setStage }) => {
-            const [bowlStep, setBowlStep] = useState(0); 
-            const [plateState, setPlateState] = useState('red'); 
-            const [isProcessing, setIsProcessing] = useState(false); 
+    const LobbyButton = () => (
+      <a href="https://lukehsiao-yc.github.io/for_healthy_children/" 
+         style={{
+           position: 'fixed', 
+           top: '20px', 
+           left: '20px', 
+           backgroundColor: '#f43f5e', 
+           color: 'white', 
+           padding: '10px 16px', 
+           borderRadius: '50px', 
+           textDecoration: 'none', 
+           fontWeight: 'bold', 
+           boxShadow: '0 4px 6px rgba(0,0,0,0.1)', 
+           zIndex: 9999, 
+           display: 'flex', 
+           alignItems: 'center', 
+           fontFamily: "'Noto Sans TC', sans-serif",
+           transition: 'transform 0.2s'
+         }}>
+         <span style={{ marginRight: '6px', fontSize: '18px' }}>🏠</span> 回到大廳
+      </a>
+    );
 
-            const isComplete = discovered.includes(1) && discovered.includes(2) && discovered.includes(8);
+    function SugarGame() {
+      const [gameState, setGameState] = useState('start'); 
+      const [currentDrinkIndex, setCurrentDrinkIndex] = useState(0);
+      const [guessCubes, setGuessCubes] = useState(0);
+      const [showAnswer, setShowAnswer] = useState(false);
+      const [showHint, setShowHint] = useState(false);
+      const [score, setScore] = useState(0);
 
-            const handleBowlClick = () => {
-                if (isProcessing) return;
-                if (bowlStep === 0) {
-                    setIsProcessing(true);
-                    setBowlStep(1);
-                    setTimeout(() => { addDiscovery(2); setIsProcessing(false); }, 2500); 
-                } else if (bowlStep === 1) {
-                    setIsProcessing(true);
-                    setBowlStep(2);
-                    setTimeout(() => { addDiscovery(8); setIsProcessing(false); }, 2500);
-                }
-            };
+      const [practiceSugar, setPracticeSugar] = useState('');
+      const [practiceCubes, setPracticeCubes] = useState('');
+      const [practiceResult, setPracticeResult] = useState(null);
 
-            const handlePlateClick = () => {
-                if (isProcessing || plateState === 'blue') return;
-                setIsProcessing(true);
-                setPlateState('blue');
-                setTimeout(() => { addDiscovery(1); setIsProcessing(false); }, 2500);
-            };
+      const currentDrink = drinksData[currentDrinkIndex];
+      const actualCubes = Math.round((currentDrink?.sugarGrams || 0) / CUBE_WEIGHT);
 
-            return (
-                <div className="fade-in flex flex-col items-center">
-                    <h2 className="text-2xl font-bold mb-6">第一關：上菜時的視覺魔法</h2>
-                    <div className="sketch-border p-8 w-full max-w-2xl flex flex-col items-center bg-white relative min-h-[300px]">
-                        <p className="text-gray-500 mb-8 font-bold">點擊桌上的餐具，看看會發生什麼變化？</p>
-
-                        <div className="flex gap-8 md:gap-16 items-end mb-4 w-full justify-center">
-                            {/* 飯碗區 */}
-                            <div className="flex flex-col items-center w-1/2">
-                                <div className={`cursor-pointer transition-all duration-700 flex items-end justify-center h-32 ${bowlStep < 2 && !isProcessing ? 'clickable-item' : ''}`}
-                                        onClick={handleBowlClick}>
-                                        <div className="relative">
-                                        <div className={`transition-all duration-700 absolute left-1/2 -translate-x-1/2 z-0 origin-bottom drop-shadow-md
-                                            ${bowlStep === 0 ? 'text-7xl bottom-2 opacity-90' : 'text-7xl bottom-6 scale-125'}`}>🍚</div>
-                                        <div className={`transition-all duration-700 border-4 rounded-b-full z-10 relative shadow-inner
-                                            ${bowlStep === 0 ? 'w-32 md:w-40 h-12 md:h-16 bg-white border-gray-400' : 
-                                                bowlStep === 1 ? 'w-20 md:w-24 h-10 md:h-12 bg-white border-gray-400' : 
-                                                'w-20 md:w-24 h-10 md:h-12 bg-stone-800 border-stone-900 shadow-xl'}`}></div>
-                                        </div>
-                                </div>
-                                <div className="mt-4 h-12 text-center text-sm font-bold">
-                                    {bowlStep === 0 && !isProcessing && <span className="fade-in text-gray-400 animate-pulse">點擊飯碗看看</span>}
-                                    {bowlStep === 1 && !isProcessing && <span className="fade-in text-blue-500 text-base underline cursor-pointer" onClick={handleBowlClick}>機關還沒結束！再點一次飯碗</span>}
-                                    {bowlStep === 1 && isProcessing && <span className="fade-in text-orange-500">飯看起來滿出來了！</span>}
-                                    {bowlStep === 2 && <span className="fade-in text-orange-500">深色讓邊界更清晰了！</span>}
-                                </div>
-                            </div>
-
-                            {/* 菜盤區 */}
-                            <div className="flex flex-col items-center w-1/2">
-                                <div className={`w-24 h-24 md:w-32 md:h-32 rounded-full flex items-center justify-center transition-all duration-1000 ${plateState === 'red' && !isProcessing ? 'clickable-item' : ''}`}
-                                        style={{ 
-                                            backgroundColor: plateState === 'red' ? '#fca5a5' : '#3b82f6', 
-                                            border: plateState === 'red' ? '2px solid #ccc' : '4px solid #1e3a8a', 
-                                            boxShadow: plateState === 'blue' ? 'inset 0 0 20px rgba(0,0,0,0.2), 0 10px 25px rgba(30,58,138,0.4)' : 'none' 
-                                        }}
-                                        onClick={handlePlateClick}>
-                                    <div className="text-5xl drop-shadow-md transition-transform duration-500 hover:scale-110">🥟</div>
-                                </div>
-                                <div className="mt-4 h-12 text-center text-sm font-bold text-gray-500">
-                                    {plateState === 'blue' && <span className="fade-in text-blue-600">瞬間冷靜下來的顏色！</span>}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {isComplete && (
-                        <button onClick={() => setStage(2)} className="mt-8 sketch-button bg-[#93c5fd] px-8 py-3 text-lg font-bold text-white fade-in">
-                            進入下一關 👉
-                        </button>
-                    )}
-                </div>
-            );
-        };
-
-        const Stage2 = ({ discovered, addDiscovery, setStage }) => {
-            const [waterLevel, setWaterLevel] = useState(0);
-            const [soupTemp, setSoupTemp] = useState('cold');
-            const [isProcessing, setIsProcessing] = useState(false);
-
-            const isComplete = discovered.includes(4) && discovered.includes(5);
-
-            const pourWater = () => {
-                if (isProcessing || discovered.includes(5)) return;
-                setIsProcessing(true);
-                setWaterLevel(100);
-                setTimeout(() => { addDiscovery(5); setIsProcessing(false); }, 2500); 
-            };
-
-            const heatSoup = () => {
-                if (isProcessing || discovered.includes(4)) return;
-                setIsProcessing(true);
-                setSoupTemp('hot');
-                setTimeout(() => { addDiscovery(4); setIsProcessing(false); }, 2500);
-            };
-
-            return (
-                <div className="fade-in flex flex-col items-center">
-                    <h2 className="text-2xl font-bold mb-6">第二關：倒飲料與喝湯的陷阱</h2>
-                    <div className="sketch-border p-8 w-full max-w-2xl flex flex-col items-center bg-orange-50">
-                        <div className="flex justify-around w-full mt-8">
-                            <div className="flex flex-col items-center">
-                                <div className="flex items-end gap-6 h-40 border-b-4 border-gray-400 pb-2">
-                                    <div className="w-24 h-16 border-2 border-blue-200 rounded-b-lg relative overflow-hidden bg-white">
-                                        <div className="absolute bottom-0 w-full bg-blue-300 transition-all duration-1000" style={{height: `${waterLevel/2}%`}}></div>
-                                    </div>
-                                    <div className="w-10 h-32 border-2 border-blue-200 rounded-b-lg relative overflow-hidden bg-white">
-                                        <div className="absolute bottom-0 w-full bg-blue-300 transition-all duration-1000" style={{height: `${waterLevel}%`}}></div>
-                                    </div>
-                                </div>
-                                {!discovered.includes(5) ? (
-                                    <button onClick={pourWater} className={`mt-6 sketch-button bg-blue-400 text-white px-4 py-2 ${!isProcessing ? 'clickable-item' : ''}`}>
-                                        倒入相同的水 💧
-                                    </button>
-                                ) : (
-                                    <p className="mt-6 font-bold text-blue-600">瘦高杯看起來比較滿！</p>
-                                )}
-                            </div>
-
-                            <div className="flex flex-col items-center justify-end">
-                                <div className={`text-6xl transition-all duration-500 relative ${!discovered.includes(4) && !isProcessing ? 'clickable-item' : ''}`}
-                                        onClick={heatSoup}>
-                                    {soupTemp === 'hot' && <span className="absolute -top-6 left-2 text-2xl fade-in text-red-400">♨️</span>}
-                                    🥣
-                                </div>
-                                <p className="mt-6 text-sm font-bold text-gray-600">
-                                    {soupTemp === 'cold' ? '點擊加熱這碗湯' : '胃部暖機中... 飽足感+1'}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    {isComplete && (
-                        <button onClick={() => setStage(3)} className="mt-8 sketch-button bg-[#93c5fd] px-8 py-3 text-lg font-bold text-white fade-in">
-                            開動囉 👉
-                        </button>
-                    )}
-                </div>
-            );
-        };
-
-        const Stage3 = ({ discovered, addDiscovery, setStage }) => {
-            const [meatPieces, setMeatPieces] = useState(1);
-            const [bones, setBones] = useState([]);
-            const [feedStep, setFeedStep] = useState(0); 
-            const [mouthState, setMouthState] = useState('😐');
-            const [isProcessing, setIsProcessing] = useState(false);
-
-            const isComplete = discovered.includes(3) && discovered.includes(6) && discovered.includes(7);
-
-            const eatMeat = () => {
-                if (isProcessing || meatPieces >= 6) return;
-                setMeatPieces(prev => {
-                    const next = prev + 1;
-                    if (next === 6) {
-                        setIsProcessing(true);
-                        setTimeout(() => { addDiscovery(3); setIsProcessing(false); }, 2000);
-                    }
-                    return next;
-                });
-            };
-
-            const getMeatSize = () => {
-                if (meatPieces === 1) return 'text-[120px]';
-                if (meatPieces === 2) return 'text-6xl';
-                if (meatPieces <= 4) return 'text-5xl';
-                return 'text-4xl';
-            };
-
-            const feedDominant = () => {
-                if (isProcessing) return;
-                setIsProcessing(true);
-                setMouthState('😋');
-                setTimeout(() => {
-                    setMouthState('😐');
-                    setFeedStep(1);
-                    setIsProcessing(false); 
-                }, 1000);
-            };
-
-            const feedNonDominant = () => {
-                if (isProcessing) return;
-                setIsProcessing(true);
-                setMouthState('😋');
-                setTimeout(() => {
-                    setMouthState('😌');
-                    setFeedStep(2);
-                    setBones(['🦴', '🦴', '🦴']);
-                    setTimeout(() => {
-                        addDiscovery(7); 
-                        setIsProcessing(false);
-                    }, 2500); 
-                }, 1200);
-            };
-
-            const clickBones = () => {
-                if (isProcessing || discovered.includes(6)) return;
-                setIsProcessing(true);
-                setTimeout(() => { addDiscovery(6); setIsProcessing(false); }, 2000);
-            };
-
-            return (
-                <div className="fade-in flex flex-col items-center">
-                    <h2 className="text-2xl font-bold mb-6">第三關：開動後的物理防禦</h2>
-                    <div className="sketch-border p-6 md:p-8 w-full max-w-2xl flex flex-col items-center bg-yellow-50 relative min-h-[350px]">
-                        <div className="flex flex-col md:flex-row w-full justify-around mt-4 gap-8 md:gap-0">
-                            <div className="flex flex-col items-center w-full md:w-1/2 border-b-2 md:border-b-0 md:border-r-2 border-dashed border-gray-300 pb-6 md:pb-0 px-4">
-                                <p className="mb-4 font-bold text-center h-8">狂點大肉排，把它切碎！</p>
-                                <div className={`select-none flex flex-wrap justify-center items-center w-48 h-48 gap-1 ${meatPieces < 6 && !isProcessing ? 'clickable-item' : ''}`} onClick={eatMeat}>
-                                    {Array(meatPieces).fill('🥩').map((m, i) => (
-                                        <span key={i} className={`${getMeatSize()} transition-all duration-300 hover:-translate-y-1`}>{m}</span>
-                                    ))}
-                                </div>
-                                <div className="mt-4 h-16 text-center">
-                                    {meatPieces < 6 ? (
-                                        <p className="text-sm text-gray-500">切得越碎，視覺佔據越大</p>
-                                    ) : (
-                                        <p className="text-sm font-bold text-orange-600 fade-in">視覺份量變大！<br/>夾的次數變多，騙大腦吃很久</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col items-center w-full md:w-1/2 relative px-4">
-                                <p className="mb-2 font-bold text-center h-12">
-                                    {feedStep === 0 ? "先用平常拿筷子的手(慣用手)" : feedStep === 1 ? <span className="text-red-600 text-lg">現在！換成「非慣用手」</span> : "進食完畢"}
-                                </p>
-                                
-                                <div className="text-6xl mb-6 transition-all duration-300">{mouthState}</div>
-
-                                {feedStep === 0 && (
-                                    <button onClick={feedDominant} 
-                                        className="sketch-button bg-blue-400 text-white px-6 py-2 clickable-item font-bold">
-                                        餵食炸雞 🍗
-                                    </button>
-                                )}
-
-                                {feedStep === 1 && (
-                                    <button onMouseEnter={(e) => {
-                                            e.target.style.transform = `translate(${Math.random()*40-20}px, ${Math.random()*40-20}px)`;
-                                        }}
-                                        onClick={feedNonDominant} 
-                                        className="sketch-button bg-red-400 text-white px-6 py-2 moving-btn clickable-item font-bold">
-                                        艱難地餵食炸雞 🍗
-                                    </button>
-                                )}
-
-                                {feedStep === 2 && (
-                                    <div className="flex flex-col items-center fade-in mt-4">
-                                        <p className="font-bold text-gray-500 mb-2">點擊留下來的戰利品</p>
-                                        <div className={`flex gap-2 text-4xl flex-wrap justify-center p-3 rounded-xl transition-all ${!discovered.includes(6) && !isProcessing ? 'clickable-item bg-orange-100 border-2 border-orange-300 border-dashed cursor-pointer' : ''}`}
-                                                onClick={clickBones}>
-                                            {bones.map((b, i) => <span key={i}>{b}</span>)}
-                                        </div>
-                                        {discovered.includes(6) && <p className="mt-4 text-sm font-bold text-orange-600 text-center fade-in">非慣用手拖慢了速度！<br/>骨頭戰利品也提醒大腦吃很多了</p>}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    {isComplete && (
-                        <button onClick={() => setStage(4)} className="mt-8 sketch-button bg-[#93c5fd] px-8 py-3 text-lg font-bold text-white fade-in">
-                            準備收尾 👉
-                        </button>
-                    )}
-                </div>
-            );
-        };
-
-        const Stage4 = ({ discovered, addDiscovery, setStage }) => {
-            const [mindful, setMindful] = useState(false);
-            const [minted, setMinted] = useState(false);
-            const [isProcessing, setIsProcessing] = useState(false);
-
-            const isComplete = discovered.includes(9) && discovered.includes(10);
-
-            const triggerMindful = () => {
-                if (isProcessing || mindful) return;
-                setIsProcessing(true);
-                setMindful(true);
-                setTimeout(() => { addDiscovery(10); setIsProcessing(false); }, 2500); 
-            };
-
-            const triggerMint = () => {
-                if (isProcessing || minted) return;
-                setIsProcessing(true);
-                setMinted(true);
-                setTimeout(() => { addDiscovery(9); setIsProcessing(false); }, 2500); 
-            };
-
-            return (
-                <div className="fade-in flex flex-col items-center">
-                    <h2 className="text-2xl font-bold mb-6">最終關：完美的登出儀式</h2>
-                    <div className={`sketch-border p-8 w-full max-w-2xl flex flex-col items-center transition-colors duration-1000 ${minted ? 'bg-teal-50' : 'bg-stone-50'} relative min-h-[400px] overflow-hidden`}>
-                        
-                        {minted && <div className="absolute inset-0 bg-teal-200/30 flex items-center justify-center text-4xl fade-in pointer-events-none z-0">❄️ 舒爽清涼 ❄️</div>}
-
-                        <div className={`transition-all duration-1000 flex gap-6 text-6xl mt-4 z-10 ${mindful ? 'opacity-40 scale-90' : ''}`}>
-                            🍽️ 🥢 🥤
-                        </div>
-
-                        {!mindful ? (
-                            <div className="mt-16 flex flex-col items-center z-10">
-                                <p className="mb-6 text-gray-600 font-bold">吃完最後一口了，給大腦一個溫柔的結束訊號吧</p>
-                                <button onClick={triggerMindful} className={`sketch-button bg-[#ffb07c] text-stone-900 px-8 py-4 flex items-center gap-3 text-lg font-bold ${!isProcessing ? 'clickable-item' : ''}`}>
-                                    <span className="text-3xl">🙏</span> 點擊雙手合十
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="mt-4 text-center z-10 fade-in w-full flex flex-col items-center">
-                                <div className="bg-white px-6 py-4 rounded-3xl rounded-tl-none border-2 border-stone-300 mb-8 shadow-sm relative w-fit mt-4">
-                                    <p className="text-xl font-bold text-stone-700">「這頓飯吃得好滿足，我吃飽了！」</p>
-                                    <div className="absolute -top-8 -left-6 text-5xl">💭</div>
-                                </div>
-
-                                <h3 className="font-bold text-lg mb-6 text-gray-700">最後一步，你要選擇哪一個來收尾？</h3>
-                                <div className="flex flex-wrap gap-6 md:gap-10 justify-center mt-2">
-                                    <button className="flex flex-col items-center hover:scale-110 transition-transform" onClick={() => alert("大腦會覺得「原來還沒吃完啊！」，再想想？")}>
-                                        <span className="text-5xl mb-3 drop-shadow">🍰</span>
-                                        <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">甜點</span>
-                                    </button>
-                                    {!discovered.includes(9) ? (
-                                        <>
-                                            <button className={`flex flex-col items-center ${!isProcessing ? 'clickable-item' : ''}`} onClick={triggerMint}>
-                                                <span className="text-5xl mb-3 drop-shadow">🧴</span>
-                                                <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">漱口水</span>
-                                            </button>
-                                            <button className={`flex flex-col items-center ${!isProcessing ? 'clickable-item' : ''}`} onClick={triggerMint}>
-                                                <span className="text-5xl mb-3 drop-shadow">🍬</span>
-                                                <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">薄荷口香糖</span>
-                                            </button>
-                                            <button className={`flex flex-col items-center ${!isProcessing ? 'clickable-item' : ''}`} onClick={triggerMint}>
-                                                <span className="text-5xl mb-3 drop-shadow">🪥</span>
-                                                <span className="text-sm font-bold text-gray-500 bg-white px-3 py-1 rounded-full shadow-sm">刷牙</span>
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <div className="flex flex-col items-center fade-in ml-4">
-                                            <span className="text-5xl mb-3 drop-shadow">🌿</span>
-                                            <span className="text-sm font-bold text-teal-600 bg-teal-100 px-3 py-1 rounded-full shadow-sm">強制關機！</span>
-                                        </div>
-                                    )}
-                                </div>
-                                {discovered.includes(9) && <p className="mt-6 text-sm font-bold text-teal-700 bg-teal-100 px-4 py-2 rounded-full inline-block fade-in">清涼的味道成功關閉了今天的食慾開關！</p>}
-                            </div>
-                        )}
-                    </div>
-                    {isComplete && (
-                        <button onClick={() => setStage(5)} className="mt-8 sketch-button bg-[#fbbf24] px-8 py-3 text-lg font-bold text-white fade-in">
-                            領取證書 🏆
-                        </button>
-                    )}
-                </div>
-            );
-        };
-
-        const Outro = () => (
-            <div className="fade-in flex flex-col items-center justify-center min-h-[80vh] text-center px-4 py-8">
-                <img src="back.png" 
-                     alt="恭喜完成體驗" 
-                     className="mb-8 rounded-3xl shadow-lg w-full max-w-4xl h-auto max-h-[70vh] object-contain border-4 border-[#5a4b43]" />
-                
-                <button onClick={() => window.location.reload()} className="sketch-button bg-[#ffb07c] px-12 py-5 text-2xl font-bold text-white mt-4 transition-transform hover:-translate-y-1">
-                    再體驗一次
-                </button>
-            </div>
-        );
-
-        function App() {
-            const [stage, setStage] = useState(0); 
-            const [discovered, setDiscovered] = useState([]);
-            const [popup, setPopup] = useState(null);
-
-            const addDiscovery = (id) => {
-                if (!discovered.includes(id)) {
-                    setDiscovered(prev => [...prev, id]);
-                    setPopup(TRICKS_DATA[id]);
-                }
-            };
-
-            const closePopup = () => setPopup(null);
-
-            return (
-                <div className="min-h-screen py-10 px-4 md:px-12 flex flex-col md:flex-row gap-8 max-w-7xl mx-auto">
-                    
-                    {/* 左側：主畫面 */}
-                    <div className="flex-1">
-                        {stage === 0 && <Intro setStage={setStage} />}
-                        {stage === 1 && <Stage1 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
-                        {stage === 2 && <Stage2 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
-                        {stage === 3 && <Stage3 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
-                        {stage === 4 && <Stage4 discovered={discovered} addDiscovery={addDiscovery} setStage={setStage} />}
-                        {stage === 5 && <Outro />}
-                    </div>
-
-                    {/* 右側：收集筆記本 */}
-                    {stage > 0 && stage < 5 && (
-                        <div className="w-full md:w-80 sketch-border p-6 bg-[#fffdf7] h-fit sticky top-10 fade-in z-0">
-                            <h3 className="text-xl font-bold mb-4 flex justify-between items-center">
-                                <span>📖 驚奇筆記</span>
-                                <span className="text-sm bg-yellow-200 px-2 py-1 rounded-full">{discovered.length} / 10</span>
-                            </h3>
-                            <div className="space-y-2">
-                                {[1,2,3,4,5,6,7,8,9,10].map(id => (
-                                    <div key={id} className={`p-2 rounded transition-colors ${discovered.includes(id) ? 'bg-yellow-100 font-bold' : 'bg-gray-100 text-gray-400'}`}>
-                                        {discovered.includes(id) ? TRICKS_DATA[id].title : '❓ 尚未發現'}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* 彈出視窗提示 */}
-                    {popup && (
-                        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 fade-in px-4" onClick={closePopup}>
-                            <div className="sketch-border p-8 bg-white max-w-sm text-center transform scale-110 shadow-2xl" onClick={e => e.stopPropagation()}>
-                                <div className="text-4xl mb-4">💡</div>
-                                <h3 className="text-2xl font-bold mb-4">{popup.title}</h3>
-                                <p className="text-lg text-gray-700 mb-6 leading-relaxed">{popup.desc}</p>
-                                <button onClick={closePopup} className="sketch-button bg-yellow-400 px-8 py-3 font-bold text-lg hover:bg-yellow-300">
-                                    收進筆記本
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
+      const handleGuess = () => {
+        setShowAnswer(true);
+        if (Math.abs(guessCubes - actualCubes) <= 1) {
+          setScore(s => s + 1);
         }
+      };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+      const nextRound = () => {
+        if (currentDrinkIndex < drinksData.length - 1) {
+          setCurrentDrinkIndex(i => i + 1);
+          setGuessCubes(0);
+          setShowAnswer(false);
+          setShowHint(false);
+        } else {
+          setGameState('edu-teach'); 
+        }
+      };
+
+      const restartGame = () => {
+        setGameState('start');
+        setCurrentDrinkIndex(0);
+        setGuessCubes(0);
+        setShowAnswer(false);
+        setShowHint(false);
+        setScore(0);
+        setPracticeSugar('');
+        setPracticeCubes('');
+        setPracticeResult(null);
+      };
+
+      const checkPractice = () => {
+        if (Number(practiceSugar) === 30 && Number(practiceCubes) === 6) {
+          setPracticeResult('correct');
+        } else {
+          setPracticeResult('wrong');
+        }
+      };
+
+      const SugarCube = ({ animate = false, delay = 0 }) => (
+        <div 
+          className={`w-8 h-8 bg-white border-2 border-gray-200 rounded shadow-md m-0.5 flex items-center justify-center transition-all ${animate ? 'animate-bounce' : ''}`}
+          style={{ animationDelay: `${delay}ms` }}
+        >
+          <div className="w-6 h-6 border border-gray-100 rounded-sm opacity-50"></div>
+        </div>
+      );
+
+      if (gameState === 'start') {
+        return (
+          <div className="min-h-screen bg-orange-50 flex flex-col items-center justify-center p-4 font-sans">
+            <LobbyButton />
+            <div className="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 text-center space-y-6 transform transition hover:scale-105">
+              <div className="text-6xl animate-bounce">🍬</div>
+              <h1 className="text-3xl font-extrabold text-gray-800">含糖飲料疊疊樂</h1>
+              <p className="text-gray-600 font-medium">
+                你知道常喝的飲料裡藏了多少顆方糖嗎？<br/>
+                (提示：一顆方糖大約是 5 公克糖)
+              </p>
+              <button 
+                onClick={() => setGameState('playing')}
+                className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+              >
+                <span>▶️</span> 開始挑戰
+              </button>
+              <p className="mt-4 text-sm text-orange-600 font-bold border-t border-orange-100 pt-4">蕭宇超醫師製作 一起邁向健康生活</p>
+            </div>
+          </div>
+        );
+      }
+
+      if (gameState === 'edu-teach') {
+        return (
+          <div className="min-h-screen bg-blue-50 flex flex-col items-center p-4 font-sans overflow-y-auto pb-20">
+            <LobbyButton />
+            <div className="max-w-md w-full space-y-6 mt-8">
+              <div className="bg-white rounded-3xl shadow-lg p-6 text-center">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">挑戰完成！</h2>
+                <p className="text-lg text-gray-600">你的分數：{score} / {drinksData.length}</p>
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-xl">📖</span> 絕招：怎麼看營養標示？
+                </h3>
+                
+                <div className="border-4 border-black p-4 bg-white font-mono text-sm mb-6">
+                  <h4 className="text-lg font-bold border-b-2 border-black pb-1 mb-2">營養標示</h4>
+                  <div className="flex justify-between border-b border-gray-400 pb-1 mb-1">
+                    <span>每一份量</span><span>250 毫升</span>
+                  </div>
+                  <div className="flex justify-between border-b-4 border-black pb-1 mb-2 bg-yellow-100 font-bold">
+                    <span>本包裝含</span><span>2 份</span>
+                  </div>
+                  <div className="flex justify-between mb-1">
+                    <span>熱量</span><span>100 大卡</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-red-600 bg-red-50 border-l-4 border-red-500 pl-2">
+                    <span>糖</span><span>20.0 公克</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="inline-block bg-black text-white rounded-full w-6 h-6 text-center text-sm mr-2">1</span>
+                    找 <strong>「每份」</strong> 的糖量 (20克)
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <span className="inline-block bg-black text-white rounded-full w-6 h-6 text-center text-sm mr-2">2</span>
+                    找 本包裝含 <strong>「幾份」</strong> (2份)
+                  </div>
+                  <div className="p-3 bg-green-100 rounded-xl border border-green-300 font-bold text-green-800">
+                    <span className="inline-block bg-green-600 text-white rounded-full w-6 h-6 text-center text-sm mr-2">3</span>
+                    相乘！ 20克 × 2份 = 總共 40 克糖
+                  </div>
+                  <div className="p-3 bg-orange-100 rounded-xl border border-orange-300 font-bold text-orange-800 flex items-center">
+                    <span className="inline-block bg-orange-600 text-white rounded-full w-6 h-6 text-center text-sm mr-2 shrink-0">4</span>
+                    換算方糖：40 ÷ 5 = <span className="text-2xl ml-2">8顆 🍬</span>
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setGameState('edu-practice')}
+                className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+              >
+                換你算算看！ <span>➡️</span>
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      if (gameState === 'edu-practice') {
+        return (
+          <div className="min-h-screen bg-indigo-50 flex flex-col items-center p-4 font-sans overflow-y-auto pb-20">
+            <LobbyButton />
+            <div className="max-w-md w-full space-y-6 mt-8">
+              <div className="bg-white rounded-3xl shadow-lg p-6">
+                <h3 className="text-xl font-bold text-indigo-800 mb-4 flex items-center gap-2">
+                  ✏️ 實戰演練
+                </h3>
+                <p className="text-gray-600 mb-4">這是一瓶市售的調味果汁，請根據營養標示算出正確的糖量與方糖數！</p>
+                
+                <div className="border-4 border-black p-4 bg-white font-mono text-sm mb-6">
+                  <h4 className="text-lg font-bold border-b-2 border-black pb-1 mb-2">營養標示</h4>
+                  <div className="flex justify-between border-b border-gray-400 pb-1 mb-1">
+                    <span>每一份量</span><span>200 毫升</span>
+                  </div>
+                  <div className="flex justify-between border-b-4 border-black pb-1 mb-2 bg-yellow-100 font-bold">
+                    <span>本包裝含</span><span>2 份</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-red-600 bg-red-50 border-l-4 border-red-500 pl-2">
+                    <span>糖</span><span>15.0 公克</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">1. 請問這瓶飲料總共含幾公克糖？</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={practiceSugar} 
+                        onChange={e => setPracticeSugar(e.target.value)}
+                        className="flex-1 border-2 border-gray-300 rounded-lg p-2 text-lg focus:border-indigo-500 focus:outline-none" 
+                        placeholder="輸入公克數"
+                      />
+                      <span className="font-bold text-gray-600">公克</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">2. 換算下來大約是幾顆方糖？ (1顆=5g)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number" 
+                        value={practiceCubes} 
+                        onChange={e => setPracticeCubes(e.target.value)}
+                        className="flex-1 border-2 border-gray-300 rounded-lg p-2 text-lg focus:border-indigo-500 focus:outline-none" 
+                        placeholder="輸入方糖數"
+                      />
+                      <span className="font-bold text-gray-600">顆 🍬</span>
+                    </div>
+                  </div>
+
+                  {practiceResult === 'wrong' && (
+                    <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm font-bold flex items-center gap-2 animate-pulse">
+                      <span>❌</span> 哎呀！算錯了，再仔細看一次公式：15克 × 2份 = ?
+                    </div>
+                  )}
+                  
+                  {practiceResult === 'correct' ? (
+                    <div className="space-y-4 animate-fade-in">
+                      <div className="p-3 bg-green-100 text-green-700 rounded-lg text-sm font-bold flex items-center gap-2">
+                        <span>✅</span> 太棒了！完全正確！(30克糖 = 6顆方糖)
+                      </div>
+                      <button 
+                        onClick={() => setGameState('edu-summary')}
+                        className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+                      >
+                        看總表與健康解析 <span>➡️</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={checkPractice}
+                      disabled={!practiceSugar || !practiceCubes}
+                      className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 active:scale-95 transition"
+                    >
+                      對答案
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (gameState === 'edu-summary') {
+        return (
+          <div className="min-h-screen bg-orange-50 flex flex-col items-center p-4 font-sans overflow-y-auto pb-20">
+            <LobbyButton />
+            <div className="max-w-md w-full space-y-6 mt-8">
+              
+              <div className="bg-white rounded-3xl shadow-lg p-6 text-center border-t-8 border-orange-500">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">📊 飲料含糖總表</h2>
+                <p className="text-sm text-gray-600 mb-4">來回顧一下剛才所有飲料的真面目吧！</p>
+                
+                <div className="max-h-60 overflow-y-auto border border-gray-200 rounded-xl mb-4 text-left">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-100 sticky top-0">
+                      <tr>
+                        <th className="p-2 font-semibold text-gray-700">飲料名稱</th>
+                        <th className="p-2 font-semibold text-gray-700 text-center">糖(g)</th>
+                        <th className="p-2 font-semibold text-gray-700 text-center">方糖</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {drinksData.map(drink => (
+                        <tr key={drink.id} className="hover:bg-orange-50">
+                          <td className="p-2 flex items-center gap-2">
+                            <span className="text-xl">{drink.emoji}</span>
+                            <span className="truncate w-28" title={drink.name}>{drink.name.split(' ')[0]}</span>
+                          </td>
+                          <td className="p-2 text-center text-red-500 font-bold">{drink.sugarGrams}</td>
+                          <td className="p-2 text-center font-bold text-gray-700">{Math.round(drink.sugarGrams / 5)} 顆</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl shadow-lg p-6 border-t-8 border-red-500">
+                <h3 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
+                  <span className="text-xl shrink-0 mt-1">⚠️</span> 實證醫學：糖的健康危機
+                </h3>
+                
+                <div className="mb-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                  <p className="text-sm text-red-800 font-bold mb-1">一日攝取上限：</p>
+                  <p className="text-sm text-red-700">
+                    世界衛生組織 (WHO) 建議，兒童每日「游離糖」攝取量不宜超過 <strong>25公克（約5顆方糖）</strong>！
+                  </p>
+                </div>
+
+                <p className="text-sm font-bold text-gray-700 mb-2">攝取過多含糖飲料的壞處：</p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-red-500">🦷</span> <strong>嚴重蛀牙：</strong> 糖分是口中細菌的最愛，容易侵蝕牙齒。
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-orange-500">⚖️</span> <strong>兒童肥胖：</strong> 多餘的糖分會轉化為脂肪囤積。
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-yellow-500">🧠</span> <strong>注意力不集中：</strong> 血糖快速飆升又急速下降，導致上課容易疲倦。
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <span className="text-blue-500">🩸</span> <strong>疾病風險：</strong> 增加肝臟負擔，提早引發第二型糖尿病。
+                  </li>
+                </ul>
+              </div>
+
+              <button 
+                onClick={restartGame}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xl flex items-center justify-center gap-2 shadow-lg active:scale-95 transition"
+              >
+                <span>🔄</span> 再玩一次
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className={`min-h-screen ${currentDrink.color} flex flex-col items-center p-4 font-sans transition-colors duration-500`}>
+          <LobbyButton />
+          <div className="max-w-md w-full flex-1 flex flex-col mt-4 mb-20">
+            
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-sm font-bold text-gray-600 bg-white/50 px-3 py-1 rounded-full">
+                關卡 {currentDrinkIndex + 1} / {drinksData.length}
+              </div>
+              <div className="text-sm font-bold text-gray-600 bg-white/50 px-3 py-1 rounded-full">
+                得分: {score}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-xl p-6 text-center relative z-10">
+              <div className="text-8xl mb-4 drop-shadow-md">{currentDrink.emoji}</div>
+              <h2 className="text-2xl font-extrabold text-gray-800">{currentDrink.name}</h2>
+              
+              {!showAnswer && (
+                <div className="mt-4 min-h-[40px] flex justify-center">
+                  {!showHint ? (
+                    <button 
+                      onClick={() => setShowHint(true)}
+                      className="text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-full hover:bg-blue-100 transition"
+                    >
+                      💡 需要提示嗎？
+                    </button>
+                  ) : (
+                    <div className="text-sm text-blue-800 bg-blue-50 p-3 rounded-xl animate-fade-in border border-blue-200">
+                      {currentDrink.hint}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {showAnswer && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-xl text-sm text-gray-600 border border-gray-200 animate-fade-in">
+                  <span className="inline mr-1">ℹ️</span>
+                  {currentDrink.description}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 flex-1 bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-white flex flex-col">
+              <h3 className="text-lg font-bold text-center text-gray-700 mb-4">
+                {showAnswer ? '震撼的真相！' : '你猜裡面有幾顆方糖？'}
+              </h3>
+
+              <div className="flex-1 flex flex-col justify-end min-h-[150px] mb-4 relative">
+              {!showAnswer ? (
+                <div className="flex flex-wrap-reverse justify-center content-start gap-1 p-2 bg-gray-100/50 rounded-xl min-h-[120px]">
+                  {guessCubes === 0 && <span className="text-gray-500 self-center font-bold">0 顆方糖 (無糖)</span>}
+                  {Array.from({ length: guessCubes }).map((_, i) => (
+                    <SugarCube key={`guess-${i}`} />
+                  ))}
+                </div>
+              ) : (
+                  <div className="flex justify-around items-end h-full w-full">
+                    <div className="flex flex-col items-center w-1/2 border-r border-gray-200">
+                      <div className="text-sm text-gray-500 mb-2">你的猜測</div>
+                      <div className="flex flex-wrap-reverse justify-center content-start gap-1 p-1 max-w-[120px]">
+                        {Array.from({ length: guessCubes }).map((_, i) => (
+                          <SugarCube key={`guess-ans-${i}`} />
+                        ))}
+                      </div>
+                      <div className="font-bold mt-2 text-gray-700">{guessCubes} 顆</div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center w-1/2">
+                      <div className="text-sm text-red-500 font-bold mb-2 animate-pulse">實際含糖量</div>
+                      <div className="flex flex-wrap-reverse justify-center content-start gap-1 p-1 max-w-[120px]">
+                        {Array.from({ length: actualCubes }).map((_, i) => (
+                          <SugarCube key={`actual-${i}`} animate={true} delay={i * 100} />
+                        ))}
+                      </div>
+                      <div className="font-bold mt-2 text-red-600 text-xl">{actualCubes} 顆</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {!showAnswer ? (
+                <div className="space-y-4">
+                  <div className="flex justify-center items-center gap-4">
+                    <button 
+                      onClick={() => setGuessCubes(Math.max(0, guessCubes - 1))}
+                      className="w-12 h-12 rounded-full bg-gray-200 text-gray-700 text-xl font-bold hover:bg-gray-300 active:scale-95 transition"
+                    >-</button>
+                    <div className="text-3xl font-black text-gray-800 w-16 text-center">{guessCubes}</div>
+                <button 
+                  onClick={() => setGuessCubes(guessCubes + 1)}
+                  className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 border-2 border-orange-200 text-xl font-bold hover:bg-orange-200 active:scale-95 transition"
+                >+</button>
+              </div>
+              <button 
+                onClick={handleGuess}
+                className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-gray-800 active:scale-95 transition"
+              >
+                鎖定答案！
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4 text-center">
+                  <div className="flex justify-center items-center gap-2 text-xl font-bold">
+                    {Math.abs(guessCubes - actualCubes) <= 1 ? (
+                      <span className="text-green-600 flex items-center gap-1"><span>✅</span> 猜得神準！</span>
+                    ) : (
+                      <span className="text-red-500 flex items-center gap-1"><span>❌</span> 差太多啦！</span>
+                    )}
+                  </div>
+                  <button 
+                    onClick={nextRound}
+                    className="w-full py-4 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600 active:scale-95 transition flex justify-center items-center gap-2"
+                  >
+                    {currentDrinkIndex < drinksData.length - 1 ? '挑戰下一杯' : '看實證醫學解析'} <span>➡️</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<SugarGame />);
+  </script>
 </body>
 </html>
