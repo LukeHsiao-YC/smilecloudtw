@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全小偵探!GOGO! | 宇超醫師的居家環境安全偵探社</title>
+    <style>
+        :root {
+            --bg-color: #fcfbf9;
+            --text-main: #333333;
+            --text-light: #666666;
+            --primary-color: #4a90e2;
+            --highlight-color: rgba(255, 235, 59, 0.7);
+            --card-bg: #ffffff;
+            --border-color: #eaeaea;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Arial, '微軟正黑體', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.8;
+            margin: 0;
+            padding: 0;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1 { 
+            color: var(--primary-color); 
+            margin-bottom: 10px; 
+            letter-spacing: 1px;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            background-color: #f0f4f8;
+            color: var(--primary-color);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            border: 1px solid #dce4ec;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-links a.active, .nav-links a:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        
+        .container { 
+            max-width: 800px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+        }
+        
+        /* 摺疊卡片樣式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2c3e50;
+            border-left: 5px solid var(--primary-color);
+            background-color: #fff;
+            transition: background-color 0.2s;
+        }
+        
+        .card-header:hover {
+            background-color: #f9fbfc;
+        }
+        
+        /* 開關圖示設定 */
+        .toggle-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+            font-weight: normal;
+        }
+        
+        /* 內容區塊使用 Grid 實現平順展開 */
+        .card-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out;
+            background-color: #fafafa;
+        }
+        
+        .card-content-inner {
+            overflow: hidden;
+            padding: 0 25px;
+        }
+        
+        /* 展開狀態 */
+        .card.active .card-content {
+            grid-template-rows: 1fr;
+        }
+        
+        .card.active .card-content-inner {
+            padding: 20px 25px 25px 25px;
+            border-top: 1px dashed #e0e0e0;
+        }
+        
+        .card.active .toggle-icon {
+            transform: rotate(45deg);
+        }
+        
+        .highlight {
+            background: linear-gradient(180deg, transparent 40%, var(--highlight-color) 40%);
+            font-weight: bold;
+            padding: 0 4px;
+        }
+        
+        ul { 
+            padding-left: 20px; 
+            margin-top: 10px;
+        }
+        
+        li { 
+            margin-bottom: 12px; 
+        }
+        
+        .content-title {
+            color: #34495e;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        
+        /* 獨立警示區塊 */
+        .alert-box {
+            background-color: #fff3f3;
+            border-left: 4px solid #ff5252;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .alert-box-title {
+            color: #d32f2f;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-light);
+            font-size: 0.95rem;
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            background-color: #fff;
+        }
+    </style>
+</head>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <img src="pi.png" alt="角色" style="height: 90px; margin-right: 15px;" onerror="this.style.display='none'">
+            <h1 style="margin-bottom: 0;">安全小偵探!GOGO!</h1>
+        </div>
+        <div style="color: var(--text-light);">用孩子的視角，找出家中的潛在危機</div>
+        <div class="nav-links">
+            <a href="index.html">首頁介紹</a>
+            <a href="knowledge.html" class="active">安全知識區</a>
+            <a href="checklist.html">居家檢核表</a>
+            <a href="audio.html">繪本與有聲書</a>
+            <a href="interactive.html">小偵探大挑戰</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <!-- 卡片 1 -->
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                一、睡眠安全（預防嬰兒猝死）
+                <span class="toggle-icon">+</span>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <ul>
+                        <li><span class="content-title">安全睡眠環境：</span>床鋪表面必須堅實平整，<span class="highlight">睡眠區域不可有任何鬆軟物件，嬰兒絕對不使用枕頭</span>。周圍也不要放玩具、布偶、被褥、羊毛製品、防撞護墊等。</li>
+                        <li><span class="content-title">堅持仰睡：</span><span class="highlight">每次睡眠都必須仰睡</span>，嚴禁趴睡或側睡，千萬不要在睡覺時使用市面上的「趴睡產品」（如防脹氣趴睡枕、安撫搖椅等）。</li>
+                        <li><span class="content-title">同室不同床：</span><span class="highlight">同室不同床</span>！建議嬰兒與父母同房，但千萬不要睡在同一張床上，以免大人熟睡時壓到嬰兒，也別讓嬰兒睡在沙發或大人的床墊上。</li>
+                        <li><span class="content-title">適宜的溫度與穿著：</span><span class="highlight">室內環境溫度以23到25度較佳</span>，避免過度包裹或穿著太多衣物導致環境過熱。建議使用「連身型嬰兒睡衣」取代蓋被。</li>
+                        <li><span class="content-title">其他注意事項：</span>保持無菸環境、勿讓嬰兒配戴平安符在頸部，並可在建立母乳餵食習慣後，考慮使用奶嘴安撫。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片 2 -->
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                二、異物吞食預防
+                <span class="toggle-icon">+</span>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <ul>
+                        <li><span class="content-title">危險小物品收好：</span><span class="highlight">鈕扣電池、巴克球、水晶寶寶、藥品</span>與硬幣等小物品必須確實收妥。</li>
+                        <li><span class="content-title">危險液體與藥品存放：</span>清潔劑（如強酸強鹼、浴廁清潔劑）及藥物，<span class="highlight">切勿分裝</span>至飲料瓶或非原始包裝中，以免誤飲。這類危險物質應存放於<span class="highlight">高於110公分，或是使用安全鎖</span>鎖在櫥櫃內。</li>
+                        <li><span class="content-title">誤食強酸強鹼急救：</span><span class="highlight">絕對不可催吐、不要猛灌水</span>！請帶著誤食的物品「<span class="highlight">速速就醫</span>」。</li>
+                        <li><span class="content-title">鼻腔異物的警訊：</span>若孩子出現<span class="highlight">單側鼻塞、反覆流鼻血、黃鼻涕或有臭味</span>，請務必警覺是否為鼻腔異物。</li>
+                        <li><span class="content-title">安全玩具挑選：</span>選擇適齡且有安全標章的玩具，<span class="highlight">玩具大小必須大於孩子的拳頭</span>，避免使用過長的繩子。</li>
+                        <li><span class="content-title">飲食注意：</span><span class="highlight">4歲以下幼童請避免餵食易引起梗塞的食物</span>，如蒟蒻果凍、軟糖、麻糬、整顆種子與堅果，以及整口的花生醬。</li>
+                        <li><span class="content-title">環境視角檢視：</span>大人可以<span class="highlight">用孩子的視角高度來檢視家中環境</span>，更容易發現並移除隱藏的危險死角。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片 3 -->
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                三、燒燙傷及觸電預防
+                <span class="toggle-icon">+</span>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <ul>
+                        <li><span class="content-title">燒燙傷急救5步驟：</span>務必謹記「<span class="highlight">沖、脫、泡、蓋、送</span>」。先以流動清水沖洗15到30分鐘，在水中小心脫去衣物，冷水持續浸泡，用乾淨物品覆蓋傷口，最後送醫。</li>
+                        <li><span class="content-title">遠離高溫熱源：</span>廚房、浴室及餐廳是容易發生燙傷的地點。應讓孩子遠離熱湯、熱水瓶、烤箱、電鍋、瓦斯爐、電熨斗等高溫源。</li>
+                        <li><span class="content-title">餐桌安全：</span>餐桌上<span class="highlight">避免使用會垂墜的桌巾</span>，以免孩子拉扯桌巾導致桌上的熱水或熱湯翻覆而造成嚴重燙傷。</li>
+                        <li><span class="content-title">插座與用電防護：</span>家中插座應增設「安全保護蓋」，請<span class="highlight">選擇造型簡單且為白色的保護蓋</span>，以降低孩子拔除的興趣。另外提醒，市面上<span class="highlight">「沒有」絕對拔不出的插座保護蓋</span>，家長不能過度依賴；不使用的電器插頭應拔下收好。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片 4 -->
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                四、跌倒墜落預防
+                <span class="toggle-icon">+</span>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <ul>
+                        <li><span class="content-title">防範幼童衝出馬路：</span>家中通往外面馬路的門，應<span class="highlight">設置「高於110公分的門鎖」</span>或加裝防護柵欄，防止幼兒自行開門跑出去而被車撞。</li>
+                        <li><span class="content-title">陽台與窗戶防護：</span><span class="highlight">陽台欄杆高度應達110公分以上</span>（10層樓以上需達120公分），欄杆間距需小於10公分，且陽台必須淨空，不可放置可攀爬的物品。窗戶應加裝兒童安全鎖限制開啟寬度，或加裝隱形鐵窗防墜。</li>
+                        <li><span class="content-title">樓梯與床鋪安全：</span>樓梯出入口應設置高於85公分的穩固柵欄；<span class="highlight">柵欄及床鋪間隙需小於6公分</span>。</li>
+                        <li><span class="content-title">窗簾繩索收納：</span>窗簾拉繩應使用固定器或將繩子綁好，<span class="highlight">窗簾拉繩收納高度必須離地至少110公分以上</span>，避免孩子玩扯導致勒頸窒息。</li>
+                        <li><span class="content-title">防滑與防撞：</span>浴室、廚房地板及浴缸內應鋪設防滑墊或使用防滑劑，地毯需有止滑裝置；家具的尖銳桌角應加裝防撞墊。</li>
+                        <li><span class="content-title">拒絕使用螃蟹車：</span><span class="highlight">不要讓嬰兒乘坐傳統學步車(螃蟹車)</span>，這容易導致嬰兒到達不該碰觸的危險區域或翻覆跌落樓梯。</li>
+                    </ul>
+                    
+                    <!-- 額外展開的就醫時機區塊 -->
+                    <div class="alert-box">
+                        <div class="alert-box-title">🚨 跌倒墜落的「立刻就醫」時機</div>
+                        <div style="margin-bottom: 8px;">若孩子摔落後出現以下8種情況，必須立刻就醫：</div>
+                        <ol style="margin-top: 0; margin-bottom: 0; padding-left: 20px; color: #333;">
+                            <li>摔下的當時<span class="highlight">有昏倒</span>。</li>
+                            <li>摔後不久出現明顯且<span class="highlight">越吐越頻繁</span>的嘔吐。</li>
+                            <li>變得<span class="highlight">異常嗜睡</span>、突然睡過夜且不容易叫醒。</li>
+                            <li>出現<span class="highlight">完全無法安撫</span>的異常哭鬧。</li>
+                            <li><span class="highlight">手腳無力</span>，或已經會走的孩子變得一直摔倒。</li>
+                            <li><span class="highlight">頭痛越來越厲害</span>。</li>
+                            <li>嬰兒前囟門有<span class="highlight">膨出</span>狀況。</li>
+                            <li>從<span class="highlight">120公分以上高度跌落</span>，或跌落時撞擊到尖銳物。</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 卡片 5 -->
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                五、溺水預防
+                <span class="toggle-icon">+</span>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <ul>
+                        <li><span class="content-title">辨識「無聲」的溺水跡象：</span>電影中奮力呼救的畫面是錯誤的，<span class="highlight">真正溺水的人根本不會呼救</span>。必須觀察的跡象包含：頭在水下或嘴巴在水面喘氣、眼神恐懼或呆滯、動作像在攀爬隱形樓梯、想游的方向和頭的方向不同、頭髮遮掩額頭或眼睛、一直要翻身面向上方等。</li>
+                        <li><span class="content-title">浴室絕對陪伴：</span>小於1歲的嬰兒有近七成的溺水意外發生在澡盆。<span class="highlight">洗澡時大人務必全程陪伴</span>，絕不可因為接電話或拿毛巾等理由「放著洗澡水」獨留孩子在浴室。</li>
+                        <li><span class="content-title">避免蓄水與攀爬：</span><span class="highlight">浴缸、臉盆及洗衣機平時皆不應蓄水</span>；洗衣機旁勿放置可供攀爬的椅子或家具。庭院的水溝應加蓋，蓄水池或魚塭周圍應設置防護圍籬。</li>
+                        <li><span class="content-title">吃藥與生病是高風險群：</span>當孩子體力不佳、有癲癇病史、氣喘控制不佳，或是<span class="highlight">正在服用易嗜睡藥物</span>（如抗組織胺、暈車藥、安眠鎮靜藥物等）時，溺水的風險會大幅提高。</li>
+                        <li><span class="content-title">戲水安全守則：</span>帶孩子玩水時，大人必須專心在旁注意（放下手機）；並讓孩子<span class="highlight">穿著螢光色系、亮眼鮮豔的泳衣，避免藍色或暗色系</span>，以便在水中清楚辨識。</li>
+                        <li><span class="content-title">安全戲水水深的判斷基準：</span><span class="highlight">兒童戲水的安全水深「不是看身高」，而是以「兒童手臂長度」為準</span>，要確保嗆水時雙手摸著池底，頭部還能安全抬起出水面。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        蕭宇超醫師整理
+    </footer>
+
+    <script>
+        // 控制卡片展開與收合的腳本
+        function toggleCard(headerElement) {
+            const card = headerElement.parentElement;
+            
+            // 切換目前點擊卡片的狀態
+            card.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

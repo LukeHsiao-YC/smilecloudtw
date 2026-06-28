@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全小偵探!GOGO! | 蕭宇超醫師</title>
+    <style>
+        :root {
+            --bg-color: #fcfbf9;
+            --text-main: #333333;
+            --primary-color: #4a90e2;
+            --card-bg: #ffffff;
+            --border-color: #eaeaea;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, '微軟正黑體', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            padding-bottom: 40px;
+        }
+        header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        h1 { color: var(--primary-color); margin-bottom: 10px; }
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            text-decoration: none;
+            background-color: #f0f4f8;
+            color: var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            border: 1px solid #dce4ec;
+        }
+        .nav-links a.active {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--primary-color);
+            background-color: #fff;
+            transition: background-color 0.2s;
+        }
+        .card-header:hover {
+            background-color: #f9fbfc;
+        }
+        .header-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 15px;
+        }
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .mini-progress-bg {
+            width: 100%;
+            max-width: 250px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .mini-progress-fill {
+            height: 100%;
+            background: #4caf50;
+            width: 0%;
+            transition: width 0.3s ease-out, background-color 0.3s ease;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .progress-text {
+            font-size: 1.05rem;
+            color: #666;
+            min-width: 40px;
+            text-align: right;
+            transition: color 0.3s;
+        }
+        .toggle-icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            transition: transform 0.3s ease;
+            font-weight: normal;
+        }
+
+        .card-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out;
+            background-color: #fafafa;
+        }
+        .card-content-inner {
+            overflow: hidden;
+            padding: 0 25px;
+        }
+        .card.active .card-content {
+            grid-template-rows: 1fr;
+        }
+        .card.active .card-content-inner {
+            padding: 20px 25px 25px 25px;
+            border-top: 1px dashed #e0e0e0;
+        }
+        .card.active .toggle-icon {
+            transform: rotate(45deg);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #fff;
+            border: 1px solid #f0f0f0;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .checklist-item:hover { 
+            background-color: #f8fbff; 
+            border-color: #dce4ec;
+        }
+        .checklist-item input { 
+            margin-top: 4px; 
+            margin-right: 15px; 
+            width: 22px; 
+            height: 22px; 
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .checklist-text { 
+            flex: 1; 
+            font-size: 1.05rem; 
+            color: #444;
+        }
+        
+        .alert-box {
+            background-color: #fff3f3;
+            border-left: 4px solid #ff5252;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+            <img src="pi.png" alt="角色" style="height: 90px; margin-right: 15px;" onerror="this.style.display='none'">
+            <h1 style="margin-bottom: 0;">安全小偵探!GOGO</h1>
+        </div>
+        <div style="color: #666;">拿起手機，逐一確認家中的安全防護</div>
+        <div class="nav-links">
+            <a href="index.html">首頁介紹</a>
+            <a href="knowledge.html">安全知識區</a>
+            <a href="checklist.html" class="active">居家檢核表</a>
+            <a href="audio.html">繪本與有聲書</a>
+            <a href="interactive.html">小偵探大挑戰</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <p style="text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 25px;">
+            資料來源：國民健康署 兒童居家安全環境檢視手冊<br>
+            花蓮慈濟醫院 東部兒童少年保護醫療區域整合中心<br>
+            蕭宇超醫師整理
+        </p>
+
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="header-main">
+                    <div class="header-title">一、睡眠安全 (5不原則)</div>
+                    <div class="mini-progress-bg"><div class="mini-progress-fill"></div></div>
+                </div>
+                <div class="header-right">
+                    <span class="progress-text">0/0</span>
+                    <span class="toggle-icon">+</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <div class="alert-box">
+                        💡 <strong>醫師貼心提醒：</strong>餵食完寶寶後，也要小心睡眠中的溢吐奶情形！
+                    </div>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">不趴睡：嬰兒趴睡容易發生窒息，側睡也可能翻成趴睡，仰睡為最正確的睡姿。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">不用枕：嬰兒不需使用枕頭。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">不同床：嬰兒與父母或多胞胎兄弟姊妹都要「同室不同床」。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">不悶熱：避免環境過熱，勿讓嬰兒穿著太多衣物，需要保暖時可利用睡袋型睡衣或包巾包裹，並露出手臂及臉部。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">不鬆軟：嬰兒睡眠區域，不宜有枕頭、棉被、毯子、玩偶，並且床墊應選擇平滑堅實。</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="header-main">
+                    <div class="header-title">二、跌倒、墜落事故預防策略</div>
+                    <div class="mini-progress-bg"><div class="mini-progress-fill"></div></div>
+                </div>
+                <div class="header-right">
+                    <span class="progress-text">0/0</span>
+                    <span class="toggle-icon">+</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">嬰幼兒活動範圍內地板平坦，並鋪設防滑防撞軟墊。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">嬰幼兒睡床外觀無掉漆、剝落、生鏽、鬆動等狀況；附屬配件或自行加裝之附件穩固。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">嬰幼兒睡床有穩固的防跌落措施，邊緣做圓角處理，若有柵欄間隙小於 6 公分。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">陽台有堅固圍欄/圍牆且高度 110 公分以上，底部與地面間隔低於 15 公分。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">陽台欄杆間隔小於 6 公分或有避免鑽爬裝置。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">陽台不可放置可攀爬的傢俱、玩具、花盆等雜物、可供攀爬的橫式欄杆。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">窗戶設有防跌落的安全裝置 (嬰幼兒無法自行開啟或加設護欄)。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">樓梯欄杆完好且堅固，欄杆間距應小於 10 公分或有避免鑽爬的裝置。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">樓梯的臺階高度一致，且樓梯階面貼有止滑條或止滑設施。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">樓梯出入口設有高於 85 公分，間隔小於 6公分及幼童不易開啟之穩固柵欄，可防止幼童跌落。</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="header-main">
+                    <div class="header-title">三、壓砸夾刺撞傷事故預防策略</div>
+                    <div class="mini-progress-bg"><div class="mini-progress-fill"></div></div>
+                </div>
+                <div class="header-right">
+                    <span class="progress-text">0/0</span>
+                    <span class="toggle-icon">+</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">電器用品放置平穩不易傾倒。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">電扇具有細格防護網。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">鐵捲門開關及遙控器放在嬰幼兒無法觸碰的地方。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">鐵捲門裝有偵測到物體則立即停止之安全裝置。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">傢俱家飾 (如雕塑品、花瓶、壁掛物等) 平穩牢固，不易滑動或翻倒。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">傢具無凸角或銳利邊緣，或已做安全處理。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">櫥櫃加裝嬰幼兒不易開啟之裝置。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">餐桌或茶几未舖桌巾。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">抽屜加裝嬰幼兒不易開啟之安全釦環 (或上鎖)。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">摺疊家具 (桌椅、梯子、燙馬) 置於嬰幼兒無法觸碰的地方。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">盡量避免使用孔洞椅子以避免手指卡住。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">維修工具、尖利刀器、易燃物品、電池、零碎物件、化妝飾品、塑膠袋等危險物品收納於嬰幼兒無法碰觸的地方。</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="header-main">
+                    <div class="header-title">四、燒燙傷事故預防策略</div>
+                    <div class="mini-progress-bg"><div class="mini-progress-fill"></div></div>
+                </div>
+                <div class="header-right">
+                    <span class="progress-text">0/0</span>
+                    <span class="toggle-icon">+</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">插座及電線固定、隱蔽或置高於 110 公分。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">加裝安全保護蓋於未使用之插座。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">座立式檯燈、飲水機、熱水瓶、微波爐、烤箱、電熨斗、電熱器、捕蚊燈置於嬰幼兒無法觸碰的地方。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">針對烤箱或微波爐等有門的電器，可使用防開啟裝置避免幼童開啟。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">洗澡將熱水器水溫設定在攝氏 50°C 以下。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">將易燃燒物品(蠟燭、打火機、火柴)收在兒童無法拿取的地方。</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="header-main">
+                    <div class="header-title">五、窒息與溺水事故預防策略</div>
+                    <div class="mini-progress-bg"><div class="mini-progress-fill"></div></div>
+                </div>
+                <div class="header-right">
+                    <span class="progress-text">0/0</span>
+                    <span class="toggle-icon">+</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">窗簾拉繩為嬰幼兒無法觸碰的高度。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">密閉電器 (如：洗衣機、烘乾機、冰箱等) 嬰幼兒無法自行開啟，或放置位置遠離嬰幼兒。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">家中若有大型容器（如：浴缸、水桶等），無人使用時不可儲水。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">避免讓小孩接近塑膠袋、有拉鍊的袋子、柔軟枕頭。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">建立安全的兒童睡眠環境，尤其是四個月以下頸椎尚未發育完全的嬰幼兒。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">玩具附有之繩索或鬆緊帶套環，絕不能超過 15-20 公分。</span></label>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" onclick="toggleCard(this)">
+                <div class="header-main">
+                    <div class="header-title">六、梗塞、異物吞食預防策略</div>
+                    <div class="mini-progress-bg"><div class="mini-progress-fill"></div></div>
+                </div>
+                <div class="header-right">
+                    <span class="progress-text">0/0</span>
+                    <span class="toggle-icon">+</span>
+                </div>
+            </div>
+            <div class="card-content">
+                <div class="card-content-inner">
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">電池、零碎物件、磁鐵、化妝飾品等收納於嬰幼兒無法碰觸的地方。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">小孩哭泣、奔跑時、玩耍時應避免同時餵食物。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">避免讓四歲以下幼兒吞食可能引起異物梗塞的固體食物（如果凍、軟糖、糖果、含骨頭肉類、整顆種子與堅果、有籽的水果與整口花生醬等）。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">選擇有國內外商品檢驗標識的玩具且玩具零件必須牢固（如 ST 標誌、CE 標誌、ASTM 標誌）。</span></label>
+                    <label class="checklist-item"><input type="checkbox" class="check-target"><span class="checklist-text">玩具本身及其零件須大於直徑 3.2 公分；長度必須大於 5.7 公分；球型玩具或擠壓玩具直徑須大於 4.5 公分。</span></label>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 控制卡片展開與收合
+        function toggleCard(headerElement) {
+            const card = headerElement.closest('.card');
+            card.classList.toggle('active');
+        }
+
+        // 初始化與更新每個卡片的獨立進度
+        function initAndBindProgress() {
+            const cards = document.querySelectorAll('.card');
+            
+            cards.forEach(card => {
+                const checkboxes = card.querySelectorAll('.check-target');
+                if (checkboxes.length === 0) return;
+
+                // 綁定事件
+                checkboxes.forEach(box => {
+                    box.addEventListener('change', () => updateCardProgress(card));
+                });
+
+                // 初始化計算一次
+                updateCardProgress(card);
+            });
+        }
+
+        function updateCardProgress(card) {
+            const checkboxes = card.querySelectorAll('.check-target');
+            const checkedBoxes = card.querySelectorAll('.check-target:checked');
+            
+            const total = checkboxes.length;
+            const checked = checkedBoxes.length;
+            const percentage = total === 0 ? 0 : Math.round((checked / total) * 100);
+            
+            const progressFill = card.querySelector('.mini-progress-fill');
+            const progressText = card.querySelector('.progress-text');
+            
+            if (progressFill) {
+                progressFill.style.width = percentage + '%';
+                // 滿分時變色給予回饋
+                if (percentage === 100) {
+                    progressFill.style.backgroundColor = '#4caf50'; // 綠色表示完成
+                } else {
+                    progressFill.style.backgroundColor = '#4a90e2'; // 藍色表示進行中
+                }
+            }
+            
+            if (progressText) {
+                progressText.textContent = `${checked}/${total}`;
+                if (percentage === 100) {
+                    progressText.style.color = '#4caf50';
+                    progressText.style.fontWeight = 'bold';
+                } else {
+                    progressText.style.color = '#666';
+                    progressText.style.fontWeight = 'normal';
+                }
+            }
+        }
+
+        // 網頁載入完成後初始化進度
+        document.addEventListener('DOMContentLoaded', initAndBindProgress);
+    </script>
+</body>
+</html>
